@@ -33,3 +33,6 @@ __history/
 # Backups
 *.bak
 *.BAK
+
+# Claude Code
+CLAUDE.md
