@@ -6,6 +6,7 @@ uses
   DUnitX.TestFramework,
   System.Classes,
   Vcl.Controls,
+  Vcl.Forms,
   Vcl.Graphics,
   ToggleSwitch;
 
@@ -13,6 +14,7 @@ type
   [TestFixture]
   TToggleSwitchTest = class
   private
+    FForm: TForm;
     FToggle: TFluentToggleSwitch;
   public
     [Setup]
@@ -83,12 +85,14 @@ uses
 
 procedure TToggleSwitchTest.Setup;
 begin
-  FToggle := TFluentToggleSwitch.Create(nil);
+  FForm := TForm.CreateNew(nil);
+  FToggle := TFluentToggleSwitch.Create(FForm);
+  FToggle.Parent := FForm;
 end;
 
 procedure TToggleSwitchTest.TearDown;
 begin
-  FToggle.Free;
+  FForm.Free;
 end;
 
 // --- Color tests ---
