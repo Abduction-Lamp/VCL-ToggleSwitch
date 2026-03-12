@@ -5,7 +5,9 @@ program Tests;
 {$ENDIF}
 {$STRONGLINKTYPES ON}
 uses
+  {$IFDEF FASTMM}
   FastMM4,
+  {$ENDIF}
   DUnitX.MemoryLeakMonitor.FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
@@ -57,12 +59,8 @@ begin
       System.ExitCode := EXIT_ERRORS;
 
     {$IFNDEF CI}
-    //We don't want this happening when running under CI.
-    if TDUnitX.Options.ExitBehavior = TDUnitXExitBehavior.Pause then
-    begin
-      System.Write('Done.. press <Enter> key to quit.');
-      System.Readln;
-    end;
+    System.Write('Done.. press <Enter> key to quit.');
+    System.Readln;
     {$ENDIF}
   except
     on E: Exception do
