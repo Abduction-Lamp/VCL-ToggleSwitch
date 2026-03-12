@@ -71,9 +71,11 @@ This will load all three projects: package, demo, and tests.
 ### 3. Install the component into the IDE palette
 
 1. In Project Manager, find the **ToggleSwitch.bpl** project (packages)
-2. Right-click → **Compile**
+2. Right-click → **Compile** (this places `.dcu` files into the global Dcp directory, making the unit available to all projects)
 3. Right-click → **Install**
 4. The component `TFluentToggleSwitch` will appear in the **"ToggleSwitch"** tab of the component palette
+
+After this, any new project can simply `uses ToggleSwitch;` — no additional Search Path configuration needed.
 
 ### 4. Run the demo
 
