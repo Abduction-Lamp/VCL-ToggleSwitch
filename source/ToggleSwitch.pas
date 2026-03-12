@@ -491,6 +491,12 @@ var
   OffThumb, OnThumb: TColor;
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
+  TrackOffsetX: Integer;
+  TextX, TextY: Integer;
+  TextW, TextH: Integer;
+  LabelText: string;
+const
+  TrackAreaWidth = 44;
 begin
   // Background
   BgColor := Self.Color;
@@ -499,8 +505,30 @@ begin
   Canvas.Brush.Color := BgColor;
   Canvas.FillRect(ClientRect);
 
-  // Track position — centered in component
-  TrackX := (Width - TrackWidth) / 2;
+  // Text layout
+  TrackOffsetX := 0;
+  if FShowText then
+  begin
+    Canvas.Font.Assign(Font);
+    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
+    TextH := Canvas.TextHeight('Wg');
+
+    if FTextPosition = tpLeft then
+    begin
+      TrackOffsetX := TextW + FTextSpacing;
+      TextX := 0;
+    end
+    else
+    begin
+      TrackOffsetX := 0;
+      TextX := TrackAreaWidth + FTextSpacing;
+    end;
+
+    TextY := (Height - TextH) div 2;
+  end;
+
+  // Track position
+  TrackX := TrackOffsetX + (TrackAreaWidth - TrackWidth) / 2;
   TrackY := (Height - TrackHeight) / 2;
 
   State := GetInteractionState;
@@ -592,6 +620,21 @@ begin
   // Focus rectangle
   if Focused then
     Canvas.DrawFocusRect(ClientRect);
+
+  // Text label
+  if FShowText then
+  begin
+    if FChecked then
+      LabelText := FTextOn
+    else
+      LabelText := FTextOff;
+
+    Canvas.Font.Assign(Font);
+    Canvas.Brush.Style := bsClear;
+    if not Enabled then
+      Canvas.Font.Color := clGrayText;
+    Canvas.TextOut(TextX, TextY, LabelText);
+  end;
 end;
 
 procedure Register;
