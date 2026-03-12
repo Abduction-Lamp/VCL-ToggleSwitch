@@ -71,6 +71,7 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>Demo</SanitizedProjectName>
+        <DCC_UnitSearchPath>../;../source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;FmxTeeUI;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;Tee;soapmidas;vclactnband;TeeUI;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;Skia.Package.FMX;fmxdae;TeeDB;FireDACMSAccDriver;CustomIPTransport;vcldsnap;DBXInterBaseDriver;OmniThreadLibraryRuntime;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -103,6 +104,8 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -147,6 +150,10 @@
                 <Source>
                     <Source Name="MainSource">Demo.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="Win32\Debug\Demo.exe" Configuration="Debug" Class="ProjectOutput">

@@ -1,9 +1,10 @@
-unit ToggleSwitch;
+﻿unit ToggleSwitch;
 
 interface
 
 uses
   System.Classes,
+  Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Graphics,
   Winapi.Windows,
@@ -62,9 +63,6 @@ type
 procedure Register;
 
 implementation
-
-uses
-  Vcl.ExtCtrls;
 
 const
   TrackWidth  = 40;

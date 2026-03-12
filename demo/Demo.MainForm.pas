@@ -29,11 +29,11 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 
-  function CreateLabel(AParent: TWinControl; ATop: Integer; const ACaption: string): TLabel;
+  function CreateLabel(AParent: TWinControl; ATop, ALeft: Integer; const ACaption: string): TLabel;
   begin
     Result := TLabel.Create(Self);
     Result.Parent := AParent;
-    Result.Left := 70;
+    Result.Left := ALeft + 15;
     Result.Top := ATop + 3;
     Result.Caption := ACaption;
   end;
@@ -53,24 +53,24 @@ begin
   ClientHeight := 260;
 
   FToggleDefault := CreateToggle(Self, 20);
-  CreateLabel(Self, 20, 'Default (Off, Animated)');
+  CreateLabel(Self, 20, 150, 'Default (Off, Animated)');
 
   FToggleOn := CreateToggle(Self, 60);
   FToggleOn.Checked := True;
-  CreateLabel(Self, 60, 'Initially On');
+  CreateLabel(Self, 60, 150, 'Initially On');
 
   FToggleDisabledOff := CreateToggle(Self, 100);
   FToggleDisabledOff.Enabled := False;
-  CreateLabel(Self, 100, 'Disabled (Off)');
+  CreateLabel(Self, 100, 150, 'Disabled (Off)');
 
   FToggleDisabledOn := CreateToggle(Self, 140);
   FToggleDisabledOn.Checked := True;
   FToggleDisabledOn.Enabled := False;
-  CreateLabel(Self, 140, 'Disabled (On)');
+  CreateLabel(Self, 140, 150, 'Disabled (On)');
 
   FToggleNoAnim := CreateToggle(Self, 180);
   FToggleNoAnim.Animated := False;
-  CreateLabel(Self, 180, 'No Animation');
+  CreateLabel(Self, 180, 150, 'No Animation');
 
   FStatusLabel := TLabel.Create(Self);
   FStatusLabel.Parent := Self;
