@@ -6,6 +6,8 @@ uses
   System.Classes,
   Vcl.Controls,
   Vcl.Graphics,
+  Winapi.Windows,
+  Winapi.Messages,
   Winapi.GDIPAPI,
   Winapi.GDIPOBJ;
 
@@ -27,8 +29,14 @@ type
     function GetTrackStrokeColor: TColor;
     function GetThumbFillColor: TColor;
     function GetThumbDiameter: Integer;
+    procedure Toggle;
+    procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
   protected
     procedure Paint; override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -123,6 +131,61 @@ begin
   if Value < 1 then
     Value := 1;
   FAnimationDuration := Value;
+end;
+
+procedure TToggleSwitch.Toggle;
+begin
+  Checked := not FChecked;
+end;
+
+procedure TToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  if Button = mbLeft then
+  begin
+    FPressed := True;
+    Invalidate;
+  end;
+end;
+
+procedure TToggleSwitch.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (Button = mbLeft) and FPressed then
+  begin
+    FPressed := False;
+    if PtInRect(ClientRect, Point(X, Y)) then
+      Toggle;
+    Invalidate;
+  end;
+  inherited;
+end;
+
+procedure TToggleSwitch.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  IsOver: Boolean;
+begin
+  inherited;
+  IsOver := PtInRect(ClientRect, Point(X, Y));
+  if IsOver <> FHovered then
+  begin
+    FHovered := IsOver;
+    Invalidate;
+  end;
+end;
+
+procedure TToggleSwitch.CMMouseEnter(var Msg: TMessage);
+begin
+  inherited;
+  FHovered := True;
+  Invalidate;
+end;
+
+procedure TToggleSwitch.CMMouseLeave(var Msg: TMessage);
+begin
+  inherited;
+  FHovered := False;
+  FPressed := False;
+  Invalidate;
 end;
 
 function TToggleSwitch.GetInteractionState: TInteractionState;
