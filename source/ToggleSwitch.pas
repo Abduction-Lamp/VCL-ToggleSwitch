@@ -29,12 +29,22 @@ type
     FAnimStartTime: Int64;
     FAnimFrequency: Int64;
     FOnChange: TNotifyEvent;
+    FTrackFrameColor: TColor;
+    FTrackColorOff: TColor;
+    FTrackColorOn: TColor;
+    FThumbColorOff: TColor;
+    FThumbColorOn: TColor;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
     procedure HandleAnimTimer(Sender: TObject);
     function GetInteractionState: TInteractionState;
     procedure Toggle;
+    procedure SetTrackFrameColor(Value: TColor);
+    procedure SetTrackColorOff(Value: TColor);
+    procedure SetTrackColorOn(Value: TColor);
+    procedure SetThumbColorOff(Value: TColor);
+    procedure SetThumbColorOn(Value: TColor);
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
@@ -58,6 +68,11 @@ type
     property Color;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnClick;
+    property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clNone;
+    property TrackColorOff: TColor read FTrackColorOff write SetTrackColorOff default clNone;
+    property TrackColorOn: TColor read FTrackColorOn write SetTrackColorOn default clNone;
+    property ThumbColorOff: TColor read FThumbColorOff write SetThumbColorOff default clNone;
+    property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clNone;
   end;
 
 procedure Register;
@@ -158,6 +173,56 @@ begin
   FAnimTimer.OnTimer := HandleAnimTimer;
   TabStop := True;
   DoubleBuffered := True;
+  FTrackFrameColor := clNone;
+  FTrackColorOff := clNone;
+  FTrackColorOn := clNone;
+  FThumbColorOff := clNone;
+  FThumbColorOn := clNone;
+end;
+
+procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
+begin
+  if FTrackFrameColor <> Value then
+  begin
+    FTrackFrameColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTrackColorOff(Value: TColor);
+begin
+  if FTrackColorOff <> Value then
+  begin
+    FTrackColorOff := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTrackColorOn(Value: TColor);
+begin
+  if FTrackColorOn <> Value then
+  begin
+    FTrackColorOn := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetThumbColorOff(Value: TColor);
+begin
+  if FThumbColorOff <> Value then
+  begin
+    FThumbColorOff := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetThumbColorOn(Value: TColor);
+begin
+  if FThumbColorOn <> Value then
+  begin
+    FThumbColorOn := Value;
+    Invalidate;
+  end;
 end;
 
 destructor TFluentToggleSwitch.Destroy;
