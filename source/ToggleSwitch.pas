@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.Math,
   Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Graphics,
@@ -13,6 +14,8 @@ uses
   Winapi.GDIPOBJ;
 
 type
+  TTextPosition = (tpLeft, tpRight);
+
   TInteractionState = (isNormal, isHover, isPressed, isDisabled);
 
   TFluentToggleSwitch = class(TCustomControl)
@@ -34,6 +37,11 @@ type
     FTrackColorOn: TColor;
     FThumbColorOff: TColor;
     FThumbColorOn: TColor;
+    FTextOn: string;
+    FTextOff: string;
+    FShowText: Boolean;
+    FTextPosition: TTextPosition;
+    FTextSpacing: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
@@ -45,6 +53,13 @@ type
     procedure SetTrackColorOn(Value: TColor);
     procedure SetThumbColorOff(Value: TColor);
     procedure SetThumbColorOn(Value: TColor);
+    procedure SetTextOn(const Value: string);
+    procedure SetTextOff(const Value: string);
+    procedure SetShowText(Value: Boolean);
+    procedure SetTextPosition(Value: TTextPosition);
+    procedure SetTextSpacing(Value: Integer);
+    procedure AdjustBounds;
+    procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
@@ -73,6 +88,12 @@ type
     property TrackColorOn: TColor read FTrackColorOn write SetTrackColorOn default clNone;
     property ThumbColorOff: TColor read FThumbColorOff write SetThumbColorOff default clNone;
     property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clNone;
+    property Font;
+    property ShowText: Boolean read FShowText write SetShowText default False;
+    property TextOn: string read FTextOn write SetTextOn;
+    property TextOff: string read FTextOff write SetTextOff;
+    property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 8;
   end;
 
 procedure Register;
@@ -178,6 +199,11 @@ begin
   FTrackColorOn := clNone;
   FThumbColorOff := clNone;
   FThumbColorOn := clNone;
+  FTextOn := 'On';
+  FTextOff := 'Off';
+  FShowText := False;
+  FTextPosition := tpRight;
+  FTextSpacing := 8;
 end;
 
 procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
@@ -223,6 +249,89 @@ begin
     FThumbColorOn := Value;
     Invalidate;
   end;
+end;
+
+procedure TFluentToggleSwitch.SetTextOn(const Value: string);
+begin
+  if FTextOn <> Value then
+  begin
+    FTextOn := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextOff(const Value: string);
+begin
+  if FTextOff <> Value then
+  begin
+    FTextOff := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetShowText(Value: Boolean);
+begin
+  if FShowText <> Value then
+  begin
+    FShowText := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextPosition(Value: TTextPosition);
+begin
+  if FTextPosition <> Value then
+  begin
+    FTextPosition := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextSpacing(Value: Integer);
+begin
+  if FTextSpacing <> Value then
+  begin
+    FTextSpacing := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.AdjustBounds;
+const
+  TrackAreaWidth = 44;
+  TrackAreaHeight = 24;
+var
+  TextW, TextH: Integer;
+  NewWidth, NewHeight: Integer;
+begin
+  if not HandleAllocated then
+    Exit;
+  if not FShowText then
+  begin
+    NewWidth := TrackAreaWidth;
+    NewHeight := TrackAreaHeight;
+  end
+  else
+  begin
+    Canvas.Font.Assign(Font);
+    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
+    TextH := Canvas.TextHeight('Wg');
+    NewWidth := TrackAreaWidth + FTextSpacing + TextW;
+    NewHeight := Max(TrackAreaHeight, TextH);
+  end;
+  SetBounds(Left, Top, NewWidth, NewHeight);
+end;
+
+procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
+begin
+  inherited;
+  AdjustBounds;
+  Invalidate;
 end;
 
 destructor TFluentToggleSwitch.Destroy;
