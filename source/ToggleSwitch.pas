@@ -42,6 +42,7 @@ type
     FShowText: Boolean;
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
+    FTrackOffsetX: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
@@ -59,6 +60,7 @@ type
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
     procedure AdjustBounds;
+    function GetTrackRect: TRect;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
@@ -206,6 +208,7 @@ begin
   FShowText := False;
   FTextPosition := tpRight;
   FTextSpacing := 8;
+  FTrackOffsetX := 0;
 end;
 
 procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
@@ -312,6 +315,7 @@ var
 begin
   if not FShowText then
   begin
+    FTrackOffsetX := 0;
     NewWidth := TrackAreaWidth;
     NewHeight := TrackAreaHeight;
   end
@@ -322,8 +326,17 @@ begin
     TextH := Canvas.TextHeight('Wg');
     NewWidth := TrackAreaWidth + FTextSpacing + TextW;
     NewHeight := Max(TrackAreaHeight, TextH);
+    if FTextPosition = tpLeft then
+      FTrackOffsetX := TextW + FTextSpacing
+    else
+      FTrackOffsetX := 0;
   end;
   SetBounds(Left, Top, NewWidth, NewHeight);
+end;
+
+function TFluentToggleSwitch.GetTrackRect: TRect;
+begin
+  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + TrackAreaWidth, Height);
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -398,7 +411,7 @@ end;
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if Button = mbLeft then
+  if (Button = mbLeft) and PtInRect(GetTrackRect, Point(X, Y)) then
   begin
     FPressed := True;
     Invalidate;
@@ -410,7 +423,7 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(ClientRect, Point(X, Y)) then
+    if PtInRect(GetTrackRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
@@ -490,7 +503,6 @@ var
   OffThumb, OnThumb: TColor;
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
-  TrackOffsetX: Integer;
   TextX, TextY: Integer;
   TextW, TextH: Integer;
   LabelText: string;
@@ -503,7 +515,6 @@ begin
   Canvas.FillRect(ClientRect);
 
   // Text layout
-  TrackOffsetX := 0;
   if FShowText then
   begin
     Canvas.Font.Assign(Font);
@@ -511,21 +522,15 @@ begin
     TextH := Canvas.TextHeight('Wg');
 
     if FTextPosition = tpLeft then
-    begin
-      TrackOffsetX := TextW + FTextSpacing;
-      TextX := 0;
-    end
+      TextX := 0
     else
-    begin
-      TrackOffsetX := 0;
       TextX := TrackAreaWidth + FTextSpacing;
-    end;
 
     TextY := (Height - TextH) div 2;
   end;
 
   // Track position
-  TrackX := TrackOffsetX + (TrackAreaWidth - TrackWidth) / 2;
+  TrackX := FTrackOffsetX + (TrackAreaWidth - TrackWidth) / 2;
   TrackY := (Height - TrackHeight) / 2;
 
   State := GetInteractionState;
