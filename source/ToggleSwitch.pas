@@ -101,6 +101,8 @@ procedure Register;
 implementation
 
 const
+  TrackAreaWidth  = 44;
+  TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
   TrackRadius = 10;
@@ -180,8 +182,8 @@ constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
-  Width := 44;
-  Height := 24;
+  Width := TrackAreaWidth;
+  Height := TrackAreaHeight;
   FChecked := False;
   FAnimated := True;
   FAnimationDuration := 150;
@@ -293,6 +295,8 @@ end;
 
 procedure TFluentToggleSwitch.SetTextSpacing(Value: Integer);
 begin
+  if Value < 0 then
+    Value := 0;
   if FTextSpacing <> Value then
   begin
     FTextSpacing := Value;
@@ -302,15 +306,10 @@ begin
 end;
 
 procedure TFluentToggleSwitch.AdjustBounds;
-const
-  TrackAreaWidth = 44;
-  TrackAreaHeight = 24;
 var
   TextW, TextH: Integer;
   NewWidth, NewHeight: Integer;
 begin
-  if not HandleAllocated then
-    Exit;
   if not FShowText then
   begin
     NewWidth := TrackAreaWidth;
@@ -495,8 +494,6 @@ var
   TextX, TextY: Integer;
   TextW, TextH: Integer;
   LabelText: string;
-const
-  TrackAreaWidth = 44;
 begin
   // Background
   BgColor := Self.Color;

@@ -65,6 +65,15 @@ type
 
     [Test]
     procedure SetTextSpacing_ShouldStoreValue;
+
+    [Test]
+    procedure SetTextSpacing_Negative_ShouldClampToZero;
+
+    [Test]
+    procedure SetTextOn_ShouldAffectWidth;
+
+    [Test]
+    procedure TextPosition_Left_WithShowText_ShouldStoreValue;
   end;
 
 implementation
@@ -172,6 +181,31 @@ procedure TToggleSwitchTest.SetTextSpacing_ShouldStoreValue;
 begin
   FToggle.TextSpacing := 16;
   Assert.AreEqual(16, FToggle.TextSpacing);
+end;
+
+procedure TToggleSwitchTest.SetTextSpacing_Negative_ShouldClampToZero;
+begin
+  FToggle.TextSpacing := -5;
+  Assert.AreEqual(0, FToggle.TextSpacing);
+end;
+
+procedure TToggleSwitchTest.SetTextOn_ShouldAffectWidth;
+var
+  WidthBefore, WidthAfter: Integer;
+begin
+  FToggle.ShowText := True;
+  WidthBefore := FToggle.Width;
+  FToggle.TextOn := 'Long text value for testing';
+  WidthAfter := FToggle.Width;
+  Assert.IsTrue(WidthAfter > WidthBefore, 'Width should increase with longer TextOn');
+end;
+
+procedure TToggleSwitchTest.TextPosition_Left_WithShowText_ShouldStoreValue;
+begin
+  FToggle.ShowText := True;
+  FToggle.TextPosition := tpLeft;
+  Assert.AreEqual(Ord(tpLeft), Ord(FToggle.TextPosition));
+  Assert.IsTrue(FToggle.ShowText, 'ShowText should remain True');
 end;
 
 initialization
