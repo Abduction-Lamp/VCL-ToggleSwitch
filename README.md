@@ -30,12 +30,28 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 ## Project Structure
 
 ```
-source/ToggleSwitch.pas         — component source code
-packages/ToggleSwitch.dpk       — design-time package for IDE installation
-demo/Demo.dpr                   — demo application
-tests/Tests.dpr                 — test project (DUnitX)
-ToggleSwitch-PG.groupproj       — project group (package + demo + tests)
-docs/SPEC-ToggleSwitch.md       — technical specification
+VCL-ToggleSwitch/
+├── source/
+│   └── ToggleSwitch.pas              — component source code (TFluentToggleSwitch)
+├── packages/
+│   ├── ToggleSwitch.dpk              — design-time package for IDE installation
+│   ├── ToggleSwitch.dproj            — package project file
+│   └── ToggleSwitch.res              — package resources
+├── demo/
+│   ├── Demo.dpr                      — demo application entry point
+│   ├── Demo.dproj                    — demo project file
+│   ├── Demo.MainForm.pas             — demo form (5 toggle variants)
+│   ├── Demo.MainForm.dfm             — demo form layout
+│   └── Demo.res                      — demo resources
+├── tests/
+│   ├── Tests.dpr                     — test runner (DUnitX + FastMM4)
+│   └── Tests.dproj                   — test project file
+├── docs/
+│   ├── SPEC-ToggleSwitch.md          — technical specification (WinUI 3 reference)
+│   └── plans/
+│       └── 2026-03-12-toggle-switch.md — implementation plan
+├── ToggleSwitch-PG.groupproj         — project group (package + demo + tests)
+└── README.md
 ```
 
 ## Quick Start
