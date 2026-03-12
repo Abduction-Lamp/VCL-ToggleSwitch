@@ -1,4 +1,4 @@
-# TToggleSwitch
+# TFluentToggleSwitch
 
 A VCL component for Delphi that replicates the look and behavior of the Windows 11 ToggleSwitch (WinUI 3 / Fluent Design).
 
@@ -61,7 +61,7 @@ This will load all three projects: package, demo, and tests.
 1. In Project Manager, find the **ToggleSwitch.bpl** project (packages)
 2. Right-click → **Compile**
 3. Right-click → **Install**
-4. The component `TToggleSwitch` will appear in the **"ToggleSwitch"** tab of the component palette
+4. The component `TFluentToggleSwitch` will appear in the **"ToggleSwitch"** tab of the component palette
 
 ### 4. Run the demo
 
@@ -76,7 +76,7 @@ The demo includes 5 toggle variants: default, initially on, disabled off, disabl
 ### Design-time (visual)
 
 After installing the package:
-1. Drag `TToggleSwitch` from the **"ToggleSwitch"** palette tab onto your form
+1. Drag `TFluentToggleSwitch` from the **"ToggleSwitch"** palette tab onto your form
 2. Configure properties in the Object Inspector
 3. Assign an `OnChange` event handler
 
@@ -88,9 +88,9 @@ uses
 
 // Creation
 var
-  Toggle: TToggleSwitch;
+  Toggle: TFluentToggleSwitch;
 begin
-  Toggle := TToggleSwitch.Create(Self);
+  Toggle := TFluentToggleSwitch.Create(Self);
   Toggle.Parent := Self;
   Toggle.Left := 20;
   Toggle.Top := 20;
@@ -100,7 +100,7 @@ end;
 // Handling state change
 procedure TForm1.HandleToggleChange(Sender: TObject);
 begin
-  if TToggleSwitch(Sender).Checked then
+  if TFluentToggleSwitch(Sender).Checked then
     ShowMessage('On')
   else
     ShowMessage('Off');

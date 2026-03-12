@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = 'TToggleSwitch Demo'
+  Caption = 'TFluentToggleSwitch Demo'
   ClientHeight = 260
   ClientWidth = 320
   Color = clBtnFace

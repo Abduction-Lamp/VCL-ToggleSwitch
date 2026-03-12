@@ -11,11 +11,11 @@ type
   TForm1 = class(TForm)
     procedure FormCreate(Sender: TObject);
   private
-    FToggleDefault: TToggleSwitch;
-    FToggleOn: TToggleSwitch;
-    FToggleDisabledOff: TToggleSwitch;
-    FToggleDisabledOn: TToggleSwitch;
-    FToggleNoAnim: TToggleSwitch;
+    FToggleDefault: TFluentToggleSwitch;
+    FToggleOn: TFluentToggleSwitch;
+    FToggleDisabledOff: TFluentToggleSwitch;
+    FToggleDisabledOn: TFluentToggleSwitch;
+    FToggleNoAnim: TFluentToggleSwitch;
     FStatusLabel: TLabel;
     procedure OnToggleChange(Sender: TObject);
   end;
@@ -38,9 +38,9 @@ procedure TForm1.FormCreate(Sender: TObject);
     Result.Caption := ACaption;
   end;
 
-  function CreateToggle(AParent: TWinControl; ATop: Integer): TToggleSwitch;
+  function CreateToggle(AParent: TWinControl; ATop: Integer): TFluentToggleSwitch;
   begin
-    Result := TToggleSwitch.Create(Self);
+    Result := TFluentToggleSwitch.Create(Self);
     Result.Parent := AParent;
     Result.Left := 20;
     Result.Top := ATop;
@@ -48,7 +48,7 @@ procedure TForm1.FormCreate(Sender: TObject);
   end;
 
 begin
-  Caption := 'TToggleSwitch Demo';
+  Caption := 'TFluentToggleSwitch Demo';
   ClientWidth := 320;
   ClientHeight := 260;
 
@@ -81,10 +81,10 @@ end;
 
 procedure TForm1.OnToggleChange(Sender: TObject);
 var
-  Toggle: TToggleSwitch;
+  Toggle: TFluentToggleSwitch;
   StateName: string;
 begin
-  Toggle := Sender as TToggleSwitch;
+  Toggle := Sender as TFluentToggleSwitch;
   if Toggle.Checked then
     StateName := 'On'
   else

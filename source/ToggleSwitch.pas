@@ -15,7 +15,7 @@ uses
 type
   TInteractionState = (isNormal, isHover, isPressed, isDisabled);
 
-  TToggleSwitch = class(TCustomControl)
+  TFluentToggleSwitch = class(TCustomControl)
   private
     FChecked: Boolean;
     FAnimated: Boolean;
@@ -138,9 +138,9 @@ begin
   Path.CloseFigure;
 end;
 
-{ TToggleSwitch }
+{ TFluentToggleSwitch }
 
-constructor TToggleSwitch.Create(AOwner: TComponent);
+constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
@@ -160,13 +160,13 @@ begin
   DoubleBuffered := True;
 end;
 
-destructor TToggleSwitch.Destroy;
+destructor TFluentToggleSwitch.Destroy;
 begin
   FAnimTimer.Free;
   inherited;
 end;
 
-procedure TToggleSwitch.SetChecked(Value: Boolean);
+procedure TFluentToggleSwitch.SetChecked(Value: Boolean);
 begin
   if FChecked = Value then
     Exit;
@@ -183,7 +183,7 @@ begin
   Invalidate;
 end;
 
-procedure TToggleSwitch.StartAnimation;
+procedure TFluentToggleSwitch.StartAnimation;
 begin
   FAnimStartProgress := FAnimProgress;
   FAnimTarget := Ord(FChecked);
@@ -191,7 +191,7 @@ begin
   FAnimTimer.Enabled := True;
 end;
 
-procedure TToggleSwitch.HandleAnimTimer(Sender: TObject);
+procedure TFluentToggleSwitch.HandleAnimTimer(Sender: TObject);
 var
   Counter: Int64;
   Elapsed: Single;
@@ -210,19 +210,19 @@ begin
   Invalidate;
 end;
 
-procedure TToggleSwitch.SetAnimationDuration(Value: Integer);
+procedure TFluentToggleSwitch.SetAnimationDuration(Value: Integer);
 begin
   if Value < 1 then
     Value := 1;
   FAnimationDuration := Value;
 end;
 
-procedure TToggleSwitch.Toggle;
+procedure TFluentToggleSwitch.Toggle;
 begin
   Checked := not FChecked;
 end;
 
-procedure TToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
   if Button = mbLeft then
@@ -232,7 +232,7 @@ begin
   end;
 end;
 
-procedure TToggleSwitch.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TFluentToggleSwitch.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if (Button = mbLeft) and FPressed then
   begin
@@ -244,7 +244,7 @@ begin
   inherited;
 end;
 
-procedure TToggleSwitch.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure TFluentToggleSwitch.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   IsOver: Boolean;
 begin
@@ -257,14 +257,14 @@ begin
   end;
 end;
 
-procedure TToggleSwitch.CMMouseEnter(var Msg: TMessage);
+procedure TFluentToggleSwitch.CMMouseEnter(var Msg: TMessage);
 begin
   inherited;
   FHovered := True;
   Invalidate;
 end;
 
-procedure TToggleSwitch.CMMouseLeave(var Msg: TMessage);
+procedure TFluentToggleSwitch.CMMouseLeave(var Msg: TMessage);
 begin
   inherited;
   FHovered := False;
@@ -272,26 +272,26 @@ begin
   Invalidate;
 end;
 
-procedure TToggleSwitch.WMSetFocus(var Msg: TWMSetFocus);
+procedure TFluentToggleSwitch.WMSetFocus(var Msg: TWMSetFocus);
 begin
   inherited;
   Invalidate;
 end;
 
-procedure TToggleSwitch.WMKillFocus(var Msg: TWMKillFocus);
+procedure TFluentToggleSwitch.WMKillFocus(var Msg: TWMKillFocus);
 begin
   inherited;
   Invalidate;
 end;
 
-procedure TToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
+procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_SPACE) or (Key = VK_RETURN) then
     Toggle;
 end;
 
-function TToggleSwitch.GetInteractionState: TInteractionState;
+function TFluentToggleSwitch.GetInteractionState: TInteractionState;
 begin
   if not Enabled then
     Result := isDisabled
@@ -303,7 +303,7 @@ begin
     Result := isNormal;
 end;
 
-procedure TToggleSwitch.Paint;
+procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
   Path: TGPGraphicsPath;
@@ -393,7 +393,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('ToggleSwitch', [TToggleSwitch]);
+  RegisterComponents('ToggleSwitch', [TFluentToggleSwitch]);
 end;
 
 end.
