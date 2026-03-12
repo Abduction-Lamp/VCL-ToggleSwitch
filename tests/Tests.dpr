@@ -14,7 +14,9 @@ uses
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
-  DUnitX.TestFramework;
+  DUnitX.TestFramework,
+  ToggleSwitch in '..\source\ToggleSwitch.pas',
+  ToggleSwitch.Tests in 'ToggleSwitch.Tests.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}
