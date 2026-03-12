@@ -58,13 +58,14 @@ begin
     if not results.AllPassed then
       System.ExitCode := EXIT_ERRORS;
 
-    {$IFNDEF CI}
-    System.Write('Done.. press <Enter> key to quit.');
-    System.Readln;
-    {$ENDIF}
   except
     on E: Exception do
       System.Writeln(E.ClassName, ': ', E.Message);
   end;
+
+  {$IFNDEF CI}
+  System.Write('Done.. press <Enter> key to quit.');
+  System.Readln;
+  {$ENDIF}
 {$ENDIF}
 end.
