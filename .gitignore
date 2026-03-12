@@ -1,0 +1,35 @@
+  # Delphi compiler output
+  *.exe
+  *.dll
+  *.bpl
+  *.bpi
+  *.dcp
+  *.dcu
+  *.drc
+  *.map
+  *.dres
+  *.rsm
+  *.tds
+  *.lib
+
+  # IDE metadata
+  *.dproj.local
+  *.identcache
+  *.projdata
+  *.tvsconfig
+  *.dsk
+  *.stat
+  *.local
+  *.~*
+
+  # Build folders
+  Win32/
+  Win64/
+
+  # IDE recovery/history
+  __recovery/
+  __history/
+
+  # Backups
+  *.bak
+  *.BAK

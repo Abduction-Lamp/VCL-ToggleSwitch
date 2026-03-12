@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2026.03.12 16:21:34.489,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\packages\ToggleSwitch-ProjectGroup.groupproj=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Projects\ProjectGroup1.groupproj</Transaction>
+    <Transaction>2026.03.12 16:22:56.641,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\packages\ToggleSwitc.groupproj=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\packages\ToggleSwitch-ProjectGroup.groupproj</Transaction>
+    <Transaction>2026.03.12 16:23:50.052,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\ToggleSwitch-PG.groupproj=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\packages\ToggleSwitc.groupproj</Transaction>
+  </Transactions>
+  <Default.Personality>
+    <Projects ActiveProject="C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\packages\ToggleSwitch.dproj"/>
+  </Default.Personality>
+</BorlandProject>
