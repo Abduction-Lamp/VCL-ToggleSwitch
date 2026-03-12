@@ -379,6 +379,7 @@ var
   State: TInteractionState;
   OffFill, OnFill, FillColor: TColor;
   StrokeColor, ThumbColor: TColor;
+  OffThumb, OnThumb: TColor;
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
 begin
@@ -395,14 +396,42 @@ begin
 
   State := GetInteractionState;
 
-  // Interpolate colors based on FAnimProgress (0=Off, 1=On)
-  OffFill := OffTrackFill[State];
-  if OffFill = clNone then
-    OffFill := BgColor;
-  OnFill := OnTrackFill[State];
+  // Track fill — Off
+  if FTrackColorOff <> clNone then
+    OffFill := FTrackColorOff
+  else
+  begin
+    OffFill := OffTrackFill[State];
+    if OffFill = clNone then
+      OffFill := BgColor;
+  end;
+
+  // Track fill — On
+  if FTrackColorOn <> clNone then
+    OnFill := FTrackColorOn
+  else
+    OnFill := OnTrackFill[State];
+
   FillColor := LerpColor(OffFill, OnFill, FAnimProgress);
-  StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
-  ThumbColor := LerpColor(OffThumbFill[State], OnThumbFill[State], FAnimProgress);
+
+  // Track stroke (frame)
+  if FTrackFrameColor <> clNone then
+    StrokeColor := FTrackFrameColor
+  else
+    StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
+
+  // Thumb
+  if FThumbColorOff <> clNone then
+    OffThumb := FThumbColorOff
+  else
+    OffThumb := OffThumbFill[State];
+
+  if FThumbColorOn <> clNone then
+    OnThumb := FThumbColorOn
+  else
+    OnThumb := OnThumbFill[State];
+
+  ThumbColor := LerpColor(OffThumb, OnThumb, FAnimProgress);
 
   // Thumb geometry — position interpolated
   ThumbD := ThumbDiameters[State];
