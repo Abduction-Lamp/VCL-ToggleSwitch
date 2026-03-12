@@ -21,14 +21,18 @@ type
     FAnimationDuration: Integer;
     FHovered: Boolean;
     FPressed: Boolean;
+    FAnimTimer: TTimer;
+    FAnimProgress: Single;
+    FAnimStartProgress: Single;
+    FAnimTarget: Single;
+    FAnimStartTime: Int64;
+    FAnimFrequency: Int64;
     FOnChange: TNotifyEvent;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
+    procedure StartAnimation;
+    procedure HandleAnimTimer(Sender: TObject);
     function GetInteractionState: TInteractionState;
-    function GetTrackFillColor: TColor;
-    function GetTrackStrokeColor: TColor;
-    function GetThumbFillColor: TColor;
-    function GetThumbDiameter: Integer;
     procedure Toggle;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
@@ -42,6 +46,7 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   published
     property Checked: Boolean read FChecked write SetChecked default False;
     property Animated: Boolean read FAnimated write FAnimated default True;
@@ -57,6 +62,9 @@ type
 procedure Register;
 
 implementation
+
+uses
+  Vcl.ExtCtrls;
 
 const
   TrackWidth  = 40;
@@ -81,6 +89,34 @@ const
   OnTrackStroke: array[TInteractionState] of TColor =  ($D47800, $BE6C00, $9E5A00, $CECECE);
   // On State — Thumb Fill (always white)
   OnThumbFill: array[TInteractionState] of TColor =   ($FFFFFF, $FFFFFF, $FFFFFF, $FFFFFF);
+
+function EaseOutCubic(T: Single): Single;
+var
+  U: Single;
+begin
+  U := 1.0 - T;
+  Result := 1.0 - U * U * U;
+end;
+
+function ClampByte(V: Integer): Byte; inline;
+begin
+  if V < 0 then Result := 0
+  else if V > 255 then Result := 255
+  else Result := V;
+end;
+
+function LerpColor(C1, C2: TColor; T: Single): TColor;
+var
+  R1, G1, B1, R2, G2, B2: Byte;
+begin
+  C1 := ColorToRGB(C1);
+  C2 := ColorToRGB(C2);
+  R1 := C1 and $FF;         G1 := (C1 shr 8) and $FF;  B1 := (C1 shr 16) and $FF;
+  R2 := C2 and $FF;         G2 := (C2 shr 8) and $FF;  B2 := (C2 shr 16) and $FF;
+  Result := ClampByte(R1 + Round((R2 - R1) * T))
+         or (ClampByte(G1 + Round((G2 - G1) * T)) shl 8)
+         or (ClampByte(B1 + Round((B2 - B1) * T)) shl 16);
+end;
 
 function TColorToARGB(C: TColor): ARGB;
 var
@@ -115,8 +151,21 @@ begin
   FChecked := False;
   FAnimated := True;
   FAnimationDuration := 150;
+  FAnimProgress := 0.0;
+  FAnimTarget := 0.0;
+  QueryPerformanceFrequency(FAnimFrequency);
+  FAnimTimer := TTimer.Create(Self);
+  FAnimTimer.Interval := 16;
+  FAnimTimer.Enabled := False;
+  FAnimTimer.OnTimer := HandleAnimTimer;
   TabStop := True;
   DoubleBuffered := True;
+end;
+
+destructor TToggleSwitch.Destroy;
+begin
+  FAnimTimer.Free;
+  inherited;
 end;
 
 procedure TToggleSwitch.SetChecked(Value: Boolean);
@@ -124,9 +173,43 @@ begin
   if FChecked = Value then
     Exit;
   FChecked := Value;
-  Invalidate;
+  if FAnimated and HandleAllocated then
+    StartAnimation
+  else
+  begin
+    FAnimProgress := Ord(FChecked);
+    FAnimTarget := FAnimProgress;
+  end;
   if Assigned(FOnChange) then
     FOnChange(Self);
+  Invalidate;
+end;
+
+procedure TToggleSwitch.StartAnimation;
+begin
+  FAnimStartProgress := FAnimProgress;
+  FAnimTarget := Ord(FChecked);
+  QueryPerformanceCounter(FAnimStartTime);
+  FAnimTimer.Enabled := True;
+end;
+
+procedure TToggleSwitch.HandleAnimTimer(Sender: TObject);
+var
+  Counter: Int64;
+  Elapsed: Single;
+  T: Single;
+begin
+  QueryPerformanceCounter(Counter);
+  Elapsed := (Counter - FAnimStartTime) / FAnimFrequency * 1000;
+  T := Elapsed / FAnimationDuration;
+  if T >= 1.0 then
+  begin
+    T := 1.0;
+    FAnimTimer.Enabled := False;
+  end;
+  T := EaseOutCubic(T);
+  FAnimProgress := FAnimStartProgress + (FAnimTarget - FAnimStartProgress) * T;
+  Invalidate;
 end;
 
 procedure TToggleSwitch.SetAnimationDuration(Value: Integer);
@@ -222,44 +305,6 @@ begin
     Result := isNormal;
 end;
 
-function TToggleSwitch.GetTrackFillColor: TColor;
-var
-  State: TInteractionState;
-begin
-  State := GetInteractionState;
-  if FChecked then
-    Result := OnTrackFill[State]
-  else
-    Result := OffTrackFill[State];
-end;
-
-function TToggleSwitch.GetTrackStrokeColor: TColor;
-var
-  State: TInteractionState;
-begin
-  State := GetInteractionState;
-  if FChecked then
-    Result := OnTrackStroke[State]
-  else
-    Result := OffTrackStroke[State];
-end;
-
-function TToggleSwitch.GetThumbFillColor: TColor;
-var
-  State: TInteractionState;
-begin
-  State := GetInteractionState;
-  if FChecked then
-    Result := OnThumbFill[State]
-  else
-    Result := OffThumbFill[State];
-end;
-
-function TToggleSwitch.GetThumbDiameter: Integer;
-begin
-  Result := ThumbDiameters[GetInteractionState];
-end;
-
 procedure TToggleSwitch.Paint;
 var
   G: TGPGraphics;
@@ -268,10 +313,11 @@ var
   Pen: TGPPen;
   BgColor: TColor;
   TrackX, TrackY: Single;
-  FillColor, StrokeColor, ThumbColor: TColor;
+  State: TInteractionState;
+  OffFill, OnFill, FillColor: TColor;
+  StrokeColor, ThumbColor: TColor;
   ThumbCX, ThumbCY: Single;
-  ThumbD: Integer;
-  ThumbR: Single;
+  ThumbD: Single;
 begin
   // Background
   BgColor := Self.Color;
@@ -284,19 +330,22 @@ begin
   TrackX := (Width - TrackWidth) / 2;
   TrackY := (Height - TrackHeight) / 2;
 
-  // Colors
-  FillColor := GetTrackFillColor;
-  StrokeColor := GetTrackStrokeColor;
-  ThumbColor := GetThumbFillColor;
+  State := GetInteractionState;
 
-  // Thumb geometry
-  ThumbD := GetThumbDiameter;
-  ThumbR := ThumbD / 2;
+  // Interpolate colors based on FAnimProgress (0=Off, 1=On)
+  OffFill := OffTrackFill[State];
+  if OffFill = clNone then
+    OffFill := BgColor;
+  OnFill := OnTrackFill[State];
+  FillColor := LerpColor(OffFill, OnFill, FAnimProgress);
+  StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
+  ThumbColor := LerpColor(OffThumbFill[State], OnThumbFill[State], FAnimProgress);
+
+  // Thumb geometry — position interpolated
+  ThumbD := ThumbDiameters[State];
   ThumbCY := TrackY + TrackHeight / 2;
-  if FChecked then
-    ThumbCX := TrackX + ThumbCenterOnX
-  else
-    ThumbCX := TrackX + ThumbCenterOffX;
+  ThumbCX := TrackX + ThumbCenterOffX
+    + (ThumbCenterOnX - ThumbCenterOffX) * FAnimProgress;
 
   G := TGPGraphics.Create(Canvas.Handle);
   try
@@ -308,26 +357,20 @@ begin
       AddPillPath(Path, TrackX, TrackY, TrackWidth, TrackHeight);
 
       // Track fill
-      if FillColor <> clNone then
-      begin
-        Brush := TGPSolidBrush.Create(TColorToARGB(FillColor));
-        try
-          G.FillPath(Brush, Path);
-        finally
-          Brush.Free;
-        end;
+      Brush := TGPSolidBrush.Create(TColorToARGB(FillColor));
+      try
+        G.FillPath(Brush, Path);
+      finally
+        Brush.Free;
       end;
 
-      // Track stroke (Off state only — On state is filled entirely)
-      if not FChecked then
-      begin
-        Pen := TGPPen.Create(TColorToARGB(StrokeColor), 1.0);
-        try
-          Pen.SetAlignment(PenAlignmentInset);
-          G.DrawPath(Pen, Path);
-        finally
-          Pen.Free;
-        end;
+      // Track stroke
+      Pen := TGPPen.Create(TColorToARGB(StrokeColor), 1.0);
+      try
+        Pen.SetAlignment(PenAlignmentInset);
+        G.DrawPath(Pen, Path);
+      finally
+        Pen.Free;
       end;
     finally
       Path.Free;
@@ -337,7 +380,7 @@ begin
     Brush := TGPSolidBrush.Create(TColorToARGB(ThumbColor));
     try
       G.FillEllipse(Brush,
-        ThumbCX - ThumbR, ThumbCY - ThumbR, ThumbD, ThumbD);
+        ThumbCX - ThumbD / 2, ThumbCY - ThumbD / 2, ThumbD, ThumbD);
     finally
       Brush.Free;
     end;
