@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject>
-  <Transactions>
-    <Transaction>2026.03.12 16:10:59.214,=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2026.03.12 16:14:16.190,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\demo\Demo.MainForm.pas=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2026.03.12 16:14:16.190,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\demo\Demo.MainForm.dfm=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
-    <Transaction>2026.03.12 16:19:00.235,C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Packages\ToggleSwitch\demo\Demo.dproj=C:\Users\abduction_lamp\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
-  </Transactions>
-</BorlandProject>
