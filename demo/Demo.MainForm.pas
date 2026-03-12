@@ -52,8 +52,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 
 begin
   Caption := 'TFluentToggleSwitch Demo';
-  ClientWidth := 320;
-  ClientHeight := 360;
+  ClientWidth := 500;
+  ClientHeight := 400;
 
   FToggleDefault := CreateToggle(Self, 20);
   CreateLabel(Self, 20, 150, 'Default (Off, Animated)');
