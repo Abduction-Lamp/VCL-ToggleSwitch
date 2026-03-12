@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.Math,
   Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Graphics,
@@ -13,6 +14,8 @@ uses
   Winapi.GDIPOBJ;
 
 type
+  TTextPosition = (tpLeft, tpRight);
+
   TInteractionState = (isNormal, isHover, isPressed, isDisabled);
 
   TFluentToggleSwitch = class(TCustomControl)
@@ -29,18 +32,43 @@ type
     FAnimStartTime: Int64;
     FAnimFrequency: Int64;
     FOnChange: TNotifyEvent;
+    FTrackFrameColor: TColor;
+    FTrackColorOff: TColor;
+    FTrackColorOn: TColor;
+    FThumbColorOff: TColor;
+    FThumbColorOn: TColor;
+    FTextOn: string;
+    FTextOff: string;
+    FShowText: Boolean;
+    FTextPosition: TTextPosition;
+    FTextSpacing: Integer;
+    FTrackOffsetX: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
     procedure HandleAnimTimer(Sender: TObject);
     function GetInteractionState: TInteractionState;
     procedure Toggle;
+    procedure SetTrackFrameColor(Value: TColor);
+    procedure SetTrackColorOff(Value: TColor);
+    procedure SetTrackColorOn(Value: TColor);
+    procedure SetThumbColorOff(Value: TColor);
+    procedure SetThumbColorOn(Value: TColor);
+    procedure SetTextOn(const Value: string);
+    procedure SetTextOff(const Value: string);
+    procedure SetShowText(Value: Boolean);
+    procedure SetTextPosition(Value: TTextPosition);
+    procedure SetTextSpacing(Value: Integer);
+    procedure AdjustBounds;
+    function GetTrackRect: TRect;
+    procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
     procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
   protected
     procedure Paint; override;
+    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -58,6 +86,17 @@ type
     property Color;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnClick;
+    property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clNone;
+    property TrackColorOff: TColor read FTrackColorOff write SetTrackColorOff default clNone;
+    property TrackColorOn: TColor read FTrackColorOn write SetTrackColorOn default clNone;
+    property ThumbColorOff: TColor read FThumbColorOff write SetThumbColorOff default clNone;
+    property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clNone;
+    property Font;
+    property ShowText: Boolean read FShowText write SetShowText default False;
+    property TextOn: string read FTextOn write SetTextOn;
+    property TextOff: string read FTextOff write SetTextOff;
+    property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 8;
   end;
 
 procedure Register;
@@ -65,6 +104,8 @@ procedure Register;
 implementation
 
 const
+  TrackAreaWidth  = 44;
+  TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
   TrackRadius = 10;
@@ -144,8 +185,8 @@ constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
-  Width := 44;
-  Height := 24;
+  Width := TrackAreaWidth;
+  Height := TrackAreaHeight;
   FChecked := False;
   FAnimated := True;
   FAnimationDuration := 150;
@@ -158,6 +199,158 @@ begin
   FAnimTimer.OnTimer := HandleAnimTimer;
   TabStop := True;
   DoubleBuffered := True;
+  FTrackFrameColor := clNone;
+  FTrackColorOff := clNone;
+  FTrackColorOn := clNone;
+  FThumbColorOff := clNone;
+  FThumbColorOn := clNone;
+  FTextOn := 'On';
+  FTextOff := 'Off';
+  FShowText := False;
+  FTextPosition := tpRight;
+  FTextSpacing := 8;
+  FTrackOffsetX := 0;
+end;
+
+procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
+begin
+  if FTrackFrameColor <> Value then
+  begin
+    FTrackFrameColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTrackColorOff(Value: TColor);
+begin
+  if FTrackColorOff <> Value then
+  begin
+    FTrackColorOff := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTrackColorOn(Value: TColor);
+begin
+  if FTrackColorOn <> Value then
+  begin
+    FTrackColorOn := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetThumbColorOff(Value: TColor);
+begin
+  if FThumbColorOff <> Value then
+  begin
+    FThumbColorOff := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetThumbColorOn(Value: TColor);
+begin
+  if FThumbColorOn <> Value then
+  begin
+    FThumbColorOn := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextOn(const Value: string);
+begin
+  if FTextOn <> Value then
+  begin
+    FTextOn := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextOff(const Value: string);
+begin
+  if FTextOff <> Value then
+  begin
+    FTextOff := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetShowText(Value: Boolean);
+begin
+  if FShowText <> Value then
+  begin
+    FShowText := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextPosition(Value: TTextPosition);
+begin
+  if FTextPosition <> Value then
+  begin
+    FTextPosition := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetTextSpacing(Value: Integer);
+begin
+  if Value < 0 then
+    Value := 0;
+  if FTextSpacing <> Value then
+  begin
+    FTextSpacing := Value;
+    AdjustBounds;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.AdjustBounds;
+var
+  TextW, TextH: Integer;
+  NewWidth, NewHeight: Integer;
+begin
+  if not FShowText then
+  begin
+    FTrackOffsetX := 0;
+    NewWidth := TrackAreaWidth;
+    NewHeight := TrackAreaHeight;
+  end
+  else
+  begin
+    Canvas.Font.Assign(Font);
+    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
+    TextH := Canvas.TextHeight('Wg');
+    NewWidth := TrackAreaWidth + FTextSpacing + TextW;
+    NewHeight := Max(TrackAreaHeight, TextH);
+    if FTextPosition = tpLeft then
+      FTrackOffsetX := TextW + FTextSpacing
+    else
+      FTrackOffsetX := 0;
+  end;
+  SetBounds(Left, Top, NewWidth, NewHeight);
+end;
+
+function TFluentToggleSwitch.GetTrackRect: TRect;
+begin
+  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + TrackAreaWidth, Height);
+end;
+
+procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
+begin
+  inherited;
+  AdjustBounds;
+  Invalidate;
+end;
+
+procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  inherited;
+  AdjustBounds;
 end;
 
 destructor TFluentToggleSwitch.Destroy;
@@ -225,7 +418,7 @@ end;
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if Button = mbLeft then
+  if (Button = mbLeft) and PtInRect(GetTrackRect, Point(X, Y)) then
   begin
     FPressed := True;
     Invalidate;
@@ -237,7 +430,7 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(ClientRect, Point(X, Y)) then
+    if PtInRect(GetTrackRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
@@ -314,8 +507,12 @@ var
   State: TInteractionState;
   OffFill, OnFill, FillColor: TColor;
   StrokeColor, ThumbColor: TColor;
+  OffThumb, OnThumb: TColor;
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
+  TextX, TextY: Integer;
+  TextW, TextH: Integer;
+  LabelText: string;
 begin
   // Background
   BgColor := Self.Color;
@@ -324,20 +521,63 @@ begin
   Canvas.Brush.Color := BgColor;
   Canvas.FillRect(ClientRect);
 
-  // Track position — centered in component
-  TrackX := (Width - TrackWidth) / 2;
+  // Text layout
+  if FShowText then
+  begin
+    Canvas.Font.Assign(Font);
+    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
+    TextH := Canvas.TextHeight('Wg');
+
+    if FTextPosition = tpLeft then
+      TextX := 0
+    else
+      TextX := TrackAreaWidth + FTextSpacing;
+
+    TextY := (Height - TextH) div 2;
+  end;
+
+  // Track position
+  TrackX := FTrackOffsetX + (TrackAreaWidth - TrackWidth) / 2;
   TrackY := (Height - TrackHeight) / 2;
 
   State := GetInteractionState;
 
-  // Interpolate colors based on FAnimProgress (0=Off, 1=On)
-  OffFill := OffTrackFill[State];
-  if OffFill = clNone then
-    OffFill := BgColor;
-  OnFill := OnTrackFill[State];
+  // Track fill — Off
+  if FTrackColorOff <> clNone then
+    OffFill := FTrackColorOff
+  else
+  begin
+    OffFill := OffTrackFill[State];
+    if OffFill = clNone then
+      OffFill := BgColor;
+  end;
+
+  // Track fill — On
+  if FTrackColorOn <> clNone then
+    OnFill := FTrackColorOn
+  else
+    OnFill := OnTrackFill[State];
+
   FillColor := LerpColor(OffFill, OnFill, FAnimProgress);
-  StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
-  ThumbColor := LerpColor(OffThumbFill[State], OnThumbFill[State], FAnimProgress);
+
+  // Track stroke (frame)
+  if FTrackFrameColor <> clNone then
+    StrokeColor := FTrackFrameColor
+  else
+    StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
+
+  // Thumb
+  if FThumbColorOff <> clNone then
+    OffThumb := FThumbColorOff
+  else
+    OffThumb := OffThumbFill[State];
+
+  if FThumbColorOn <> clNone then
+    OnThumb := FThumbColorOn
+  else
+    OnThumb := OnThumbFill[State];
+
+  ThumbColor := LerpColor(OffThumb, OnThumb, FAnimProgress);
 
   // Thumb geometry — position interpolated
   ThumbD := ThumbDiameters[State];
@@ -389,6 +629,21 @@ begin
   // Focus rectangle
   if Focused then
     Canvas.DrawFocusRect(ClientRect);
+
+  // Text label
+  if FShowText then
+  begin
+    if FChecked then
+      LabelText := FTextOn
+    else
+      LabelText := FTextOff;
+
+    Canvas.Font.Assign(Font);
+    Canvas.Brush.Style := bsClear;
+    if not Enabled then
+      Canvas.Font.Color := clGrayText;
+    Canvas.TextOut(TextX, TextY, LabelText);
+  end;
 end;
 
 procedure Register;

@@ -16,6 +16,9 @@ type
     FToggleDisabledOff: TFluentToggleSwitch;
     FToggleDisabledOn: TFluentToggleSwitch;
     FToggleNoAnim: TFluentToggleSwitch;
+    FToggleCustomColors: TFluentToggleSwitch;
+    FToggleWithText: TFluentToggleSwitch;
+    FToggleTextLeft: TFluentToggleSwitch;
     FStatusLabel: TLabel;
     procedure OnToggleChange(Sender: TObject);
   end;
@@ -49,8 +52,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 
 begin
   Caption := 'TFluentToggleSwitch Demo';
-  ClientWidth := 320;
-  ClientHeight := 260;
+  ClientWidth := 500;
+  ClientHeight := 400;
 
   FToggleDefault := CreateToggle(Self, 20);
   CreateLabel(Self, 20, 150, 'Default (Off, Animated)');
@@ -72,10 +75,26 @@ begin
   FToggleNoAnim.Animated := False;
   CreateLabel(Self, 180, 150, 'No Animation');
 
+  FToggleCustomColors := CreateToggle(Self, 220);
+  FToggleCustomColors.TrackColorOn := clGreen;
+  FToggleCustomColors.ThumbColorOn := clWhite;
+  FToggleCustomColors.TrackFrameColor := clGray;
+  CreateLabel(Self, 220, 150, 'Custom Colors');
+
+  FToggleWithText := CreateToggle(Self, 260);
+  FToggleWithText.ShowText := True;
+  FToggleWithText.TextPosition := tpRight;
+  CreateLabel(Self, 260, 150, 'With Text (Right)');
+
+  FToggleTextLeft := CreateToggle(Self, 300);
+  FToggleTextLeft.ShowText := True;
+  FToggleTextLeft.TextPosition := tpLeft;
+  CreateLabel(Self, 300, 150, 'With Text (Left)');
+
   FStatusLabel := TLabel.Create(Self);
   FStatusLabel.Parent := Self;
   FStatusLabel.Left := 20;
-  FStatusLabel.Top := 225;
+  FStatusLabel.Top := 335;
   FStatusLabel.Caption := 'Click a toggle to see state change';
 end;
 

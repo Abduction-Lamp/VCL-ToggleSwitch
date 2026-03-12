@@ -5,7 +5,9 @@ program Tests;
 {$ENDIF}
 {$STRONGLINKTYPES ON}
 uses
+  {$IFDEF FASTMM}
   FastMM4,
+  {$ENDIF}
   DUnitX.MemoryLeakMonitor.FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
@@ -14,7 +16,9 @@ uses
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
-  DUnitX.TestFramework;
+  DUnitX.TestFramework,
+  ToggleSwitch in '..\source\ToggleSwitch.pas',
+  ToggleSwitch.Tests in 'ToggleSwitch.Tests.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}
@@ -54,17 +58,14 @@ begin
     if not results.AllPassed then
       System.ExitCode := EXIT_ERRORS;
 
-    {$IFNDEF CI}
-    //We don't want this happening when running under CI.
-    if TDUnitX.Options.ExitBehavior = TDUnitXExitBehavior.Pause then
-    begin
-      System.Write('Done.. press <Enter> key to quit.');
-      System.Readln;
-    end;
-    {$ENDIF}
   except
     on E: Exception do
       System.Writeln(E.ClassName, ': ', E.Message);
   end;
+
+  {$IFNDEF CI}
+  System.Write('Done.. press <Enter> key to quit.');
+  System.Readln;
+  {$ENDIF}
 {$ENDIF}
 end.
