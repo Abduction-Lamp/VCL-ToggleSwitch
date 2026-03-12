@@ -68,6 +68,7 @@ type
     procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
   protected
     procedure Paint; override;
+    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -344,6 +345,12 @@ begin
   inherited;
   AdjustBounds;
   Invalidate;
+end;
+
+procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  inherited;
+  AdjustBounds;
 end;
 
 destructor TFluentToggleSwitch.Destroy;
