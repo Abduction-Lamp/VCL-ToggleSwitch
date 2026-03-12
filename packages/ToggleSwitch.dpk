@@ -28,6 +28,11 @@ package ToggleSwitch;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  vcl,
+  designide;
+
+contains
+  ToggleSwitch in '..\source\ToggleSwitch.pas';
 
 end.
