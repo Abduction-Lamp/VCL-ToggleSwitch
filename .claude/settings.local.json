@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg --files)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git log:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)",
+      "Bash(git rm:*)",
+      "Bash(gh release:*)",
+      "Bash(gh issue:*)",
+      "Bash(rg --files /Users/abduction_lamp/VCL-ToggleSwitch/tests/)",
+      "Bash(rg --files /Users/abduction_lamp/VCL-ToggleSwitch/)",
+      "Bash(git commit:*)",
+      "Bash(git rebase:*)",
+      "Bash(gh pr:*)"
+    ]
+  }
+}

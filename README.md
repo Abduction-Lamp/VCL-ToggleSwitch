@@ -18,6 +18,8 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - Smooth On/Off transition animation (EaseOutCubic, 150 ms) with position and color interpolation
 - 8 visual states: Normal / Hover / Pressed / Disabled × On / Off
 - WinUI 3 Light Theme color scheme (AccentColor `#0078D4`)
+- Customizable colors — override track fill, track border, and thumb colors for On/Off states
+- Optional text label — configurable text, position (left/right), and spacing with auto-resize
 - Mouse support (click, hover, pressed) and keyboard support (Space, Enter, Tab)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
@@ -40,12 +42,13 @@ VCL-ToggleSwitch/
 ├── demo/
 │   ├── Demo.dpr                      — demo application entry point
 │   ├── Demo.dproj                    — demo project file
-│   ├── Demo.MainForm.pas             — demo form (5 toggle variants)
+│   ├── Demo.MainForm.pas             — demo form (8 toggle variants)
 │   ├── Demo.MainForm.dfm             — demo form layout
 │   └── Demo.res                      — demo resources
 ├── tests/
 │   ├── Tests.dpr                     — test runner (DUnitX + FastMM4)
-│   └── Tests.dproj                   — test project file
+│   ├── Tests.dproj                   — test project file
+│   └── ToggleSwitch.Tests.pas        — DUnitX unit tests
 ├── ToggleSwitch-PG.groupproj         — project group (package + demo + tests)
 └── README.md
 ```
@@ -83,7 +86,7 @@ After this, any new project can simply `uses ToggleSwitch;` — no additional Se
 2. Right-click → **Set as Active Project**
 3. **Run** (F9)
 
-The demo includes 5 toggle variants: default, initially on, disabled off, disabled on, and no animation.
+The demo includes 8 toggle variants: default, initially on, disabled off, disabled on, no animation, custom colors, text label (right), and text label (left).
 
 ## Usage
 
@@ -121,6 +124,30 @@ begin
 end;
 ```
 
+### Custom colors
+
+```pascal
+Toggle.TrackColorOn := clGreen;
+Toggle.TrackColorOff := clSilver;
+Toggle.TrackFrameColor := clGray;
+Toggle.ThumbColorOn := clWhite;
+Toggle.ThumbColorOff := clBlack;
+```
+
+Set any color property to `clNone` (default) to use the built-in WinUI 3 color scheme.
+
+### Text label
+
+```pascal
+Toggle.ShowText := True;
+Toggle.TextOn := 'Enabled';
+Toggle.TextOff := 'Disabled';
+Toggle.TextPosition := tpRight;  // tpLeft or tpRight
+Toggle.TextSpacing := 8;         // pixels between toggle and text
+```
+
+The component auto-adjusts its width to fit the longer of the two texts. Text is rendered using the component's `Font` property. Only the toggle track area responds to mouse clicks — the text label is passive.
+
 ## Properties
 
 | Property | Type | Default | Description |
@@ -131,6 +158,19 @@ end;
 | `Enabled` | `Boolean` | `True` | Whether the component is interactive |
 | `TabStop` | `Boolean` | `True` | Include in Tab key navigation |
 | `Color` | `TColor` | `clNone` | Background color (clNone = parent color) |
+| **Color customization** | | | |
+| `TrackFrameColor` | `TColor` | `clNone` | Track border/stroke color |
+| `TrackColorOff` | `TColor` | `clNone` | Track fill color when Off |
+| `TrackColorOn` | `TColor` | `clNone` | Track fill color when On |
+| `ThumbColorOff` | `TColor` | `clNone` | Thumb color when Off |
+| `ThumbColorOn` | `TColor` | `clNone` | Thumb color when On |
+| **Text label** | | | |
+| `ShowText` | `Boolean` | `False` | Show or hide the text label |
+| `TextOn` | `string` | `'On'` | Label text when Checked = True |
+| `TextOff` | `string` | `'Off'` | Label text when Checked = False |
+| `TextPosition` | `TTextPosition` | `tpRight` | Label position: `tpLeft` or `tpRight` |
+| `TextSpacing` | `Integer` | `8` | Distance in pixels between toggle and text |
+| `Font` | `TFont` | *(inherited)* | Font used for text label rendering |
 
 ## Events
 
