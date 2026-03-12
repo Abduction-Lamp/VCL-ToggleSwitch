@@ -46,10 +46,6 @@ VCL-ToggleSwitch/
 ├── tests/
 │   ├── Tests.dpr                     — test runner (DUnitX + FastMM4)
 │   └── Tests.dproj                   — test project file
-├── docs/
-│   ├── SPEC-ToggleSwitch.md          — technical specification (WinUI 3 reference)
-│   └── plans/
-│       └── 2026-03-12-toggle-switch.md — implementation plan
 ├── ToggleSwitch-PG.groupproj         — project group (package + demo + tests)
 └── README.md
 ```
