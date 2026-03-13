@@ -5,6 +5,8 @@ interface
 uses
   System.Classes,
   System.Math,
+  System.Types,
+  System.UITypes,
   Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Graphics,
@@ -549,9 +551,12 @@ var
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
   TextX, TextY: Integer;
-  TextW, TextH: Integer;
+  TextH: Integer;
   LabelText: string;
 begin
+  TextX := 0;
+  TextY := 0;
+
   // Background
   BgColor := Self.Color;
   if BgColor = clNone then
@@ -568,7 +573,6 @@ begin
   if FShowText then
   begin
     Canvas.Font.Assign(Font);
-    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
     TextH := Canvas.TextHeight('Wg');
 
     if FTextPosition = tpLeft then
