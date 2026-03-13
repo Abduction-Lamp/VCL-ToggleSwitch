@@ -31,71 +31,89 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
+const
+  LeftMargin = 20;
+  LabelLeft = 165;
+  RowGap = 16;
+var
+  Y: Integer;
 
-  function CreateLabel(AParent: TWinControl; ATop, ALeft: Integer; const ACaption: string): TLabel;
+  function CreateLabel(ATop: Integer; const ACaption: string): TLabel;
   begin
     Result := TLabel.Create(Self);
-    Result.Parent := AParent;
-    Result.Left := ALeft + 15;
+    Result.Parent := Self;
+    Result.Left := LabelLeft;
     Result.Top := ATop + 3;
     Result.Caption := ACaption;
   end;
 
-  function CreateToggle(AParent: TWinControl; ATop: Integer): TFluentToggleSwitch;
+  function CreateToggle(ATop: Integer): TFluentToggleSwitch;
   begin
     Result := TFluentToggleSwitch.Create(Self);
-    Result.Parent := AParent;
-    Result.Left := 20;
+    Result.Parent := Self;
+    Result.Left := LeftMargin;
     Result.Top := ATop;
     Result.OnChange := OnToggleChange;
   end;
 
 begin
   Caption := 'TFluentToggleSwitch Demo';
-  ClientWidth := 500;
-  ClientHeight := 400;
 
-  FToggleDefault := CreateToggle(Self, 20);
-  CreateLabel(Self, 20, 150, 'Default (Off, Animated)');
+  Y := 20;
 
-  FToggleOn := CreateToggle(Self, 60);
+  FToggleDefault := CreateToggle(Y);
+  CreateLabel(Y, 'Default (Off, Animated)');
+  Y := Y + FToggleDefault.Height + RowGap;
+
+  FToggleOn := CreateToggle(Y);
   FToggleOn.Checked := True;
-  CreateLabel(Self, 60, 150, 'Initially On');
+  CreateLabel(Y, 'Initially On');
+  Y := Y + FToggleOn.Height + RowGap;
 
-  FToggleDisabledOff := CreateToggle(Self, 100);
+  FToggleDisabledOff := CreateToggle(Y);
   FToggleDisabledOff.Enabled := False;
-  CreateLabel(Self, 100, 150, 'Disabled (Off)');
+  CreateLabel(Y, 'Disabled (Off)');
+  Y := Y + FToggleDisabledOff.Height + RowGap;
 
-  FToggleDisabledOn := CreateToggle(Self, 140);
+  FToggleDisabledOn := CreateToggle(Y);
   FToggleDisabledOn.Checked := True;
   FToggleDisabledOn.Enabled := False;
-  CreateLabel(Self, 140, 150, 'Disabled (On)');
+  CreateLabel(Y, 'Disabled (On)');
+  Y := Y + FToggleDisabledOn.Height + RowGap;
 
-  FToggleNoAnim := CreateToggle(Self, 180);
+  FToggleNoAnim := CreateToggle(Y);
   FToggleNoAnim.Animated := False;
-  CreateLabel(Self, 180, 150, 'No Animation');
+  CreateLabel(Y, 'No Animation');
+  Y := Y + FToggleNoAnim.Height + RowGap;
 
-  FToggleCustomColors := CreateToggle(Self, 220);
+  FToggleCustomColors := CreateToggle(Y);
   FToggleCustomColors.TrackColorOn := clGreen;
   FToggleCustomColors.ThumbColorOn := clWhite;
   FToggleCustomColors.TrackFrameColor := clGray;
-  CreateLabel(Self, 220, 150, 'Custom Colors');
+  CreateLabel(Y, 'Custom Colors');
+  Y := Y + FToggleCustomColors.Height + RowGap;
 
-  FToggleWithText := CreateToggle(Self, 260);
+  FToggleWithText := CreateToggle(Y);
   FToggleWithText.ShowText := True;
   FToggleWithText.TextPosition := tpRight;
-  CreateLabel(Self, 260, 150, 'With Text (Right)');
+  CreateLabel(Y, 'With Text (Right)');
+  Y := Y + FToggleWithText.Height + RowGap;
 
-  FToggleTextLeft := CreateToggle(Self, 300);
+  FToggleTextLeft := CreateToggle(Y);
   FToggleTextLeft.ShowText := True;
   FToggleTextLeft.TextPosition := tpLeft;
-  CreateLabel(Self, 300, 150, 'With Text (Left)');
+  CreateLabel(Y, 'With Text (Left)');
+  Y := Y + FToggleTextLeft.Height + RowGap;
 
   FStatusLabel := TLabel.Create(Self);
   FStatusLabel.Parent := Self;
-  FStatusLabel.Left := 20;
-  FStatusLabel.Top := 335;
+  FStatusLabel.Left := LeftMargin;
+  FStatusLabel.Top := Y;
   FStatusLabel.Caption := 'Click a toggle to see state change';
+  Y := Y + FStatusLabel.Height + RowGap;
+
+  ClientWidth := 500;
+  ClientHeight := Y;
 end;
 
 procedure TForm1.OnToggleChange(Sender: TObject);
