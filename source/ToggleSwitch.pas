@@ -453,7 +453,7 @@ end;
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if Button = mbLeft then
+  if (Button = mbLeft) and PtInRect(GetTrackRect, Point(X, Y)) then
   begin
     FPressed := True;
     Invalidate;
@@ -465,7 +465,7 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(ClientRect, Point(X, Y)) then
+    if PtInRect(GetTrackRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
