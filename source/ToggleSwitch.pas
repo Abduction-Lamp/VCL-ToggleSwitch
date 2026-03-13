@@ -80,7 +80,6 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-    procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -326,6 +325,10 @@ end;
 
 procedure TFluentToggleSwitch.AdjustBounds;
 var
+  DC: HDC;
+  SaveFont: HFONT;
+  TM: TTextMetric;
+  SizeOn, SizeOff: TSize;
   TextW, TextH: Integer;
   NewWidth, NewHeight: Integer;
 begin
@@ -337,11 +340,18 @@ begin
   end
   else
   begin
-    if not HandleAllocated then
-      Exit;
-    Canvas.Font.Assign(Font);
-    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
-    TextH := Canvas.TextHeight('Wg');
+    DC := GetDC(0);
+    try
+      SaveFont := SelectObject(DC, Font.Handle);
+      GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
+      GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
+      GetTextMetrics(DC, TM);
+      SelectObject(DC, SaveFont);
+    finally
+      ReleaseDC(0, DC);
+    end;
+    TextW := Max(SizeOn.cx, SizeOff.cx);
+    TextH := TM.tmHeight;
     NewWidth := FScaledTrackAreaWidth + FTextSpacing + TextW;
     NewHeight := Max(FScaledTrackAreaHeight, TextH);
     if FTextPosition = tpLeft then
@@ -375,12 +385,6 @@ begin
   FScaledThumbCenterOnX := MulDiv(FScaledThumbCenterOnX, M, D);
   for var S := Low(TInteractionState) to High(TInteractionState) do
     FScaledThumbDiameters[S] := MulDiv(FScaledThumbDiameters[S], M, D);
-  AdjustBounds;
-end;
-
-procedure TFluentToggleSwitch.CreateWnd;
-begin
-  inherited;
   AdjustBounds;
 end;
 
