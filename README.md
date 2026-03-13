@@ -25,6 +25,8 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
 
+![Demo](docs/images/demo-screenshot.png)
+
 ## Requirements
 
 - **Delphi 12.1** (RAD Studio 12.1 Athens) or compatible version
