@@ -5,6 +5,8 @@ interface
 uses
   System.Classes,
   System.Math,
+  System.Types,
+  System.UITypes,
   Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Graphics,
@@ -43,6 +45,13 @@ type
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
     FTrackOffsetX: Integer;
+    FScaledTrackAreaWidth: Integer;
+    FScaledTrackAreaHeight: Integer;
+    FScaledTrackWidth: Integer;
+    FScaledTrackHeight: Integer;
+    FScaledThumbCenterOffX: Integer;
+    FScaledThumbCenterOnX: Integer;
+    FScaledThumbDiameters: array[TInteractionState] of Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
@@ -108,7 +117,6 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
-  TrackRadius = 10;
   ThumbCenterOffX = 10;  // center of thumb from left edge of track (Off)
   ThumbCenterOnX  = 30;  // center of thumb from left edge of track (On)
 
@@ -185,8 +193,16 @@ constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
-  Width := TrackAreaWidth;
-  Height := TrackAreaHeight;
+  FScaledTrackAreaWidth := TrackAreaWidth;
+  FScaledTrackAreaHeight := TrackAreaHeight;
+  FScaledTrackWidth := TrackWidth;
+  FScaledTrackHeight := TrackHeight;
+  FScaledThumbCenterOffX := ThumbCenterOffX;
+  FScaledThumbCenterOnX := ThumbCenterOnX;
+  for var S := Low(TInteractionState) to High(TInteractionState) do
+    FScaledThumbDiameters[S] := ThumbDiameters[S];
+  Width := FScaledTrackAreaWidth;
+  Height := FScaledTrackAreaHeight;
   FChecked := False;
   FAnimated := True;
   FAnimationDuration := 150;
@@ -311,22 +327,35 @@ end;
 
 procedure TFluentToggleSwitch.AdjustBounds;
 var
+  DC: HDC;
+  SaveFont: HFONT;
+  TM: TTextMetric;
+  SizeOn, SizeOff: TSize;
   TextW, TextH: Integer;
   NewWidth, NewHeight: Integer;
 begin
   if not FShowText then
   begin
     FTrackOffsetX := 0;
-    NewWidth := TrackAreaWidth;
-    NewHeight := TrackAreaHeight;
+    NewWidth := FScaledTrackAreaWidth;
+    NewHeight := FScaledTrackAreaHeight;
   end
   else
   begin
-    Canvas.Font.Assign(Font);
-    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
-    TextH := Canvas.TextHeight('Wg');
-    NewWidth := TrackAreaWidth + FTextSpacing + TextW;
-    NewHeight := Max(TrackAreaHeight, TextH);
+    DC := GetDC(0);
+    try
+      SaveFont := SelectObject(DC, Font.Handle);
+      GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
+      GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
+      GetTextMetrics(DC, TM);
+      SelectObject(DC, SaveFont);
+    finally
+      ReleaseDC(0, DC);
+    end;
+    TextW := Max(SizeOn.cx, SizeOff.cx);
+    TextH := TM.tmHeight;
+    NewWidth := FScaledTrackAreaWidth + FTextSpacing + TextW;
+    NewHeight := Max(FScaledTrackAreaHeight, TextH);
     if FTextPosition = tpLeft then
       FTrackOffsetX := TextW + FTextSpacing
     else
@@ -337,7 +366,7 @@ end;
 
 function TFluentToggleSwitch.GetTrackRect: TRect;
 begin
-  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + TrackAreaWidth, Height);
+  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + FScaledTrackAreaWidth, Height);
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -350,6 +379,14 @@ end;
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
 begin
   inherited;
+  FScaledTrackAreaWidth := MulDiv(FScaledTrackAreaWidth, M, D);
+  FScaledTrackAreaHeight := MulDiv(FScaledTrackAreaHeight, M, D);
+  FScaledTrackWidth := MulDiv(FScaledTrackWidth, M, D);
+  FScaledTrackHeight := MulDiv(FScaledTrackHeight, M, D);
+  FScaledThumbCenterOffX := MulDiv(FScaledThumbCenterOffX, M, D);
+  FScaledThumbCenterOnX := MulDiv(FScaledThumbCenterOnX, M, D);
+  for var S := Low(TInteractionState) to High(TInteractionState) do
+    FScaledThumbDiameters[S] := MulDiv(FScaledThumbDiameters[S], M, D);
   AdjustBounds;
 end;
 
@@ -481,7 +518,10 @@ procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_SPACE) or (Key = VK_RETURN) then
+  begin
     Toggle;
+    inherited Click;
+  end;
 end;
 
 function TFluentToggleSwitch.GetInteractionState: TInteractionState;
@@ -511,13 +551,21 @@ var
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
   TextX, TextY: Integer;
-  TextW, TextH: Integer;
+  TextH: Integer;
   LabelText: string;
 begin
+  TextX := 0;
+  TextY := 0;
+
   // Background
   BgColor := Self.Color;
   if BgColor = clNone then
-    BgColor := clBtnFace;
+  begin
+    if Parent <> nil then
+      BgColor := Parent.Brush.Color
+    else
+      BgColor := clBtnFace;
+  end;
   Canvas.Brush.Color := BgColor;
   Canvas.FillRect(ClientRect);
 
@@ -525,20 +573,19 @@ begin
   if FShowText then
   begin
     Canvas.Font.Assign(Font);
-    TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
     TextH := Canvas.TextHeight('Wg');
 
     if FTextPosition = tpLeft then
       TextX := 0
     else
-      TextX := TrackAreaWidth + FTextSpacing;
+      TextX := FScaledTrackAreaWidth + FTextSpacing;
 
     TextY := (Height - TextH) div 2;
   end;
 
   // Track position
-  TrackX := FTrackOffsetX + (TrackAreaWidth - TrackWidth) / 2;
-  TrackY := (Height - TrackHeight) / 2;
+  TrackX := FTrackOffsetX + (FScaledTrackAreaWidth - FScaledTrackWidth) / 2;
+  TrackY := (Height - FScaledTrackHeight) / 2;
 
   State := GetInteractionState;
 
@@ -580,10 +627,10 @@ begin
   ThumbColor := LerpColor(OffThumb, OnThumb, FAnimProgress);
 
   // Thumb geometry — position interpolated
-  ThumbD := ThumbDiameters[State];
-  ThumbCY := TrackY + TrackHeight / 2;
-  ThumbCX := TrackX + ThumbCenterOffX
-    + (ThumbCenterOnX - ThumbCenterOffX) * FAnimProgress;
+  ThumbD := FScaledThumbDiameters[State];
+  ThumbCY := TrackY + FScaledTrackHeight / 2;
+  ThumbCX := TrackX + FScaledThumbCenterOffX
+    + (FScaledThumbCenterOnX - FScaledThumbCenterOffX) * FAnimProgress;
 
   G := TGPGraphics.Create(Canvas.Handle);
   try
@@ -592,7 +639,7 @@ begin
     // Draw track
     Path := TGPGraphicsPath.Create;
     try
-      AddPillPath(Path, TrackX, TrackY, TrackWidth, TrackHeight);
+      AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
 
       // Track fill
       Brush := TGPSolidBrush.Create(TColorToARGB(FillColor));

@@ -16,6 +16,8 @@ type
   private
     FForm: TForm;
     FToggle: TFluentToggleSwitch;
+    FOnChangeFired: Boolean;
+    procedure HandleOnChange(Sender: TObject);
   public
     [Setup]
     procedure Setup;
@@ -76,6 +78,20 @@ type
 
     [Test]
     procedure TextPosition_Left_WithShowText_ShouldStoreValue;
+
+    // --- Toggle and events ---
+
+    [Test]
+    procedure SetTextOn_BeforeParent_ShouldNotRaise;
+
+    [Test]
+    procedure Toggle_ShouldChangeChecked;
+
+    [Test]
+    procedure SetChecked_ShouldFireOnChange;
+
+    [Test]
+    procedure DefaultChecked_ShouldBeFalse;
   end;
 
 implementation
@@ -210,6 +226,53 @@ begin
   FToggle.TextPosition := tpLeft;
   Assert.AreEqual(Ord(tpLeft), Ord(FToggle.TextPosition));
   Assert.IsTrue(FToggle.ShowText, 'ShowText should remain True');
+end;
+
+// --- Toggle and event tests ---
+
+procedure TToggleSwitchTest.HandleOnChange(Sender: TObject);
+begin
+  FOnChangeFired := True;
+end;
+
+procedure TToggleSwitchTest.SetTextOn_BeforeParent_ShouldNotRaise;
+var
+  Tmp: TFluentToggleSwitch;
+begin
+  Tmp := TFluentToggleSwitch.Create(nil);
+  try
+    // Should not raise "Control has no parent window"
+    Tmp.ShowText := True;
+    Tmp.TextOn := 'Test';
+    Tmp.TextOff := 'Off test';
+    Tmp.TextPosition := tpLeft;
+    Tmp.TextSpacing := 12;
+    Assert.IsTrue(True, 'No exception raised');
+  finally
+    Tmp.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Toggle_ShouldChangeChecked;
+begin
+  Assert.IsFalse(FToggle.Checked);
+  FToggle.Checked := True;
+  Assert.IsTrue(FToggle.Checked);
+  FToggle.Checked := False;
+  Assert.IsFalse(FToggle.Checked);
+end;
+
+procedure TToggleSwitchTest.SetChecked_ShouldFireOnChange;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Checked := True;
+  Assert.IsTrue(FOnChangeFired, 'OnChange should fire when Checked changes');
+end;
+
+procedure TToggleSwitchTest.DefaultChecked_ShouldBeFalse;
+begin
+  Assert.IsFalse(FToggle.Checked);
 end;
 
 initialization
