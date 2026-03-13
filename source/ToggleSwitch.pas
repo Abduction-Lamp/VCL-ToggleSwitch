@@ -73,6 +73,7 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -322,6 +323,8 @@ begin
   end
   else
   begin
+    if not HandleAllocated then
+      Exit;
     Canvas.Font.Assign(Font);
     TextW := Max(Canvas.TextWidth(FTextOn), Canvas.TextWidth(FTextOff));
     TextH := Canvas.TextHeight('Wg');
@@ -348,6 +351,12 @@ begin
 end;
 
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  inherited;
+  AdjustBounds;
+end;
+
+procedure TFluentToggleSwitch.CreateWnd;
 begin
   inherited;
   AdjustBounds;
