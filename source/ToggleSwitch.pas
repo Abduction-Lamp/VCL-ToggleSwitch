@@ -47,7 +47,6 @@ type
     FScaledTrackAreaHeight: Integer;
     FScaledTrackWidth: Integer;
     FScaledTrackHeight: Integer;
-    FScaledTrackRadius: Integer;
     FScaledThumbCenterOffX: Integer;
     FScaledThumbCenterOnX: Integer;
     FScaledThumbDiameters: array[TInteractionState] of Integer;
@@ -117,7 +116,6 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
-  TrackRadius = 10;
   ThumbCenterOffX = 10;  // center of thumb from left edge of track (Off)
   ThumbCenterOnX  = 30;  // center of thumb from left edge of track (On)
 
@@ -198,7 +196,6 @@ begin
   FScaledTrackAreaHeight := TrackAreaHeight;
   FScaledTrackWidth := TrackWidth;
   FScaledTrackHeight := TrackHeight;
-  FScaledTrackRadius := TrackRadius;
   FScaledThumbCenterOffX := ThumbCenterOffX;
   FScaledThumbCenterOnX := ThumbCenterOnX;
   for var S := Low(TInteractionState) to High(TInteractionState) do
@@ -374,7 +371,6 @@ begin
   FScaledTrackAreaHeight := MulDiv(FScaledTrackAreaHeight, M, D);
   FScaledTrackWidth := MulDiv(FScaledTrackWidth, M, D);
   FScaledTrackHeight := MulDiv(FScaledTrackHeight, M, D);
-  FScaledTrackRadius := MulDiv(FScaledTrackRadius, M, D);
   FScaledThumbCenterOffX := MulDiv(FScaledThumbCenterOffX, M, D);
   FScaledThumbCenterOnX := MulDiv(FScaledThumbCenterOnX, M, D);
   for var S := Low(TInteractionState) to High(TInteractionState) do
