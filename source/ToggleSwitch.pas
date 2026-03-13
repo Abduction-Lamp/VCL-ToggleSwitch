@@ -516,7 +516,10 @@ procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_SPACE) or (Key = VK_RETURN) then
+  begin
     Toggle;
+    inherited Click;
+  end;
 end;
 
 function TFluentToggleSwitch.GetInteractionState: TInteractionState;
