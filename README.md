@@ -21,13 +21,14 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
 - Mouse support (click, hover, pressed) and keyboard support (Space, Enter, Tab)
+- DPI-aware — correct rendering on high-DPI displays (per-monitor V2)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
 
 ## Requirements
 
 - **Delphi 12.1** (RAD Studio 12.1 Athens) or compatible version
-- Platform: **Win32**
+- Platform: **Windows** (Win32, Win64)
 
 ## Project Structure
 
