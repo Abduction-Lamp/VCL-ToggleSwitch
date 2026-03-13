@@ -555,7 +555,12 @@ begin
   // Background
   BgColor := Self.Color;
   if BgColor = clNone then
-    BgColor := clBtnFace;
+  begin
+    if Parent <> nil then
+      BgColor := Parent.Brush.Color
+    else
+      BgColor := clBtnFace;
+  end;
   Canvas.Brush.Color := BgColor;
   Canvas.FillRect(ClientRect);
 
