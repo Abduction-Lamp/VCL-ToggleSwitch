@@ -35,6 +35,7 @@ __history/
 *.BAK
 
 # Claude Code
+.claude/
 CLAUDE.md
 docs/*
 !docs/images/
