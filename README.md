@@ -25,7 +25,7 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
 
-![Demo](docs/images/demo-screenshot.png)
+![Demo](docs/images/demo-screenshot-001.png)
 
 ## Requirements
 
