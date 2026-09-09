@@ -40,6 +40,9 @@ type
     FDragDelta: Single;
     FDragged: Boolean;
     FAnimTimer: TTimer;
+    FPath: TGPGraphicsPath;
+    FBrush: TGPSolidBrush;
+    FPen: TGPPen;
     FAnimProgress: Single;
     FAnimStartProgress: Single;
     FAnimTarget: Single;
@@ -63,6 +66,7 @@ type
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
     FTrackOffsetX: Integer;
+    FTextHeight: Integer;
     FScalePPI: Integer;
     FScaledTrackAreaWidth: Integer;
     FScaledTrackAreaHeight: Integer;
@@ -74,6 +78,7 @@ type
     FScaledThumbCenterOnX: array[TInteractionState] of Single;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
+    procedure StartTimer;
     procedure StartAnimation;
     procedure SettleThumb;
     procedure HandleAnimTimer(Sender: TObject);
@@ -297,6 +302,10 @@ begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
   ParentColor := True;
+  // Drawing reuses one path, brush and pen instead of building them per frame
+  FPath := TGPGraphicsPath.Create;
+  FBrush := TGPSolidBrush.Create(0);
+  FPen := TGPPen.Create(0, 1);
   FScalePPI := USER_DEFAULT_SCREEN_DPI;
   Rescale;
   Width := FScaledTrackAreaWidth;
@@ -310,10 +319,6 @@ begin
   FStateT := 1.0;
   FStateDuration := StateDuration;
   QueryPerformanceFrequency(FAnimFrequency);
-  FAnimTimer := TTimer.Create(Self);
-  FAnimTimer.Interval := 16;
-  FAnimTimer.Enabled := False;
-  FAnimTimer.OnTimer := HandleAnimTimer;
   TabStop := True;
   DoubleBuffered := True;
   FTrackFrameColor := clNone;
@@ -432,7 +437,7 @@ var
   SaveFont: HFONT;
   TM: TTextMetric;
   SizeOn, SizeOff: TSize;
-  TextW, TextH: Integer;
+  TextW: Integer;
   NewWidth, NewHeight: Integer;
 begin
   if not FShowText then
@@ -454,9 +459,9 @@ begin
       ReleaseDC(0, DC);
     end;
     TextW := Max(SizeOn.cx, SizeOff.cx);
-    TextH := TM.tmHeight;
+    FTextHeight := TM.tmHeight;
     NewWidth := FScaledTrackAreaWidth + FTextSpacing + TextW;
-    NewHeight := Max(FScaledTrackAreaHeight, TextH);
+    NewHeight := Max(FScaledTrackAreaHeight, FTextHeight);
     if FTextPosition = tpLeft then
       FTrackOffsetX := TextW + FTextSpacing
     else
@@ -478,6 +483,8 @@ begin
     FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
     FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
   end;
+  // Stroke is centered on the outline and scaled with DPI, as in WinUI
+  FPen.SetWidth(FScalePPI / USER_DEFAULT_SCREEN_DPI);
   // A snapshot taken at the old scale would be wrong now
   FStateT := 1.0;
 end;
@@ -502,6 +509,9 @@ end;
 destructor TFluentToggleSwitch.Destroy;
 begin
   FAnimTimer.Free;
+  FPen.Free;
+  FBrush.Free;
+  FPath.Free;
   inherited;
 end;
 
@@ -514,19 +524,31 @@ begin
   Invalidate;
 end;
 
+// The timer, and the hidden window it owns, exist only once something animates
+procedure TFluentToggleSwitch.StartTimer;
+begin
+  if FAnimTimer = nil then
+  begin
+    FAnimTimer := TTimer.Create(Self);
+    FAnimTimer.Interval := 16;
+    FAnimTimer.OnTimer := HandleAnimTimer;
+  end;
+  FAnimTimer.Enabled := True;
+end;
+
 procedure TFluentToggleSwitch.StartAnimation;
 begin
   FAnimStartProgress := FAnimProgress;
   FAnimTarget := Ord(FChecked);
   FSliding := True;
   QueryPerformanceCounter(FAnimStartTime);
-  FAnimTimer.Enabled := True;
+  StartTimer;
 end;
 
 // Moves the thumb from wherever it is to the rest position of the current state
 procedure TFluentToggleSwitch.SettleThumb;
 begin
-  if FAnimated and HandleAllocated then
+  if FAnimated and HandleAllocated and Showing then
     StartAnimation
   else
   begin
@@ -766,11 +788,11 @@ begin
     FStateDuration := DisabledStateDuration
   else
     FStateDuration := StateDuration;
-  if FAnimated and HandleAllocated then
+  if FAnimated and HandleAllocated and Showing then
   begin
     FStateT := 0;
     QueryPerformanceCounter(FStateStartTime);
-    FAnimTimer.Enabled := True;
+    StartTimer;
   end
   else
     FStateT := 1.0;
@@ -780,73 +802,58 @@ end;
 procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
-  Path: TGPGraphicsPath;
   TrackX, TrackY: Single;
   VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
   OffThumb, OnThumb: ARGB;
   OffOpacity: Single;
-  StrokeWidth: Single;
   ThumbCX, ThumbCY: Single;
   ThumbW, ThumbH: Single;
   TextX, TextY: Integer;
-  TextH: Integer;
   LabelText: string;
 
   procedure FillShape(Color: ARGB);
-  var
-    Brush: TGPSolidBrush;
   begin
-    Brush := TGPSolidBrush.Create(Color);
-    try
-      G.FillPath(Brush, Path);
-    finally
-      Brush.Free;
-    end;
+    if GetAlpha(Color) = 0 then
+      Exit;
+    FBrush.SetColor(Color);
+    G.FillPath(FBrush, FPath);
   end;
 
   procedure StrokeShape(Color: ARGB);
-  var
-    Pen: TGPPen;
   begin
-    Pen := TGPPen.Create(Color, StrokeWidth);
-    try
-      G.DrawPath(Pen, Path);
-    finally
-      Pen.Free;
-    end;
+    if GetAlpha(Color) = 0 then
+      Exit;
+    FPen.SetColor(Color);
+    G.DrawPath(FPen, FPath);
   end;
 
 begin
   TextX := 0;
   TextY := 0;
 
-  // Background
+  // Background. csOpaque suppresses WM_ERASEBKGND, so this is the only erase
+  Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := Color;
   Canvas.FillRect(ClientRect);
 
-  // Text layout
+  // Text layout; the height was measured when the font or the text last changed
   if FShowText then
   begin
-    Canvas.Font.Assign(Font);
-    TextH := Canvas.TextHeight('Wg');
-
     if FTextPosition = tpLeft then
       TextX := 0
     else
       TextX := FScaledTrackAreaWidth + FTextSpacing;
 
-    TextY := (Height - TextH) div 2;
+    TextY := (Height - FTextHeight) div 2;
   end;
 
-  // Track position
-  TrackX := FTrackOffsetX + (FScaledTrackAreaWidth - FScaledTrackWidth) / 2;
-  TrackY := (Height - FScaledTrackHeight) / 2;
+  // Track position, kept on whole pixels so the outline stays crisp
+  TrackX := FTrackOffsetX + Round((FScaledTrackAreaWidth - FScaledTrackWidth) / 2);
+  TrackY := Round((Height - FScaledTrackHeight) / 2);
 
   VS := CurrentVisual;
   OffOpacity := 1 - FAnimProgress;
-  // Stroke is centered on the outline and scaled with DPI, as in WinUI
-  StrokeWidth := FScalePPI / USER_DEFAULT_SCREEN_DPI;
 
   // Track colors; user colors override the theme
   if FTrackColorOff <> clNone then
@@ -887,32 +894,28 @@ begin
   try
     G.SetSmoothingMode(SmoothingModeAntiAlias);
 
-    Path := TGPGraphicsPath.Create;
-    try
-      // Off and On tracks cross-fade, as in WinUI
-      AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
-      if OffOpacity > 0 then
-      begin
-        FillShape(ScaleAlpha(OffFill, OffOpacity));
-        StrokeShape(ScaleAlpha(OffStroke, OffOpacity));
-      end;
-      if FAnimProgress > 0 then
-      begin
-        FillShape(ScaleAlpha(OnFill, FAnimProgress));
-        if FTrackFrameColor <> clNone then
-          StrokeShape(ScaleAlpha(TColorToARGB(FTrackFrameColor), FAnimProgress));
-      end;
-
-      // Thumb cross-fades the same way
-      Path.Reset;
-      AddPillPath(Path, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
-      if OffOpacity > 0 then
-        FillShape(ScaleAlpha(OffThumb, OffOpacity));
-      if FAnimProgress > 0 then
-        FillShape(ScaleAlpha(OnThumb, FAnimProgress));
-    finally
-      Path.Free;
+    // Off and On tracks cross-fade, as in WinUI
+    FPath.Reset;
+    AddPillPath(FPath, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
+    if OffOpacity > 0 then
+    begin
+      FillShape(ScaleAlpha(OffFill, OffOpacity));
+      StrokeShape(ScaleAlpha(OffStroke, OffOpacity));
     end;
+    if FAnimProgress > 0 then
+    begin
+      FillShape(ScaleAlpha(OnFill, FAnimProgress));
+      if FTrackFrameColor <> clNone then
+        StrokeShape(ScaleAlpha(OffStroke, FAnimProgress));
+    end;
+
+    // Thumb cross-fades the same way
+    FPath.Reset;
+    AddPillPath(FPath, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
+    if OffOpacity > 0 then
+      FillShape(ScaleAlpha(OffThumb, OffOpacity));
+    if FAnimProgress > 0 then
+      FillShape(ScaleAlpha(OnThumb, FAnimProgress));
   finally
     G.Free;
   end;

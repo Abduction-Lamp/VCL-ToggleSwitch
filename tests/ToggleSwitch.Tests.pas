@@ -112,6 +112,12 @@ type
 
     [Test]
     procedure AnimationDuration_ShouldClampToPositive;
+
+    [Test]
+    procedure Paint_ShouldNotChangeSize;
+
+    [Test]
+    procedure CreateAndDestroy_ShouldReleaseDrawingObjects;
   end;
 
 implementation
@@ -328,6 +334,41 @@ procedure TToggleSwitchTest.AnimationDuration_ShouldClampToPositive;
 begin
   FToggle.AnimationDuration := 0;
   Assert.AreEqual(1, FToggle.AnimationDuration, 'Duration never drops below 1 ms');
+end;
+
+procedure TToggleSwitchTest.Paint_ShouldNotChangeSize;
+var
+  Bmp: TBitmap;
+  W, H: Integer;
+begin
+  W := FToggle.Width;
+  H := FToggle.Height;
+  Bmp := TBitmap.Create;
+  try
+    Bmp.SetSize(W, H);
+    FToggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
+  finally
+    Bmp.Free;
+  end;
+  Assert.AreEqual(W, FToggle.Width, 'Painting leaves the width alone');
+  Assert.AreEqual(H, FToggle.Height, 'Painting leaves the height alone');
+end;
+
+procedure TToggleSwitchTest.CreateAndDestroy_ShouldReleaseDrawingObjects;
+var
+  I: Integer;
+  Tmp: TFluentToggleSwitch;
+begin
+  for I := 1 to 50 do
+  begin
+    Tmp := TFluentToggleSwitch.Create(nil);
+    try
+      Tmp.ShowText := True;
+    finally
+      Tmp.Free;
+    end;
+  end;
+  Assert.Pass('FastMM4 reports a leaked path, brush or pen at shutdown');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;
