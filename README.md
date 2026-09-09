@@ -15,10 +15,11 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 
 ## Features
 
-- Smooth On/Off transition animation (EaseOutCubic, 150 ms): the thumb slides while track and thumb colors cross-fade
+- Smooth On/Off transition animation with the timings of the WinUI template: the thumb waits 33 ms, then slides for 367 ms on a cubic Bezier curve while track and thumb colors cross-fade
+- Hover, press and disabled changes cross-fade over 83 ms rather than snapping
 - 8 visual states: Normal / Hover / Pressed / Disabled × On / Off
 - Thumb grows on hover and stretches into a pill when pressed, as in WinUI 3
-- WinUI 3 Light Theme color scheme (AccentColor `#0078D4`)
+- WinUI 3 Light Theme color scheme, using the accent color configured in Windows (falls back to `#0067C0`, the Windows 11 default)
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
 - Mouse support (click, hover, pressed, dragging the thumb)
@@ -163,7 +164,7 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 |:--------:|:----:|:-------:|-------------|
 | `Checked` | `Boolean` | `False` | Toggle state (On/Off) |
 | `Animated` | `Boolean` | `True` | Enable smooth transition animation |
-| `AnimationDuration` | `Integer` | `150` | Animation duration in milliseconds |
+| `AnimationDuration` | `Integer` | `367` | Thumb slide duration in milliseconds |
 | `Enabled` | `Boolean` | `True` | Whether the component is interactive |
 | `TabStop` | `Boolean` | `True` | Include in Tab key navigation |
 | `ParentColor` | `Boolean` | `True` | Follow the parent's background color |
