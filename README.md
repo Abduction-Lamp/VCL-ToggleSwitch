@@ -160,7 +160,7 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 ## Properties
 
 | Property | Type | Default | Description |
-|----------|------|---------|-------------|
+|:--------:|:----:|:-------:|-------------|
 | `Checked` | `Boolean` | `False` | Toggle state (On/Off) |
 | `Animated` | `Boolean` | `True` | Enable smooth transition animation |
 | `AnimationDuration` | `Integer` | `150` | Animation duration in milliseconds |
