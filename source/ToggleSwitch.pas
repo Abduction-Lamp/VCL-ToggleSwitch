@@ -74,12 +74,9 @@ type
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
-    procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
-    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
   protected
     procedure Paint; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
-    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -502,28 +499,6 @@ begin
   Invalidate;
 end;
 
-procedure TFluentToggleSwitch.WMSetFocus(var Msg: TWMSetFocus);
-begin
-  inherited;
-  Invalidate;
-end;
-
-procedure TFluentToggleSwitch.WMKillFocus(var Msg: TWMKillFocus);
-begin
-  inherited;
-  Invalidate;
-end;
-
-procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
-begin
-  inherited;
-  if (Key = VK_SPACE) or (Key = VK_RETURN) then
-  begin
-    Toggle;
-    inherited Click;
-  end;
-end;
-
 function TFluentToggleSwitch.GetInteractionState: TInteractionState;
 begin
   if not Enabled then
@@ -665,10 +640,6 @@ begin
   finally
     G.Free;
   end;
-
-  // Focus rectangle
-  if Focused then
-    Canvas.DrawFocusRect(ClientRect);
 
   // Text label
   if FShowText then

@@ -93,7 +93,7 @@ type
     procedure SetChecked_ShouldNotFireOnChange;
 
     [Test]
-    procedure SpaceKey_ShouldToggleAndFireOnChange;
+    procedure SpaceKey_ShouldNotToggle;
 
     [Test]
     procedure ParentColor_ShouldBeTrueByDefault;
@@ -279,13 +279,13 @@ begin
   Assert.IsFalse(FOnChangeFired, 'OnChange is for user actions only');
 end;
 
-procedure TToggleSwitchTest.SpaceKey_ShouldToggleAndFireOnChange;
+procedure TToggleSwitchTest.SpaceKey_ShouldNotToggle;
 begin
   FOnChangeFired := False;
   FToggle.OnChange := HandleOnChange;
   FToggle.Perform(WM_KEYDOWN, VK_SPACE, 0);
-  Assert.IsTrue(FToggle.Checked, 'Space toggles the switch');
-  Assert.IsTrue(FOnChangeFired, 'OnChange fires on a user toggle');
+  Assert.IsFalse(FToggle.Checked, 'Keyboard does not toggle the switch');
+  Assert.IsFalse(FOnChangeFired, 'OnChange does not fire on keyboard input');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

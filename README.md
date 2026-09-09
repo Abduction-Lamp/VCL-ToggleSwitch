@@ -20,7 +20,7 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - WinUI 3 Light Theme color scheme (AccentColor `#0078D4`)
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
-- Mouse support (click, hover, pressed) and keyboard support (Space, Enter, Tab)
+- Mouse support (click, hover, pressed)
 - DPI-aware — correct rendering on high-DPI displays (per-monitor V2)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
@@ -187,8 +187,6 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | Key | Action |
 |-----|--------|
 | `Tab` | Move focus to/from the component |
-| `Space` | Toggle state |
-| `Enter` | Toggle state |
 
 ## Adding to an Existing Project (without IDE installation)
 
