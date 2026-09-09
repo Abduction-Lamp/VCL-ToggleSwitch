@@ -112,6 +112,12 @@ type
 
     [Test]
     procedure AnimationDuration_ShouldClampToPositive;
+
+    [Test]
+    procedure Paint_ShouldNotChangeSize;
+
+    [Test]
+    procedure CreateAndDestroy_ShouldNotLeak;
   end;
 
 implementation
@@ -328,6 +334,51 @@ procedure TToggleSwitchTest.AnimationDuration_ShouldClampToPositive;
 begin
   FToggle.AnimationDuration := 0;
   Assert.AreEqual(1, FToggle.AnimationDuration, 'Duration never drops below 1 ms');
+end;
+
+procedure TToggleSwitchTest.Paint_ShouldNotChangeSize;
+var
+  Bmp: TBitmap;
+  W, H: Integer;
+begin
+  W := FToggle.Width;
+  H := FToggle.Height;
+  Bmp := TBitmap.Create;
+  try
+    Bmp.SetSize(W, H);
+    FToggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
+  finally
+    Bmp.Free;
+  end;
+  Assert.AreEqual(W, FToggle.Width, 'Painting leaves the width alone');
+  Assert.AreEqual(H, FToggle.Height, 'Painting leaves the height alone');
+end;
+
+procedure TToggleSwitchTest.CreateAndDestroy_ShouldNotLeak;
+var
+  I: Integer;
+  Tmp: TFluentToggleSwitch;
+  Bmp: TBitmap;
+begin
+  // Painting is what builds the GDI+ objects, so the loop has to render
+  Bmp := TBitmap.Create;
+  try
+    for I := 1 to 50 do
+    begin
+      Tmp := TFluentToggleSwitch.Create(nil);
+      try
+        Tmp.Parent := FForm;
+        Tmp.ShowText := True;
+        Bmp.SetSize(Tmp.Width, Tmp.Height);
+        Tmp.PaintTo(Bmp.Canvas.Handle, 0, 0);
+      finally
+        Tmp.Free;
+      end;
+    end;
+  finally
+    Bmp.Free;
+  end;
+  Assert.Pass('FastMM4 reports anything left behind at shutdown');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

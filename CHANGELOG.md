@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-09-10
+
+### Changed
+
+- A frame now builds one path, one brush and one pen and recolors them per shape, instead of allocating seven to eight GDI+ objects. At 60 frames per second that is roughly 250 fewer allocations per second per animating switch. The objects still do not outlive the paint, because the GDI+ wrapper unit shuts the library down in its finalization, which can run before the last control is destroyed.
+- The animation timer, and the hidden window it owns, are created on first use rather than for every instance. A form full of switches no longer pays for timers nothing has started.
+- Animations no longer run while the switch is not showing, for example on an inactive tab page. The state applies immediately instead.
+- Text height is measured when the font or the text changes rather than on every frame, and the font is assigned to the canvas once per paint instead of twice. Vertical centering now uses the same metric the auto-sizing uses.
+- The track is positioned on whole pixels so its outline stays crisp when the text makes the control an odd number of pixels tall.
+- Fully transparent fills and strokes are skipped instead of being rasterized.
+
 ## [1.4.0] - 2026-09-10
 
 ### Fixed
@@ -94,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First public release: GDI+ rendering, EaseOutCubic animation, 8 visual states, WinUI 3 Light colors, mouse and keyboard input, design-time package.
 
+[1.5.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.1.0...v1.2.0
