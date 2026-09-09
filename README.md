@@ -20,7 +20,7 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - WinUI 3 Light Theme color scheme (AccentColor `#0078D4`)
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
-- Mouse support (click, hover, pressed)
+- Mouse support (click, hover, pressed, dragging the thumb)
 - DPI-aware — correct rendering on high-DPI displays (per-monitor V2)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free

@@ -1,4 +1,4 @@
-unit ToggleSwitch.Tests;
+﻿unit ToggleSwitch.Tests;
 
 interface
 
@@ -94,6 +94,12 @@ type
 
     [Test]
     procedure SpaceKey_ShouldNotToggle;
+
+    [Test]
+    procedure DragPastMiddle_ShouldTurnOnAndFireOnChange;
+
+    [Test]
+    procedure DragShort_ShouldSnapBack;
 
     [Test]
     procedure ParentColor_ShouldBeTrueByDefault;
@@ -286,6 +292,25 @@ begin
   FToggle.Perform(WM_KEYDOWN, VK_SPACE, 0);
   Assert.IsFalse(FToggle.Checked, 'Keyboard does not toggle the switch');
   Assert.IsFalse(FOnChangeFired, 'OnChange does not fire on keyboard input');
+end;
+
+procedure TToggleSwitchTest.DragPastMiddle_ShouldTurnOnAndFireOnChange;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
+  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+  Assert.IsTrue(FToggle.Checked, 'Thumb released past the middle turns the switch on');
+  Assert.IsTrue(FOnChangeFired, 'OnChange fires on a user drag');
+end;
+
+procedure TToggleSwitchTest.DragShort_ShouldSnapBack;
+begin
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(15, 12));
+  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(15, 12));
+  Assert.IsFalse(FToggle.Checked, 'Thumb released before the middle snaps back');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

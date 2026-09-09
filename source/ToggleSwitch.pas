@@ -27,6 +27,9 @@ type
     FAnimationDuration: Integer;
     FHovered: Boolean;
     FPressed: Boolean;
+    FDragStartX: Integer;
+    FDragDelta: Single;
+    FDragged: Boolean;
     FAnimTimer: TTimer;
     FAnimProgress: Single;
     FAnimStartProgress: Single;
@@ -57,7 +60,10 @@ type
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
+    procedure SettleThumb;
     procedure HandleAnimTimer(Sender: TObject);
+    function DragTravel: Single;
+    procedure DragThumb(X: Integer);
     function GetInteractionState: TInteractionState;
     procedure Toggle;
     procedure SetTrackFrameColor(Value: TColor);
@@ -117,6 +123,7 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
+  DragThreshold = 4;  // pointer travel that turns a press into a drag
   // Thumb geometry per interaction state. When pressed the thumb becomes a
   // 17x14 pill hugging the track edge, so its center shifts inward.
   //                                                      Normal  Hover  Pressed  Disabled
@@ -385,13 +392,7 @@ begin
   if FChecked = Value then
     Exit;
   FChecked := Value;
-  if FAnimated and HandleAllocated then
-    StartAnimation
-  else
-  begin
-    FAnimProgress := Ord(FChecked);
-    FAnimTarget := FAnimProgress;
-  end;
+  SettleThumb;
   Invalidate;
 end;
 
@@ -401,6 +402,18 @@ begin
   FAnimTarget := Ord(FChecked);
   QueryPerformanceCounter(FAnimStartTime);
   FAnimTimer.Enabled := True;
+end;
+
+// Moves the thumb from wherever it is to the rest position of the current state
+procedure TFluentToggleSwitch.SettleThumb;
+begin
+  if FAnimated and HandleAllocated then
+    StartAnimation
+  else
+  begin
+    FAnimProgress := Ord(FChecked);
+    FAnimTarget := FAnimProgress;
+  end;
 end;
 
 procedure TFluentToggleSwitch.HandleAnimTimer(Sender: TObject);
@@ -444,6 +457,9 @@ begin
     if CanFocus then
       SetFocus;
     FPressed := True;
+    FDragStartX := X;
+    FDragDelta := 0;
+    FDragged := False;
     Invalidate;
   end;
 end;
@@ -453,7 +469,17 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(ClientRect, Point(X, Y)) then
+    if FDragged then
+    begin
+      // The thumb settles into the state on its side of the track
+      FAnimProgress := Ord(FChecked) + FDragDelta / DragTravel;
+      FDragDelta := 0;
+      if (FAnimProgress >= 0.5) <> FChecked then
+        Toggle
+      else
+        SettleThumb;
+    end
+    else if PtInRect(ClientRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
@@ -471,6 +497,42 @@ begin
     FHovered := IsOver;
     Invalidate;
   end;
+  if FPressed then
+    DragThumb(X);
+end;
+
+function TFluentToggleSwitch.DragTravel: Single;
+begin
+  Result := FScaledThumbCenterOnX[isPressed] - FScaledThumbCenterOffX[isPressed];
+end;
+
+procedure TFluentToggleSwitch.DragThumb(X: Integer);
+var
+  Delta: Single;
+begin
+  Delta := X - FDragStartX;
+  if Abs(Delta) >= MulDiv(DragThreshold, FScalePPI, USER_DEFAULT_SCREEN_DPI) then
+    FDragged := True;
+  // The thumb stays within the track
+  if FChecked then
+  begin
+    if Delta > 0 then
+      Delta := 0
+    else if Delta < -DragTravel then
+      Delta := -DragTravel;
+  end
+  else
+  begin
+    if Delta < 0 then
+      Delta := 0
+    else if Delta > DragTravel then
+      Delta := DragTravel;
+  end;
+  if Delta <> FDragDelta then
+  begin
+    FDragDelta := Delta;
+    Invalidate;
+  end;
 end;
 
 procedure TFluentToggleSwitch.CMMouseEnter(var Msg: TMessage);
@@ -484,7 +546,9 @@ procedure TFluentToggleSwitch.CMMouseLeave(var Msg: TMessage);
 begin
   inherited;
   FHovered := False;
-  FPressed := False;
+  // The mouse is captured while pressed, so a drag may leave the control
+  if not MouseCapture then
+    FPressed := False;
   Invalidate;
 end;
 
@@ -603,7 +667,8 @@ begin
   ThumbH := FScaledThumbHeights[State];
   ThumbCY := TrackY + FScaledTrackHeight / 2;
   ThumbCX := TrackX + FScaledThumbCenterOffX[State]
-    + (FScaledThumbCenterOnX[State] - FScaledThumbCenterOffX[State]) * FAnimProgress;
+    + (FScaledThumbCenterOnX[State] - FScaledThumbCenterOffX[State]) * FAnimProgress
+    + FDragDelta;
 
   G := TGPGraphics.Create(Canvas.Handle);
   try
