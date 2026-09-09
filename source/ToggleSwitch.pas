@@ -50,9 +50,10 @@ type
     FScaledTrackAreaHeight: Integer;
     FScaledTrackWidth: Integer;
     FScaledTrackHeight: Integer;
-    FScaledThumbCenterOffX: Single;
-    FScaledThumbCenterOnX: Single;
-    FScaledThumbDiameters: array[TInteractionState] of Integer;
+    FScaledThumbWidths: array[TInteractionState] of Integer;
+    FScaledThumbHeights: array[TInteractionState] of Integer;
+    FScaledThumbCenterOffX: array[TInteractionState] of Single;
+    FScaledThumbCenterOnX: array[TInteractionState] of Single;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
@@ -116,10 +117,14 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
-  ThumbCenterOffX = 9.5;  // center of thumb from left edge of track (Off)
-  ThumbCenterOnX  = 29.5; // center of thumb from left edge of track (On)
-
-  ThumbDiameters: array[TInteractionState] of Integer = (12, 14, 17, 12);
+  // Thumb geometry per interaction state. When pressed the thumb becomes a
+  // 17x14 pill hugging the track edge, so its center shifts inward.
+  //                                                      Normal  Hover  Pressed  Disabled
+  ThumbWidths:  array[TInteractionState] of Integer =   (12,     14,    17,      12);
+  ThumbHeights: array[TInteractionState] of Integer =   (12,     14,    14,      12);
+  // Thumb center from the left edge of the track
+  ThumbCenterOffX: array[TInteractionState] of Single = (9.5,    9.5,   11.5,    9.5);
+  ThumbCenterOnX:  array[TInteractionState] of Single = (29.5,   29.5,  28.5,    29.5);
 
   // Colors are ARGB ($AARRGGBB) from the WinUI 3 Light theme. Off-state colors
   // are translucent black blended over the parent background; the On track has
@@ -345,10 +350,13 @@ begin
   FScaledTrackAreaHeight := MulDiv(TrackAreaHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
   FScaledTrackWidth := MulDiv(TrackWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
   FScaledTrackHeight := MulDiv(TrackHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledThumbCenterOffX := ThumbCenterOffX * FScalePPI / USER_DEFAULT_SCREEN_DPI;
-  FScaledThumbCenterOnX := ThumbCenterOnX * FScalePPI / USER_DEFAULT_SCREEN_DPI;
   for var S := Low(TInteractionState) to High(TInteractionState) do
-    FScaledThumbDiameters[S] := MulDiv(ThumbDiameters[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  begin
+    FScaledThumbWidths[S] := MulDiv(ThumbWidths[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
+    FScaledThumbHeights[S] := MulDiv(ThumbHeights[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
+    FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
+    FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
+  end;
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -503,7 +511,7 @@ var
   OffOpacity: Single;
   StrokeWidth: Single;
   ThumbCX, ThumbCY: Single;
-  ThumbD: Single;
+  ThumbW, ThumbH: Single;
   TextX, TextY: Integer;
   TextH: Integer;
   LabelText: string;
@@ -529,18 +537,6 @@ var
       G.DrawPath(Pen, Path);
     finally
       Pen.Free;
-    end;
-  end;
-
-  procedure FillThumb(Color: ARGB);
-  var
-    Brush: TGPSolidBrush;
-  begin
-    Brush := TGPSolidBrush.Create(Color);
-    try
-      G.FillEllipse(Brush, ThumbCX - ThumbD / 2, ThumbCY - ThumbD / 2, ThumbD, ThumbD);
-    finally
-      Brush.Free;
     end;
   end;
 
@@ -603,18 +599,19 @@ begin
     OnThumb := OnThumbFill[State];
 
   // Thumb geometry; position interpolated
-  ThumbD := FScaledThumbDiameters[State];
+  ThumbW := FScaledThumbWidths[State];
+  ThumbH := FScaledThumbHeights[State];
   ThumbCY := TrackY + FScaledTrackHeight / 2;
-  ThumbCX := TrackX + FScaledThumbCenterOffX
-    + (FScaledThumbCenterOnX - FScaledThumbCenterOffX) * FAnimProgress;
+  ThumbCX := TrackX + FScaledThumbCenterOffX[State]
+    + (FScaledThumbCenterOnX[State] - FScaledThumbCenterOffX[State]) * FAnimProgress;
 
   G := TGPGraphics.Create(Canvas.Handle);
   try
     G.SetSmoothingMode(SmoothingModeAntiAlias);
 
-    // Off and On tracks cross-fade, as in WinUI
     Path := TGPGraphicsPath.Create;
     try
+      // Off and On tracks cross-fade, as in WinUI
       AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
       if OffOpacity > 0 then
       begin
@@ -627,15 +624,17 @@ begin
         if FTrackFrameColor <> clNone then
           StrokeShape(ScaleAlpha(TColorToARGB(FTrackFrameColor), FAnimProgress));
       end;
+
+      // Thumb cross-fades the same way
+      Path.Reset;
+      AddPillPath(Path, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
+      if OffOpacity > 0 then
+        FillShape(ScaleAlpha(OffThumb, OffOpacity));
+      if FAnimProgress > 0 then
+        FillShape(ScaleAlpha(OnThumb, FAnimProgress));
     finally
       Path.Free;
     end;
-
-    // Thumb cross-fades the same way
-    if OffOpacity > 0 then
-      FillThumb(ScaleAlpha(OffThumb, OffOpacity));
-    if FAnimProgress > 0 then
-      FillThumb(ScaleAlpha(OnThumb, FAnimProgress));
   finally
     G.Free;
   end;
