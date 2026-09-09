@@ -358,15 +358,25 @@ procedure TToggleSwitchTest.CreateAndDestroy_ShouldNotLeak;
 var
   I: Integer;
   Tmp: TFluentToggleSwitch;
+  Bmp: TBitmap;
 begin
-  for I := 1 to 50 do
-  begin
-    Tmp := TFluentToggleSwitch.Create(nil);
-    try
-      Tmp.ShowText := True;
-    finally
-      Tmp.Free;
+  // Painting is what builds the GDI+ objects, so the loop has to render
+  Bmp := TBitmap.Create;
+  try
+    for I := 1 to 50 do
+    begin
+      Tmp := TFluentToggleSwitch.Create(nil);
+      try
+        Tmp.Parent := FForm;
+        Tmp.ShowText := True;
+        Bmp.SetSize(Tmp.Width, Tmp.Height);
+        Tmp.PaintTo(Bmp.Canvas.Handle, 0, 0);
+      finally
+        Tmp.Free;
+      end;
     end;
+  finally
+    Bmp.Free;
   end;
   Assert.Pass('FastMM4 reports anything left behind at shutdown');
 end;
