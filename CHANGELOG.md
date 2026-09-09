@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - 2026-09-10
 
+### Fixed
+
+- A click that nudged the pointer by less than the drag threshold left the thumb permanently offset by those few pixels.
+- Disabling the component while it was pressed left it stuck in the pressed state, because a disabled window never receives the matching mouse release.
+- A DPI change measured the layout once at the old scale before correcting itself.
+
 ### Changed
 
 - Animation timings now follow the WinUI template. The thumb waits 33 ms, then slides for 367 ms along a cubic Bezier curve, replacing the previous 150 ms ease-out. `AnimationDuration` now defaults to 367.

@@ -491,9 +491,11 @@ end;
 
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
 begin
-  inherited;
+  // Rescale first: inherited changes the font, and the CM_FONTCHANGED handler
+  // it triggers measures the layout at the current scale
   FScalePPI := MulDiv(FScalePPI, M, D);
   Rescale;
+  inherited;
   AdjustBounds;
 end;
 
@@ -570,6 +572,7 @@ begin
     else
     begin
       Busy := True;
+      // ControlFastOutSlowInKeySpline
       FStateT := BezierEase(T, 0, 0, 0, 1);
     end;
   end;
@@ -623,8 +626,13 @@ begin
       else
         SettleThumb;
     end
-    else if PtInRect(ClientRect, Point(X, Y)) then
-      Toggle;
+    else
+    begin
+      // A click can nudge the thumb without reaching the drag threshold
+      FDragDelta := 0;
+      if PtInRect(ClientRect, Point(X, Y)) then
+        Toggle;
+    end;
     Invalidate;
   end;
   inherited;
@@ -699,6 +707,12 @@ end;
 procedure TFluentToggleSwitch.CMEnabledChanged(var Msg: TMessage);
 begin
   inherited;
+  if not Enabled then
+  begin
+    // A disabled window loses the capture, so no MouseUp will arrive
+    FPressed := False;
+    FHovered := False;
+  end;
   UpdateVisualState;
 end;
 
