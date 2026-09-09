@@ -121,20 +121,16 @@ const
 
   ThumbDiameters: array[TInteractionState] of Integer = (12, 14, 17, 12);
 
-  // Off State — Track Fill (clNone = transparent / no fill)
-  OffTrackFill: array[TInteractionState] of TColor = (clNone, clNone, $F9F9F9, clNone);
-  // Off State — Track Stroke                           Normal    Hover     Pressed   Disabled
-  OffTrackStroke: array[TInteractionState] of TColor = ($878787, $6B6B6B, $6B6B6B, $CECECE);
-  // Off State — Thumb Fill
-  OffThumbFill: array[TInteractionState] of TColor =  ($5C5C5C, $1A1A1A, $1A1A1A, $ADADAD);
-
-  // On State — Track Fill (AccentColor / AccentDark1 / AccentDark2)
-  //   RGB #0078D4 → TColor $D47800,  #006CBE → $BE6C00,  #005A9E → $9E5A00
-  OnTrackFill: array[TInteractionState] of TColor =   ($D47800, $BE6C00, $9E5A00, $CECECE);
-  // On State — Track Stroke (same as fill)
-  OnTrackStroke: array[TInteractionState] of TColor =  ($D47800, $BE6C00, $9E5A00, $CECECE);
-  // On State — Thumb Fill (always white)
-  OnThumbFill: array[TInteractionState] of TColor =   ($FFFFFF, $FFFFFF, $FFFFFF, $FFFFFF);
+  // Colors are ARGB ($AARRGGBB) from the WinUI 3 Light theme. Off-state colors
+  // are translucent black blended over the parent background; the On track has
+  // no stroke of its own.
+  //                                                    Normal     Hover      Pressed    Disabled
+  OffTrackFill:   array[TInteractionState] of ARGB = ($06000000, $0F000000, $18000000, $00000000);
+  OffTrackStroke: array[TInteractionState] of ARGB = ($72000000, $72000000, $72000000, $37000000);
+  OffThumbFill:   array[TInteractionState] of ARGB = ($9E000000, $9E000000, $9E000000, $5C000000);
+  // On state: AccentColor #0078D4 / AccentDark1 #006CBE / AccentDark2 #005A9E
+  OnTrackFill:    array[TInteractionState] of ARGB = ($FF0078D4, $FF006CBE, $FF005A9E, $37000000);
+  OnThumbFill:    array[TInteractionState] of ARGB = ($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
 
 function EaseOutCubic(T: Single): Single;
 var
@@ -144,24 +140,9 @@ begin
   Result := 1.0 - U * U * U;
 end;
 
-function ClampByte(V: Integer): Byte; inline;
+function ScaleAlpha(C: ARGB; Opacity: Single): ARGB;
 begin
-  if V < 0 then Result := 0
-  else if V > 255 then Result := 255
-  else Result := V;
-end;
-
-function LerpColor(C1, C2: TColor; T: Single): TColor;
-var
-  R1, G1, B1, R2, G2, B2: Byte;
-begin
-  C1 := ColorToRGB(C1);
-  C2 := ColorToRGB(C2);
-  R1 := C1 and $FF;         G1 := (C1 shr 8) and $FF;  B1 := (C1 shr 16) and $FF;
-  R2 := C2 and $FF;         G2 := (C2 shr 8) and $FF;  B2 := (C2 shr 16) and $FF;
-  Result := ClampByte(R1 + Round((R2 - R1) * T))
-         or (ClampByte(G1 + Round((G2 - G1) * T)) shl 8)
-         or (ClampByte(B1 + Round((B2 - B1) * T)) shl 16);
+  Result := MakeColor(Round(GetAlpha(C) * Opacity), GetRed(C), GetGreen(C), GetBlue(C));
 end;
 
 function TColorToARGB(C: TColor): ARGB;
@@ -515,26 +496,60 @@ procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
   Path: TGPGraphicsPath;
-  Brush: TGPSolidBrush;
-  Pen: TGPPen;
-  BgColor: TColor;
   TrackX, TrackY: Single;
   State: TInteractionState;
-  OffFill, OnFill, FillColor: TColor;
-  StrokeColor, ThumbColor: TColor;
-  OffThumb, OnThumb: TColor;
+  OffFill, OffStroke, OnFill: ARGB;
+  OffThumb, OnThumb: ARGB;
+  OffOpacity: Single;
+  StrokeWidth: Single;
   ThumbCX, ThumbCY: Single;
   ThumbD: Single;
   TextX, TextY: Integer;
   TextH: Integer;
   LabelText: string;
+
+  procedure FillShape(Color: ARGB);
+  var
+    Brush: TGPSolidBrush;
+  begin
+    Brush := TGPSolidBrush.Create(Color);
+    try
+      G.FillPath(Brush, Path);
+    finally
+      Brush.Free;
+    end;
+  end;
+
+  procedure StrokeShape(Color: ARGB);
+  var
+    Pen: TGPPen;
+  begin
+    Pen := TGPPen.Create(Color, StrokeWidth);
+    try
+      G.DrawPath(Pen, Path);
+    finally
+      Pen.Free;
+    end;
+  end;
+
+  procedure FillThumb(Color: ARGB);
+  var
+    Brush: TGPSolidBrush;
+  begin
+    Brush := TGPSolidBrush.Create(Color);
+    try
+      G.FillEllipse(Brush, ThumbCX - ThumbD / 2, ThumbCY - ThumbD / 2, ThumbD, ThumbD);
+    finally
+      Brush.Free;
+    end;
+  end;
+
 begin
   TextX := 0;
   TextY := 0;
 
   // Background
-  BgColor := Color;
-  Canvas.Brush.Color := BgColor;
+  Canvas.Brush.Color := Color;
   Canvas.FillRect(ClientRect);
 
   // Text layout
@@ -556,45 +571,38 @@ begin
   TrackY := (Height - FScaledTrackHeight) / 2;
 
   State := GetInteractionState;
+  OffOpacity := 1 - FAnimProgress;
+  // Stroke is centered on the outline and scaled with DPI, as in WinUI
+  StrokeWidth := FScalePPI / USER_DEFAULT_SCREEN_DPI;
 
-  // Track fill — Off
+  // Track colors; user colors override the theme
   if FTrackColorOff <> clNone then
-    OffFill := FTrackColorOff
+    OffFill := TColorToARGB(FTrackColorOff)
   else
-  begin
     OffFill := OffTrackFill[State];
-    if OffFill = clNone then
-      OffFill := BgColor;
-  end;
 
-  // Track fill — On
+  if FTrackFrameColor <> clNone then
+    OffStroke := TColorToARGB(FTrackFrameColor)
+  else
+    OffStroke := OffTrackStroke[State];
+
   if FTrackColorOn <> clNone then
-    OnFill := FTrackColorOn
+    OnFill := TColorToARGB(FTrackColorOn)
   else
     OnFill := OnTrackFill[State];
 
-  FillColor := LerpColor(OffFill, OnFill, FAnimProgress);
-
-  // Track stroke (frame)
-  if FTrackFrameColor <> clNone then
-    StrokeColor := FTrackFrameColor
-  else
-    StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
-
-  // Thumb
+  // Thumb colors
   if FThumbColorOff <> clNone then
-    OffThumb := FThumbColorOff
+    OffThumb := TColorToARGB(FThumbColorOff)
   else
     OffThumb := OffThumbFill[State];
 
   if FThumbColorOn <> clNone then
-    OnThumb := FThumbColorOn
+    OnThumb := TColorToARGB(FThumbColorOn)
   else
     OnThumb := OnThumbFill[State];
 
-  ThumbColor := LerpColor(OffThumb, OnThumb, FAnimProgress);
-
-  // Thumb geometry — position interpolated
+  // Thumb geometry; position interpolated
   ThumbD := FScaledThumbDiameters[State];
   ThumbCY := TrackY + FScaledTrackHeight / 2;
   ThumbCX := TrackX + FScaledThumbCenterOffX
@@ -604,38 +612,30 @@ begin
   try
     G.SetSmoothingMode(SmoothingModeAntiAlias);
 
-    // Draw track
+    // Off and On tracks cross-fade, as in WinUI
     Path := TGPGraphicsPath.Create;
     try
       AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
-
-      // Track fill
-      Brush := TGPSolidBrush.Create(TColorToARGB(FillColor));
-      try
-        G.FillPath(Brush, Path);
-      finally
-        Brush.Free;
+      if OffOpacity > 0 then
+      begin
+        FillShape(ScaleAlpha(OffFill, OffOpacity));
+        StrokeShape(ScaleAlpha(OffStroke, OffOpacity));
       end;
-
-      // Track stroke: centered on the outline and scaled with DPI, as in WinUI
-      Pen := TGPPen.Create(TColorToARGB(StrokeColor), FScalePPI / USER_DEFAULT_SCREEN_DPI);
-      try
-        G.DrawPath(Pen, Path);
-      finally
-        Pen.Free;
+      if FAnimProgress > 0 then
+      begin
+        FillShape(ScaleAlpha(OnFill, FAnimProgress));
+        if FTrackFrameColor <> clNone then
+          StrokeShape(ScaleAlpha(TColorToARGB(FTrackFrameColor), FAnimProgress));
       end;
     finally
       Path.Free;
     end;
 
-    // Draw thumb
-    Brush := TGPSolidBrush.Create(TColorToARGB(ThumbColor));
-    try
-      G.FillEllipse(Brush,
-        ThumbCX - ThumbD / 2, ThumbCY - ThumbD / 2, ThumbD, ThumbD);
-    finally
-      Brush.Free;
-    end;
+    // Thumb cross-fades the same way
+    if OffOpacity > 0 then
+      FillThumb(ScaleAlpha(OffThumb, OffOpacity));
+    if FAnimProgress > 0 then
+      FillThumb(ScaleAlpha(OnThumb, FAnimProgress));
   finally
     G.Free;
   end;
