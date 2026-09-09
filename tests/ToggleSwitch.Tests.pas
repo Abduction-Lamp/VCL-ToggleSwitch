@@ -117,7 +117,7 @@ type
     procedure Paint_ShouldNotChangeSize;
 
     [Test]
-    procedure CreateAndDestroy_ShouldReleaseDrawingObjects;
+    procedure CreateAndDestroy_ShouldNotLeak;
   end;
 
 implementation
@@ -354,7 +354,7 @@ begin
   Assert.AreEqual(H, FToggle.Height, 'Painting leaves the height alone');
 end;
 
-procedure TToggleSwitchTest.CreateAndDestroy_ShouldReleaseDrawingObjects;
+procedure TToggleSwitchTest.CreateAndDestroy_ShouldNotLeak;
 var
   I: Integer;
   Tmp: TFluentToggleSwitch;
@@ -368,7 +368,7 @@ begin
       Tmp.Free;
     end;
   end;
-  Assert.Pass('FastMM4 reports a leaked path, brush or pen at shutdown');
+  Assert.Pass('FastMM4 reports anything left behind at shutdown');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

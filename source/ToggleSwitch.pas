@@ -40,9 +40,6 @@ type
     FDragDelta: Single;
     FDragged: Boolean;
     FAnimTimer: TTimer;
-    FPath: TGPGraphicsPath;
-    FBrush: TGPSolidBrush;
-    FPen: TGPPen;
     FAnimProgress: Single;
     FAnimStartProgress: Single;
     FAnimTarget: Single;
@@ -302,10 +299,6 @@ begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
   ParentColor := True;
-  // Drawing reuses one path, brush and pen instead of building them per frame
-  FPath := TGPGraphicsPath.Create;
-  FBrush := TGPSolidBrush.Create(0);
-  FPen := TGPPen.Create(0, 1);
   FScalePPI := USER_DEFAULT_SCREEN_DPI;
   Rescale;
   Width := FScaledTrackAreaWidth;
@@ -483,8 +476,6 @@ begin
     FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
     FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
   end;
-  // Stroke is centered on the outline and scaled with DPI, as in WinUI
-  FPen.SetWidth(FScalePPI / USER_DEFAULT_SCREEN_DPI);
   // A snapshot taken at the old scale would be wrong now
   FStateT := 1.0;
 end;
@@ -509,9 +500,6 @@ end;
 destructor TFluentToggleSwitch.Destroy;
 begin
   FAnimTimer.Free;
-  FPen.Free;
-  FBrush.Free;
-  FPath.Free;
   inherited;
 end;
 
@@ -802,6 +790,9 @@ end;
 procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
+  Path: TGPGraphicsPath;
+  Brush: TGPSolidBrush;
+  Pen: TGPPen;
   TrackX, TrackY: Single;
   VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
@@ -816,16 +807,16 @@ var
   begin
     if GetAlpha(Color) = 0 then
       Exit;
-    FBrush.SetColor(Color);
-    G.FillPath(FBrush, FPath);
+    Brush.SetColor(Color);
+    G.FillPath(Brush, Path);
   end;
 
   procedure StrokeShape(Color: ARGB);
   begin
     if GetAlpha(Color) = 0 then
       Exit;
-    FPen.SetColor(Color);
-    G.DrawPath(FPen, FPath);
+    Pen.SetColor(Color);
+    G.DrawPath(Pen, Path);
   end;
 
 begin
@@ -890,13 +881,23 @@ begin
     + (VS.ThumbOnX - VS.ThumbOffX) * FAnimProgress
     + FDragDelta;
 
-  G := TGPGraphics.Create(Canvas.Handle);
+  // One path, one brush and one pen serve the whole frame, recolored per shape.
+  // GDI+ objects do not outlive Paint: the wrapper unit shuts GDI+ down in its
+  // finalization, which can run before the last control is destroyed.
+  G := nil;
+  Path := nil;
+  Brush := nil;
+  Pen := nil;
   try
+    G := TGPGraphics.Create(Canvas.Handle);
     G.SetSmoothingMode(SmoothingModeAntiAlias);
+    Path := TGPGraphicsPath.Create;
+    Brush := TGPSolidBrush.Create(0);
+    // Stroke is centered on the outline and scaled with DPI, as in WinUI
+    Pen := TGPPen.Create(0, FScalePPI / USER_DEFAULT_SCREEN_DPI);
 
     // Off and On tracks cross-fade, as in WinUI
-    FPath.Reset;
-    AddPillPath(FPath, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
+    AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
     if OffOpacity > 0 then
     begin
       FillShape(ScaleAlpha(OffFill, OffOpacity));
@@ -910,13 +911,16 @@ begin
     end;
 
     // Thumb cross-fades the same way
-    FPath.Reset;
-    AddPillPath(FPath, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
+    Path.Reset;
+    AddPillPath(Path, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
     if OffOpacity > 0 then
       FillShape(ScaleAlpha(OffThumb, OffOpacity));
     if FAnimProgress > 0 then
       FillShape(ScaleAlpha(OnThumb, FAnimProgress));
   finally
+    Pen.Free;
+    Brush.Free;
+    Path.Free;
     G.Free;
   end;
 

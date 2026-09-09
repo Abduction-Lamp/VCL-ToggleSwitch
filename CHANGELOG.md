@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Drawing reuses one path, one brush and one pen instead of allocating seven to eight GDI+ objects per frame. At 60 frames per second that removed roughly 450 allocations per second per animating switch.
+- A frame now builds one path, one brush and one pen and recolors them per shape, instead of allocating seven to eight GDI+ objects. At 60 frames per second that is roughly 250 fewer allocations per second per animating switch. The objects still do not outlive the paint, because the GDI+ wrapper unit shuts the library down in its finalization, which can run before the last control is destroyed.
 - The animation timer, and the hidden window it owns, are created on first use rather than for every instance. A form full of switches no longer pays for timers nothing has started.
 - Animations no longer run while the switch is not showing, for example on an inactive tab page. The state applies immediately instead.
 - Text height is measured when the font or the text changes rather than on every frame, and the font is assigned to the canvas once per paint instead of twice. Vertical centering now uses the same metric the auto-sizing uses.
