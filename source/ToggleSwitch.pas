@@ -50,8 +50,8 @@ type
     FScaledTrackAreaHeight: Integer;
     FScaledTrackWidth: Integer;
     FScaledTrackHeight: Integer;
-    FScaledThumbCenterOffX: Integer;
-    FScaledThumbCenterOnX: Integer;
+    FScaledThumbCenterOffX: Single;
+    FScaledThumbCenterOnX: Single;
     FScaledThumbDiameters: array[TInteractionState] of Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
@@ -116,8 +116,8 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
-  ThumbCenterOffX = 10;  // center of thumb from left edge of track (Off)
-  ThumbCenterOnX  = 30;  // center of thumb from left edge of track (On)
+  ThumbCenterOffX = 9.5;  // center of thumb from left edge of track (Off)
+  ThumbCenterOnX  = 29.5; // center of thumb from left edge of track (On)
 
   ThumbDiameters: array[TInteractionState] of Integer = (12, 14, 17, 12);
 
@@ -364,8 +364,8 @@ begin
   FScaledTrackAreaHeight := MulDiv(TrackAreaHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
   FScaledTrackWidth := MulDiv(TrackWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
   FScaledTrackHeight := MulDiv(TrackHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledThumbCenterOffX := MulDiv(ThumbCenterOffX, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledThumbCenterOnX := MulDiv(ThumbCenterOnX, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledThumbCenterOffX := ThumbCenterOffX * FScalePPI / USER_DEFAULT_SCREEN_DPI;
+  FScaledThumbCenterOnX := ThumbCenterOnX * FScalePPI / USER_DEFAULT_SCREEN_DPI;
   for var S := Low(TInteractionState) to High(TInteractionState) do
     FScaledThumbDiameters[S] := MulDiv(ThumbDiameters[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
 end;
@@ -617,10 +617,9 @@ begin
         Brush.Free;
       end;
 
-      // Track stroke
-      Pen := TGPPen.Create(TColorToARGB(StrokeColor), 1.0);
+      // Track stroke: centered on the outline and scaled with DPI, as in WinUI
+      Pen := TGPPen.Create(TColorToARGB(StrokeColor), FScalePPI / USER_DEFAULT_SCREEN_DPI);
       try
-        Pen.SetAlignment(PenAlignmentInset);
         G.DrawPath(Pen, Path);
       finally
         Pen.Free;
