@@ -20,6 +20,15 @@ type
 
   TInteractionState = (isNormal, isHover, isPressed, isDisabled);
 
+  // Everything an interaction state contributes to the drawing. Kept as values
+  // so a state change can animate from whatever is currently on screen.
+  TVisualState = record
+    ThumbW, ThumbH: Single;
+    ThumbOffX, ThumbOnX: Single;
+    TrackOff, StrokeOff, TrackOn: ARGB;
+    ThumbOff, ThumbOn: ARGB;
+  end;
+
   TFluentToggleSwitch = class(TCustomControl)
   private
     FChecked: Boolean;
@@ -36,6 +45,12 @@ type
     FAnimTarget: Single;
     FAnimStartTime: Int64;
     FAnimFrequency: Int64;
+    FSliding: Boolean;
+    FState: TInteractionState;
+    FStateFrom: TVisualState;
+    FStateT: Single;
+    FStateStartTime: Int64;
+    FStateDuration: Integer;
     FOnChange: TNotifyEvent;
     FTrackFrameColor: TColor;
     FTrackColorOff: TColor;
@@ -65,6 +80,9 @@ type
     function DragTravel: Single;
     procedure DragThumb(X: Integer);
     function GetInteractionState: TInteractionState;
+    function StateVisual(S: TInteractionState): TVisualState;
+    function CurrentVisual: TVisualState;
+    procedure UpdateVisualState;
     procedure Toggle;
     procedure SetTrackFrameColor(Value: TColor);
     procedure SetTrackColorOff(Value: TColor);
@@ -81,6 +99,7 @@ type
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
+    procedure CMEnabledChanged(var Msg: TMessage); message CM_ENABLEDCHANGED;
   protected
     procedure Paint; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
@@ -93,7 +112,7 @@ type
   published
     property Checked: Boolean read FChecked write SetChecked default False;
     property Animated: Boolean read FAnimated write FAnimated default True;
-    property AnimationDuration: Integer read FAnimationDuration write SetAnimationDuration default 150;
+    property AnimationDuration: Integer read FAnimationDuration write SetAnimationDuration default 367;
     property Enabled;
     property TabStop default True;
     property TabOrder;
@@ -124,6 +143,11 @@ const
   TrackWidth  = 40;
   TrackHeight = 20;
   DragThreshold = 4;  // pointer travel that turns a press into a drag
+  // Animation timings from the WinUI template. The thumb waits out the delay,
+  // then slides for AnimationDuration; interaction states cross-fade faster.
+  ThumbSlideDelay = 33;
+  StateDuration = 83;          // ControlFasterAnimationDuration
+  DisabledStateDuration = 250; // ControlNormalAnimationDuration
   // Thumb geometry per interaction state. When pressed the thumb becomes a
   // 17x14 pill hugging the track edge, so its center shifts inward.
   //                                                      Normal  Hover  Pressed  Disabled
@@ -140,21 +164,108 @@ const
   OffTrackFill:   array[TInteractionState] of ARGB = ($06000000, $0F000000, $18000000, $00000000);
   OffTrackStroke: array[TInteractionState] of ARGB = ($72000000, $72000000, $72000000, $37000000);
   OffThumbFill:   array[TInteractionState] of ARGB = ($9E000000, $9E000000, $9E000000, $5C000000);
-  // On state: AccentColor #0078D4 / AccentDark1 #006CBE / AccentDark2 #005A9E
-  OnTrackFill:    array[TInteractionState] of ARGB = ($FF0078D4, $FF006CBE, $FF005A9E, $37000000);
   OnThumbFill:    array[TInteractionState] of ARGB = ($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  // Windows 11 default accent shade, used when the system palette is unreadable
+  DefaultAccentDark1 = $FF0067C0;
 
-function EaseOutCubic(T: Single): Single;
+var
+  // On-state track fill: the accent shade at the opacity of each state. Hover
+  // and Pressed are the same color at 0.9 and 0.8, so the track lightens toward
+  // the background instead of darkening.
+  OnTrackFill: array[TInteractionState] of ARGB;
+
+// Cubic Bezier from (0,0) to (1,1) with the two control points on one axis
+function BezierAxis(T, C1, C2: Single): Single; inline;
 var
   U: Single;
 begin
   U := 1.0 - T;
-  Result := 1.0 - U * U * U;
+  Result := 3.0 * U * U * T * C1 + 3.0 * U * T * T * C2 + T * T * T;
+end;
+
+// Value of the curve at time X, the easing XAML expresses as a KeySpline
+function BezierEase(X, X1, Y1, X2, Y2: Single): Single;
+var
+  Lo, Hi, T: Single;
+  I: Integer;
+begin
+  if X <= 0 then
+    Exit(0);
+  if X >= 1 then
+    Exit(1);
+  Lo := 0;
+  Hi := 1;
+  for I := 1 to 12 do
+  begin
+    T := (Lo + Hi) / 2;
+    if BezierAxis(T, X1, X2) < X then
+      Lo := T
+    else
+      Hi := T;
+  end;
+  Result := BezierAxis((Lo + Hi) / 2, Y1, Y2);
+end;
+
+function LerpARGB(A, B: ARGB; T: Single): ARGB;
+begin
+  Result := MakeColor(
+    Round(GetAlpha(A) + (GetAlpha(B) - GetAlpha(A)) * T),
+    Round(GetRed(A) + (GetRed(B) - GetRed(A)) * T),
+    Round(GetGreen(A) + (GetGreen(B) - GetGreen(A)) * T),
+    Round(GetBlue(A) + (GetBlue(B) - GetBlue(A)) * T));
+end;
+
+function LerpVisual(const A, B: TVisualState; T: Single): TVisualState;
+begin
+  Result.ThumbW := A.ThumbW + (B.ThumbW - A.ThumbW) * T;
+  Result.ThumbH := A.ThumbH + (B.ThumbH - A.ThumbH) * T;
+  Result.ThumbOffX := A.ThumbOffX + (B.ThumbOffX - A.ThumbOffX) * T;
+  Result.ThumbOnX := A.ThumbOnX + (B.ThumbOnX - A.ThumbOnX) * T;
+  Result.TrackOff := LerpARGB(A.TrackOff, B.TrackOff, T);
+  Result.StrokeOff := LerpARGB(A.StrokeOff, B.StrokeOff, T);
+  Result.TrackOn := LerpARGB(A.TrackOn, B.TrackOn, T);
+  Result.ThumbOff := LerpARGB(A.ThumbOff, B.ThumbOff, T);
+  Result.ThumbOn := LerpARGB(A.ThumbOn, B.ThumbOn, T);
 end;
 
 function ScaleAlpha(C: ARGB; Opacity: Single): ARGB;
 begin
   Result := MakeColor(Round(GetAlpha(C) * Opacity), GetRed(C), GetGreen(C), GetBlue(C));
+end;
+
+// SystemAccentColorDark1, the shade WinUI paints the On track with in the light
+// theme. Windows stores the shades as eight RGBA entries; Dark1 is the fifth.
+function SystemAccentDark1: ARGB;
+const
+  AccentKey = 'Software\Microsoft\Windows\CurrentVersion\Explorer\Accent';
+  Dark1 = 16;
+var
+  Key: HKEY;
+  Palette: array[0..31] of Byte;
+  Size, ValueType: DWORD;
+begin
+  Result := DefaultAccentDark1;
+  if RegOpenKeyEx(HKEY_CURRENT_USER, AccentKey, 0, KEY_READ, Key) <> ERROR_SUCCESS then
+    Exit;
+  try
+    Size := SizeOf(Palette);
+    if (RegQueryValueEx(Key, 'AccentPalette', nil, @ValueType, @Palette[0], @Size) = ERROR_SUCCESS)
+      and (ValueType = REG_BINARY) and (Size >= Dark1 + 3) then
+      Result := MakeColor(255, Palette[Dark1], Palette[Dark1 + 1], Palette[Dark1 + 2]);
+  finally
+    RegCloseKey(Key);
+  end;
+end;
+
+procedure InitAccentColors;
+var
+  Accent: ARGB;
+begin
+  Accent := SystemAccentDark1;
+  OnTrackFill[isNormal] := Accent;
+  OnTrackFill[isHover] := ScaleAlpha(Accent, 0.9);
+  OnTrackFill[isPressed] := ScaleAlpha(Accent, 0.8);
+  OnTrackFill[isDisabled] := $37000000;
 end;
 
 function TColorToARGB(C: TColor): ARGB;
@@ -192,9 +303,12 @@ begin
   Height := FScaledTrackAreaHeight;
   FChecked := False;
   FAnimated := True;
-  FAnimationDuration := 150;
+  FAnimationDuration := 367;
   FAnimProgress := 0.0;
   FAnimTarget := 0.0;
+  FState := isNormal;
+  FStateT := 1.0;
+  FStateDuration := StateDuration;
   QueryPerformanceFrequency(FAnimFrequency);
   FAnimTimer := TTimer.Create(Self);
   FAnimTimer.Interval := 16;
@@ -364,6 +478,8 @@ begin
     FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
     FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
   end;
+  // A snapshot taken at the old scale would be wrong now
+  FStateT := 1.0;
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -400,6 +516,7 @@ procedure TFluentToggleSwitch.StartAnimation;
 begin
   FAnimStartProgress := FAnimProgress;
   FAnimTarget := Ord(FChecked);
+  FSliding := True;
   QueryPerformanceCounter(FAnimStartTime);
   FAnimTimer.Enabled := True;
 end;
@@ -411,6 +528,7 @@ begin
     StartAnimation
   else
   begin
+    FSliding := False;
     FAnimProgress := Ord(FChecked);
     FAnimTarget := FAnimProgress;
   end;
@@ -419,19 +537,44 @@ end;
 procedure TFluentToggleSwitch.HandleAnimTimer(Sender: TObject);
 var
   Counter: Int64;
-  Elapsed: Single;
   T: Single;
+  Busy: Boolean;
 begin
   QueryPerformanceCounter(Counter);
-  Elapsed := (Counter - FAnimStartTime) / FAnimFrequency * 1000;
-  T := Elapsed / FAnimationDuration;
-  if T >= 1.0 then
+  Busy := False;
+
+  if FSliding then
   begin
-    T := 1.0;
-    FAnimTimer.Enabled := False;
+    T := ((Counter - FAnimStartTime) / FAnimFrequency * 1000 - ThumbSlideDelay)
+      / FAnimationDuration;
+    if T >= 1.0 then
+    begin
+      T := 1.0;
+      FSliding := False;
+    end
+    else
+    begin
+      Busy := True;
+      if T < 0 then
+        T := 0;
+    end;
+    FAnimProgress := FAnimStartProgress
+      + (FAnimTarget - FAnimStartProgress) * BezierEase(T, 0.1, 0.9, 0.2, 1.0);
   end;
-  T := EaseOutCubic(T);
-  FAnimProgress := FAnimStartProgress + (FAnimTarget - FAnimStartProgress) * T;
+
+  if FStateT < 1.0 then
+  begin
+    T := (Counter - FStateStartTime) / FAnimFrequency * 1000 / FStateDuration;
+    if T >= 1.0 then
+      FStateT := 1.0
+    else
+    begin
+      Busy := True;
+      FStateT := BezierEase(T, 0, 0, 0, 1);
+    end;
+  end;
+
+  FAnimTimer.Enabled := Busy;
   Invalidate;
 end;
 
@@ -460,7 +603,7 @@ begin
     FDragStartX := X;
     FDragDelta := 0;
     FDragged := False;
-    Invalidate;
+    UpdateVisualState;
   end;
 end;
 
@@ -469,6 +612,7 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
+    UpdateVisualState;
     if FDragged then
     begin
       // The thumb settles into the state on its side of the track
@@ -495,7 +639,7 @@ begin
   if IsOver <> FHovered then
   begin
     FHovered := IsOver;
-    Invalidate;
+    UpdateVisualState;
   end;
   if FPressed then
     DragThumb(X);
@@ -539,7 +683,7 @@ procedure TFluentToggleSwitch.CMMouseEnter(var Msg: TMessage);
 begin
   inherited;
   FHovered := True;
-  Invalidate;
+  UpdateVisualState;
 end;
 
 procedure TFluentToggleSwitch.CMMouseLeave(var Msg: TMessage);
@@ -549,7 +693,13 @@ begin
   // The mouse is captured while pressed, so a drag may leave the control
   if not MouseCapture then
     FPressed := False;
-  Invalidate;
+  UpdateVisualState;
+end;
+
+procedure TFluentToggleSwitch.CMEnabledChanged(var Msg: TMessage);
+begin
+  inherited;
+  UpdateVisualState;
 end;
 
 function TFluentToggleSwitch.GetInteractionState: TInteractionState;
@@ -564,12 +714,61 @@ begin
     Result := isNormal;
 end;
 
+function TFluentToggleSwitch.StateVisual(S: TInteractionState): TVisualState;
+begin
+  Result.ThumbW := FScaledThumbWidths[S];
+  Result.ThumbH := FScaledThumbHeights[S];
+  Result.ThumbOffX := FScaledThumbCenterOffX[S];
+  Result.ThumbOnX := FScaledThumbCenterOnX[S];
+  Result.TrackOff := OffTrackFill[S];
+  Result.StrokeOff := OffTrackStroke[S];
+  Result.TrackOn := OnTrackFill[S];
+  Result.ThumbOff := OffThumbFill[S];
+  Result.ThumbOn := OnThumbFill[S];
+end;
+
+function TFluentToggleSwitch.CurrentVisual: TVisualState;
+var
+  Target: TVisualState;
+begin
+  Target := StateVisual(FState);
+  if FStateT < 1.0 then
+    Result := LerpVisual(FStateFrom, Target, FStateT)
+  else
+    Result := Target;
+end;
+
+procedure TFluentToggleSwitch.UpdateVisualState;
+var
+  NewState: TInteractionState;
+begin
+  NewState := GetInteractionState;
+  if NewState = FState then
+    Exit;
+  // Animate away from whatever is on screen right now
+  FStateFrom := CurrentVisual;
+  FState := NewState;
+  if NewState = isDisabled then
+    FStateDuration := DisabledStateDuration
+  else
+    FStateDuration := StateDuration;
+  if FAnimated and HandleAllocated then
+  begin
+    FStateT := 0;
+    QueryPerformanceCounter(FStateStartTime);
+    FAnimTimer.Enabled := True;
+  end
+  else
+    FStateT := 1.0;
+  Invalidate;
+end;
+
 procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
   Path: TGPGraphicsPath;
   TrackX, TrackY: Single;
-  State: TInteractionState;
+  VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
   OffThumb, OnThumb: ARGB;
   OffOpacity: Single;
@@ -630,7 +829,7 @@ begin
   TrackX := FTrackOffsetX + (FScaledTrackAreaWidth - FScaledTrackWidth) / 2;
   TrackY := (Height - FScaledTrackHeight) / 2;
 
-  State := GetInteractionState;
+  VS := CurrentVisual;
   OffOpacity := 1 - FAnimProgress;
   // Stroke is centered on the outline and scaled with DPI, as in WinUI
   StrokeWidth := FScalePPI / USER_DEFAULT_SCREEN_DPI;
@@ -639,35 +838,35 @@ begin
   if FTrackColorOff <> clNone then
     OffFill := TColorToARGB(FTrackColorOff)
   else
-    OffFill := OffTrackFill[State];
+    OffFill := VS.TrackOff;
 
   if FTrackFrameColor <> clNone then
     OffStroke := TColorToARGB(FTrackFrameColor)
   else
-    OffStroke := OffTrackStroke[State];
+    OffStroke := VS.StrokeOff;
 
   if FTrackColorOn <> clNone then
     OnFill := TColorToARGB(FTrackColorOn)
   else
-    OnFill := OnTrackFill[State];
+    OnFill := VS.TrackOn;
 
   // Thumb colors
   if FThumbColorOff <> clNone then
     OffThumb := TColorToARGB(FThumbColorOff)
   else
-    OffThumb := OffThumbFill[State];
+    OffThumb := VS.ThumbOff;
 
   if FThumbColorOn <> clNone then
     OnThumb := TColorToARGB(FThumbColorOn)
   else
-    OnThumb := OnThumbFill[State];
+    OnThumb := VS.ThumbOn;
 
   // Thumb geometry; position interpolated
-  ThumbW := FScaledThumbWidths[State];
-  ThumbH := FScaledThumbHeights[State];
+  ThumbW := VS.ThumbW;
+  ThumbH := VS.ThumbH;
   ThumbCY := TrackY + FScaledTrackHeight / 2;
-  ThumbCX := TrackX + FScaledThumbCenterOffX[State]
-    + (FScaledThumbCenterOnX[State] - FScaledThumbCenterOffX[State]) * FAnimProgress
+  ThumbCX := TrackX + VS.ThumbOffX
+    + (VS.ThumbOnX - VS.ThumbOffX) * FAnimProgress
     + FDragDelta;
 
   G := TGPGraphics.Create(Canvas.Handle);
@@ -724,5 +923,8 @@ procedure Register;
 begin
   RegisterComponents('ToggleSwitch', [TFluentToggleSwitch]);
 end;
+
+initialization
+  InitAccentColors;
 
 end.

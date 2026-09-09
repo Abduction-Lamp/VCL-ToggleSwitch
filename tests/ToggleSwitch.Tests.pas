@@ -106,6 +106,12 @@ type
 
     [Test]
     procedure DefaultChecked_ShouldBeFalse;
+
+    [Test]
+    procedure DefaultAnimationDuration_ShouldMatchWinUI;
+
+    [Test]
+    procedure AnimationDuration_ShouldClampToPositive;
   end;
 
 implementation
@@ -311,6 +317,17 @@ begin
   FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(15, 12));
   FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(15, 12));
   Assert.IsFalse(FToggle.Checked, 'Thumb released before the middle snaps back');
+end;
+
+procedure TToggleSwitchTest.DefaultAnimationDuration_ShouldMatchWinUI;
+begin
+  Assert.AreEqual(367, FToggle.AnimationDuration, 'Thumb slide lasts as long as in WinUI');
+end;
+
+procedure TToggleSwitchTest.AnimationDuration_ShouldClampToPositive;
+begin
+  FToggle.AnimationDuration := 0;
+  Assert.AreEqual(1, FToggle.AnimationDuration, 'Duration never drops below 1 ms');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

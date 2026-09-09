@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-10
+
+### Changed
+
+- Animation timings now follow the WinUI template. The thumb waits 33 ms, then slides for 367 ms along a cubic Bezier curve, replacing the previous 150 ms ease-out. `AnimationDuration` now defaults to 367.
+- Hover, press and disabled changes cross-fade over 83 ms (250 ms into disabled) instead of taking effect instantly. Thumb size and position animate along with the colors.
+- The On track uses the accent color configured in Windows, read from the system palette. Without it the component falls back to `#0067C0`, the Windows 11 default.
+- Hover and press lighten the On track toward the background by lowering opacity to 0.9 and 0.8. Previously they darkened it, which is the opposite of the WinUI behavior. The previous shades came from the Windows 10 palette.
+
 ## [1.3.0] - 2026-09-10
 
 ### Added
@@ -79,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First public release: GDI+ rendering, EaseOutCubic animation, 8 visual states, WinUI 3 Light colors, mouse and keyboard input, design-time package.
 
+[1.4.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.0.1...v1.1.0
