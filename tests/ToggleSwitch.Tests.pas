@@ -4,6 +4,8 @@ interface
 
 uses
   DUnitX.TestFramework,
+  Winapi.Windows,
+  Winapi.Messages,
   System.Classes,
   Vcl.Controls,
   Vcl.Forms,
@@ -88,7 +90,13 @@ type
     procedure Toggle_ShouldChangeChecked;
 
     [Test]
-    procedure SetChecked_ShouldFireOnChange;
+    procedure SetChecked_ShouldNotFireOnChange;
+
+    [Test]
+    procedure SpaceKey_ShouldToggleAndFireOnChange;
+
+    [Test]
+    procedure ParentColor_ShouldBeTrueByDefault;
 
     [Test]
     procedure DefaultChecked_ShouldBeFalse;
@@ -262,12 +270,27 @@ begin
   Assert.IsFalse(FToggle.Checked);
 end;
 
-procedure TToggleSwitchTest.SetChecked_ShouldFireOnChange;
+procedure TToggleSwitchTest.SetChecked_ShouldNotFireOnChange;
 begin
   FOnChangeFired := False;
   FToggle.OnChange := HandleOnChange;
   FToggle.Checked := True;
-  Assert.IsTrue(FOnChangeFired, 'OnChange should fire when Checked changes');
+  FToggle.Checked := False;
+  Assert.IsFalse(FOnChangeFired, 'OnChange is for user actions only');
+end;
+
+procedure TToggleSwitchTest.SpaceKey_ShouldToggleAndFireOnChange;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Perform(WM_KEYDOWN, VK_SPACE, 0);
+  Assert.IsTrue(FToggle.Checked, 'Space toggles the switch');
+  Assert.IsTrue(FOnChangeFired, 'OnChange fires on a user toggle');
+end;
+
+procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;
+begin
+  Assert.IsTrue(FToggle.ParentColor, 'Background follows the parent');
 end;
 
 procedure TToggleSwitchTest.DefaultChecked_ShouldBeFalse;

@@ -45,6 +45,7 @@ type
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
     FTrackOffsetX: Integer;
+    FScalePPI: Integer;
     FScaledTrackAreaWidth: Integer;
     FScaledTrackAreaHeight: Integer;
     FScaledTrackWidth: Integer;
@@ -69,7 +70,7 @@ type
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
     procedure AdjustBounds;
-    function GetTrackRect: TRect;
+    procedure Rescale;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
@@ -93,6 +94,7 @@ type
     property TabStop default True;
     property TabOrder;
     property Color;
+    property ParentColor;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnClick;
     property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clNone;
@@ -193,14 +195,9 @@ constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
-  FScaledTrackAreaWidth := TrackAreaWidth;
-  FScaledTrackAreaHeight := TrackAreaHeight;
-  FScaledTrackWidth := TrackWidth;
-  FScaledTrackHeight := TrackHeight;
-  FScaledThumbCenterOffX := ThumbCenterOffX;
-  FScaledThumbCenterOnX := ThumbCenterOnX;
-  for var S := Low(TInteractionState) to High(TInteractionState) do
-    FScaledThumbDiameters[S] := ThumbDiameters[S];
+  ParentColor := True;
+  FScalePPI := USER_DEFAULT_SCREEN_DPI;
+  Rescale;
   Width := FScaledTrackAreaWidth;
   Height := FScaledTrackAreaHeight;
   FChecked := False;
@@ -364,9 +361,16 @@ begin
   SetBounds(Left, Top, NewWidth, NewHeight);
 end;
 
-function TFluentToggleSwitch.GetTrackRect: TRect;
+procedure TFluentToggleSwitch.Rescale;
 begin
-  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + FScaledTrackAreaWidth, Height);
+  FScaledTrackAreaWidth := MulDiv(TrackAreaWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackAreaHeight := MulDiv(TrackAreaHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackWidth := MulDiv(TrackWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackHeight := MulDiv(TrackHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledThumbCenterOffX := MulDiv(ThumbCenterOffX, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledThumbCenterOnX := MulDiv(ThumbCenterOnX, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  for var S := Low(TInteractionState) to High(TInteractionState) do
+    FScaledThumbDiameters[S] := MulDiv(ThumbDiameters[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -379,14 +383,8 @@ end;
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
 begin
   inherited;
-  FScaledTrackAreaWidth := MulDiv(FScaledTrackAreaWidth, M, D);
-  FScaledTrackAreaHeight := MulDiv(FScaledTrackAreaHeight, M, D);
-  FScaledTrackWidth := MulDiv(FScaledTrackWidth, M, D);
-  FScaledTrackHeight := MulDiv(FScaledTrackHeight, M, D);
-  FScaledThumbCenterOffX := MulDiv(FScaledThumbCenterOffX, M, D);
-  FScaledThumbCenterOnX := MulDiv(FScaledThumbCenterOnX, M, D);
-  for var S := Low(TInteractionState) to High(TInteractionState) do
-    FScaledThumbDiameters[S] := MulDiv(FScaledThumbDiameters[S], M, D);
+  FScalePPI := MulDiv(FScalePPI, M, D);
+  Rescale;
   AdjustBounds;
 end;
 
@@ -408,8 +406,6 @@ begin
     FAnimProgress := Ord(FChecked);
     FAnimTarget := FAnimProgress;
   end;
-  if Assigned(FOnChange) then
-    FOnChange(Self);
   Invalidate;
 end;
 
@@ -450,13 +446,17 @@ end;
 procedure TFluentToggleSwitch.Toggle;
 begin
   Checked := not FChecked;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if (Button = mbLeft) and PtInRect(GetTrackRect, Point(X, Y)) then
+  if Button = mbLeft then
   begin
+    if CanFocus then
+      SetFocus;
     FPressed := True;
     Invalidate;
   end;
@@ -467,7 +467,7 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(GetTrackRect, Point(X, Y)) then
+    if PtInRect(ClientRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
@@ -558,14 +558,7 @@ begin
   TextY := 0;
 
   // Background
-  BgColor := Self.Color;
-  if BgColor = clNone then
-  begin
-    if Parent <> nil then
-      BgColor := Parent.Brush.Color
-    else
-      BgColor := clBtnFace;
-  end;
+  BgColor := Color;
   Canvas.Brush.Color := BgColor;
   Canvas.FillRect(ClientRect);
 
