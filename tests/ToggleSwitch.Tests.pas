@@ -1,9 +1,11 @@
-unit ToggleSwitch.Tests;
+﻿unit ToggleSwitch.Tests;
 
 interface
 
 uses
   DUnitX.TestFramework,
+  Winapi.Windows,
+  Winapi.Messages,
   System.Classes,
   Vcl.Controls,
   Vcl.Forms,
@@ -88,7 +90,19 @@ type
     procedure Toggle_ShouldChangeChecked;
 
     [Test]
-    procedure SetChecked_ShouldFireOnChange;
+    procedure SetChecked_ShouldNotFireOnChange;
+
+    [Test]
+    procedure SpaceKey_ShouldNotToggle;
+
+    [Test]
+    procedure DragPastMiddle_ShouldTurnOnAndFireOnChange;
+
+    [Test]
+    procedure DragShort_ShouldSnapBack;
+
+    [Test]
+    procedure ParentColor_ShouldBeTrueByDefault;
 
     [Test]
     procedure DefaultChecked_ShouldBeFalse;
@@ -262,12 +276,46 @@ begin
   Assert.IsFalse(FToggle.Checked);
 end;
 
-procedure TToggleSwitchTest.SetChecked_ShouldFireOnChange;
+procedure TToggleSwitchTest.SetChecked_ShouldNotFireOnChange;
 begin
   FOnChangeFired := False;
   FToggle.OnChange := HandleOnChange;
   FToggle.Checked := True;
-  Assert.IsTrue(FOnChangeFired, 'OnChange should fire when Checked changes');
+  FToggle.Checked := False;
+  Assert.IsFalse(FOnChangeFired, 'OnChange is for user actions only');
+end;
+
+procedure TToggleSwitchTest.SpaceKey_ShouldNotToggle;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Perform(WM_KEYDOWN, VK_SPACE, 0);
+  Assert.IsFalse(FToggle.Checked, 'Keyboard does not toggle the switch');
+  Assert.IsFalse(FOnChangeFired, 'OnChange does not fire on keyboard input');
+end;
+
+procedure TToggleSwitchTest.DragPastMiddle_ShouldTurnOnAndFireOnChange;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
+  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+  Assert.IsTrue(FToggle.Checked, 'Thumb released past the middle turns the switch on');
+  Assert.IsTrue(FOnChangeFired, 'OnChange fires on a user drag');
+end;
+
+procedure TToggleSwitchTest.DragShort_ShouldSnapBack;
+begin
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(15, 12));
+  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(15, 12));
+  Assert.IsFalse(FToggle.Checked, 'Thumb released before the middle snaps back');
+end;
+
+procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;
+begin
+  Assert.IsTrue(FToggle.ParentColor, 'Background follows the parent');
 end;
 
 procedure TToggleSwitchTest.DefaultChecked_ShouldBeFalse;

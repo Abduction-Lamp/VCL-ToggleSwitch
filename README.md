@@ -15,12 +15,13 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 
 ## Features
 
-- Smooth On/Off transition animation (EaseOutCubic, 150 ms) with position and color interpolation
+- Smooth On/Off transition animation (EaseOutCubic, 150 ms): the thumb slides while track and thumb colors cross-fade
 - 8 visual states: Normal / Hover / Pressed / Disabled × On / Off
+- Thumb grows on hover and stretches into a pill when pressed, as in WinUI 3
 - WinUI 3 Light Theme color scheme (AccentColor `#0078D4`)
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
-- Mouse support (click, hover, pressed) and keyboard support (Space, Enter, Tab)
+- Mouse support (click, hover, pressed, dragging the thumb)
 - DPI-aware — correct rendering on high-DPI displays (per-monitor V2)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
@@ -51,8 +52,13 @@ VCL-ToggleSwitch/
 ├── tests/
 │   ├── Tests.dpr                     — test runner (DUnitX + FastMM4)
 │   ├── Tests.dproj                   — test project file
+│   ├── Tests.res                     — test runner resources
 │   └── ToggleSwitch.Tests.pas        — DUnitX unit tests
+├── docs/
+│   └── images/                       — screenshots
 ├── ToggleSwitch-PG.groupproj         — project group (package + demo + tests)
+├── CHANGELOG.md
+├── LICENSE
 └── README.md
 ```
 
@@ -149,7 +155,7 @@ Toggle.TextPosition := tpRight;  // tpLeft or tpRight
 Toggle.TextSpacing := 8;         // pixels between toggle and text
 ```
 
-The component auto-adjusts its width to fit the longer of the two texts. Text is rendered using the component's `Font` property. Only the toggle track area responds to mouse clicks — the text label is passive.
+The component auto-adjusts its width to fit the longer of the two texts. Text is rendered using the component's `Font` property. Clicking anywhere on the component, including the label, toggles the switch.
 
 ## Properties
 
@@ -160,7 +166,8 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | `AnimationDuration` | `Integer` | `150` | Animation duration in milliseconds |
 | `Enabled` | `Boolean` | `True` | Whether the component is interactive |
 | `TabStop` | `Boolean` | `True` | Include in Tab key navigation |
-| `Color` | `TColor` | `clNone` | Background color (clNone = parent color) |
+| `ParentColor` | `Boolean` | `True` | Follow the parent's background color |
+| `Color` | `TColor` | *(parent)* | Background color; assigning it turns `ParentColor` off |
 | **Color customization** | | | |
 | `TrackFrameColor` | `TColor` | `clNone` | Track border/stroke color |
 | `TrackColorOff` | `TColor` | `clNone` | Track fill color when Off |
@@ -179,7 +186,7 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 
 | Event | Type | Description |
 |-------|------|-------------|
-| `OnChange` | `TNotifyEvent` | Fires when the toggle state changes |
+| `OnChange` | `TNotifyEvent` | Fires when the user toggles the switch. Setting `Checked` in code does not fire it |
 | `OnClick` | `TNotifyEvent` | Standard click event (inherited) |
 
 ## Keyboard
@@ -187,8 +194,6 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | Key | Action |
 |-----|--------|
 | `Tab` | Move focus to/from the component |
-| `Space` | Toggle state |
-| `Enter` | Toggle state |
 
 ## Adding to an Existing Project (without IDE installation)
 

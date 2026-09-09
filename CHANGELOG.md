@@ -1,0 +1,86 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.3.0] - 2026-09-10
+
+### Added
+
+- The thumb can be dragged within the track. Releasing it past the middle switches the state; otherwise it snaps back.
+- The pressed thumb stretches into a 17×14 pill hugging the track edge, as in WinUI 3.
+
+### Changed
+
+- Off-state colors follow the WinUI 3 Light theme: translucent fill, stroke and thumb are blended over the parent background. Hover darkens the track fill instead of the stroke and thumb.
+- Off and On tracks cross-fade during the transition instead of interpolating colors.
+- The track stroke is centered on the outline and scaled with DPI. Previously it was a fixed 1 px inset stroke.
+- `OnChange` fires only when the user toggles the switch. Setting `Checked` in code no longer raises it.
+- Clicking anywhere on the component, including the text label, toggles it and focuses the control.
+- Sizes are recomputed from the base constants on every DPI change instead of rescaling rounded values.
+
+### Removed
+
+- Space and Enter no longer toggle the switch.
+- The focus rectangle.
+
+## [1.2.0] - 2026-03-13
+
+### Added
+
+- Tests for the no-parent scenario, toggle logic, `OnChange` firing and default state.
+- Demo screenshot in the README.
+
+### Changed
+
+- The demo computes its layout from control heights, so nothing overlaps on high-DPI displays.
+- Platform list updated to Win32/Win64.
+
+### Fixed
+
+- DPI-aware scaling: correct rendering on high-DPI displays (per-monitor V2).
+- Text properties can be set before `Parent` is assigned.
+- Space and Enter fire `OnClick` in addition to `OnChange`.
+- The background uses the parent color when `Color` is `clNone`.
+- Only the track responds to clicks; the text label is passive.
+- Compiler warnings: missing units and unused variables.
+
+## [1.1.0] - 2026-03-12
+
+### Added
+
+- Color properties `TrackFrameColor`, `TrackColorOff`, `TrackColorOn`, `ThumbColorOff` and `ThumbColorOn`. `clNone` keeps the built-in scheme.
+- Text label: `ShowText`, `TextOn`, `TextOff`, `TextPosition` and `TextSpacing`. The component auto-sizes to the text.
+- `Font` republished for the text label.
+- 17 DUnitX tests covering color and text properties, auto-sizing and input validation.
+
+### Fixed
+
+- The click area is restricted to the track.
+- Bounds are recalculated after DPI scaling (`ChangeScale`).
+- Negative `TextSpacing` is clamped to 0.
+- The test runner waits for input before closing; FastMM4 is compiled conditionally.
+
+## [1.0.1] - 2026-03-12
+
+### Added
+
+- README with setup instructions.
+- MIT license.
+
+### Fixed
+
+- `TToggleSwitch` renamed to `TFluentToggleSwitch` to avoid the conflict with `Vcl.WinXCtrls`.
+- Compiled units go to the global Dcp directory, so `uses ToggleSwitch;` works without a Search Path entry.
+
+## [1.0.0] - 2026-03-12
+
+First public release: GDI+ rendering, EaseOutCubic animation, 8 visual states, WinUI 3 Light colors, mouse and keyboard input, design-time package.
+
+[1.3.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/releases/tag/v1.0.0

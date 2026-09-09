@@ -27,6 +27,9 @@ type
     FAnimationDuration: Integer;
     FHovered: Boolean;
     FPressed: Boolean;
+    FDragStartX: Integer;
+    FDragDelta: Single;
+    FDragged: Boolean;
     FAnimTimer: TTimer;
     FAnimProgress: Single;
     FAnimStartProgress: Single;
@@ -45,17 +48,22 @@ type
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
     FTrackOffsetX: Integer;
+    FScalePPI: Integer;
     FScaledTrackAreaWidth: Integer;
     FScaledTrackAreaHeight: Integer;
     FScaledTrackWidth: Integer;
     FScaledTrackHeight: Integer;
-    FScaledThumbCenterOffX: Integer;
-    FScaledThumbCenterOnX: Integer;
-    FScaledThumbDiameters: array[TInteractionState] of Integer;
+    FScaledThumbWidths: array[TInteractionState] of Integer;
+    FScaledThumbHeights: array[TInteractionState] of Integer;
+    FScaledThumbCenterOffX: array[TInteractionState] of Single;
+    FScaledThumbCenterOnX: array[TInteractionState] of Single;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartAnimation;
+    procedure SettleThumb;
     procedure HandleAnimTimer(Sender: TObject);
+    function DragTravel: Single;
+    procedure DragThumb(X: Integer);
     function GetInteractionState: TInteractionState;
     procedure Toggle;
     procedure SetTrackFrameColor(Value: TColor);
@@ -69,16 +77,13 @@ type
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
     procedure AdjustBounds;
-    function GetTrackRect: TRect;
+    procedure Rescale;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
-    procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
-    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
   protected
     procedure Paint; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
-    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -93,6 +98,7 @@ type
     property TabStop default True;
     property TabOrder;
     property Color;
+    property ParentColor;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnClick;
     property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clNone;
@@ -117,25 +123,26 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
-  ThumbCenterOffX = 10;  // center of thumb from left edge of track (Off)
-  ThumbCenterOnX  = 30;  // center of thumb from left edge of track (On)
+  DragThreshold = 4;  // pointer travel that turns a press into a drag
+  // Thumb geometry per interaction state. When pressed the thumb becomes a
+  // 17x14 pill hugging the track edge, so its center shifts inward.
+  //                                                      Normal  Hover  Pressed  Disabled
+  ThumbWidths:  array[TInteractionState] of Integer =   (12,     14,    17,      12);
+  ThumbHeights: array[TInteractionState] of Integer =   (12,     14,    14,      12);
+  // Thumb center from the left edge of the track
+  ThumbCenterOffX: array[TInteractionState] of Single = (9.5,    9.5,   11.5,    9.5);
+  ThumbCenterOnX:  array[TInteractionState] of Single = (29.5,   29.5,  28.5,    29.5);
 
-  ThumbDiameters: array[TInteractionState] of Integer = (12, 14, 17, 12);
-
-  // Off State — Track Fill (clNone = transparent / no fill)
-  OffTrackFill: array[TInteractionState] of TColor = (clNone, clNone, $F9F9F9, clNone);
-  // Off State — Track Stroke                           Normal    Hover     Pressed   Disabled
-  OffTrackStroke: array[TInteractionState] of TColor = ($878787, $6B6B6B, $6B6B6B, $CECECE);
-  // Off State — Thumb Fill
-  OffThumbFill: array[TInteractionState] of TColor =  ($5C5C5C, $1A1A1A, $1A1A1A, $ADADAD);
-
-  // On State — Track Fill (AccentColor / AccentDark1 / AccentDark2)
-  //   RGB #0078D4 → TColor $D47800,  #006CBE → $BE6C00,  #005A9E → $9E5A00
-  OnTrackFill: array[TInteractionState] of TColor =   ($D47800, $BE6C00, $9E5A00, $CECECE);
-  // On State — Track Stroke (same as fill)
-  OnTrackStroke: array[TInteractionState] of TColor =  ($D47800, $BE6C00, $9E5A00, $CECECE);
-  // On State — Thumb Fill (always white)
-  OnThumbFill: array[TInteractionState] of TColor =   ($FFFFFF, $FFFFFF, $FFFFFF, $FFFFFF);
+  // Colors are ARGB ($AARRGGBB) from the WinUI 3 Light theme. Off-state colors
+  // are translucent black blended over the parent background; the On track has
+  // no stroke of its own.
+  //                                                    Normal     Hover      Pressed    Disabled
+  OffTrackFill:   array[TInteractionState] of ARGB = ($06000000, $0F000000, $18000000, $00000000);
+  OffTrackStroke: array[TInteractionState] of ARGB = ($72000000, $72000000, $72000000, $37000000);
+  OffThumbFill:   array[TInteractionState] of ARGB = ($9E000000, $9E000000, $9E000000, $5C000000);
+  // On state: AccentColor #0078D4 / AccentDark1 #006CBE / AccentDark2 #005A9E
+  OnTrackFill:    array[TInteractionState] of ARGB = ($FF0078D4, $FF006CBE, $FF005A9E, $37000000);
+  OnThumbFill:    array[TInteractionState] of ARGB = ($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
 
 function EaseOutCubic(T: Single): Single;
 var
@@ -145,24 +152,9 @@ begin
   Result := 1.0 - U * U * U;
 end;
 
-function ClampByte(V: Integer): Byte; inline;
+function ScaleAlpha(C: ARGB; Opacity: Single): ARGB;
 begin
-  if V < 0 then Result := 0
-  else if V > 255 then Result := 255
-  else Result := V;
-end;
-
-function LerpColor(C1, C2: TColor; T: Single): TColor;
-var
-  R1, G1, B1, R2, G2, B2: Byte;
-begin
-  C1 := ColorToRGB(C1);
-  C2 := ColorToRGB(C2);
-  R1 := C1 and $FF;         G1 := (C1 shr 8) and $FF;  B1 := (C1 shr 16) and $FF;
-  R2 := C2 and $FF;         G2 := (C2 shr 8) and $FF;  B2 := (C2 shr 16) and $FF;
-  Result := ClampByte(R1 + Round((R2 - R1) * T))
-         or (ClampByte(G1 + Round((G2 - G1) * T)) shl 8)
-         or (ClampByte(B1 + Round((B2 - B1) * T)) shl 16);
+  Result := MakeColor(Round(GetAlpha(C) * Opacity), GetRed(C), GetGreen(C), GetBlue(C));
 end;
 
 function TColorToARGB(C: TColor): ARGB;
@@ -193,14 +185,9 @@ constructor TFluentToggleSwitch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
-  FScaledTrackAreaWidth := TrackAreaWidth;
-  FScaledTrackAreaHeight := TrackAreaHeight;
-  FScaledTrackWidth := TrackWidth;
-  FScaledTrackHeight := TrackHeight;
-  FScaledThumbCenterOffX := ThumbCenterOffX;
-  FScaledThumbCenterOnX := ThumbCenterOnX;
-  for var S := Low(TInteractionState) to High(TInteractionState) do
-    FScaledThumbDiameters[S] := ThumbDiameters[S];
+  ParentColor := True;
+  FScalePPI := USER_DEFAULT_SCREEN_DPI;
+  Rescale;
   Width := FScaledTrackAreaWidth;
   Height := FScaledTrackAreaHeight;
   FChecked := False;
@@ -364,9 +351,19 @@ begin
   SetBounds(Left, Top, NewWidth, NewHeight);
 end;
 
-function TFluentToggleSwitch.GetTrackRect: TRect;
+procedure TFluentToggleSwitch.Rescale;
 begin
-  Result := Rect(FTrackOffsetX, 0, FTrackOffsetX + FScaledTrackAreaWidth, Height);
+  FScaledTrackAreaWidth := MulDiv(TrackAreaWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackAreaHeight := MulDiv(TrackAreaHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackWidth := MulDiv(TrackWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  FScaledTrackHeight := MulDiv(TrackHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
+  for var S := Low(TInteractionState) to High(TInteractionState) do
+  begin
+    FScaledThumbWidths[S] := MulDiv(ThumbWidths[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
+    FScaledThumbHeights[S] := MulDiv(ThumbHeights[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
+    FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
+    FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
+  end;
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -379,14 +376,8 @@ end;
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
 begin
   inherited;
-  FScaledTrackAreaWidth := MulDiv(FScaledTrackAreaWidth, M, D);
-  FScaledTrackAreaHeight := MulDiv(FScaledTrackAreaHeight, M, D);
-  FScaledTrackWidth := MulDiv(FScaledTrackWidth, M, D);
-  FScaledTrackHeight := MulDiv(FScaledTrackHeight, M, D);
-  FScaledThumbCenterOffX := MulDiv(FScaledThumbCenterOffX, M, D);
-  FScaledThumbCenterOnX := MulDiv(FScaledThumbCenterOnX, M, D);
-  for var S := Low(TInteractionState) to High(TInteractionState) do
-    FScaledThumbDiameters[S] := MulDiv(FScaledThumbDiameters[S], M, D);
+  FScalePPI := MulDiv(FScalePPI, M, D);
+  Rescale;
   AdjustBounds;
 end;
 
@@ -401,15 +392,7 @@ begin
   if FChecked = Value then
     Exit;
   FChecked := Value;
-  if FAnimated and HandleAllocated then
-    StartAnimation
-  else
-  begin
-    FAnimProgress := Ord(FChecked);
-    FAnimTarget := FAnimProgress;
-  end;
-  if Assigned(FOnChange) then
-    FOnChange(Self);
+  SettleThumb;
   Invalidate;
 end;
 
@@ -419,6 +402,18 @@ begin
   FAnimTarget := Ord(FChecked);
   QueryPerformanceCounter(FAnimStartTime);
   FAnimTimer.Enabled := True;
+end;
+
+// Moves the thumb from wherever it is to the rest position of the current state
+procedure TFluentToggleSwitch.SettleThumb;
+begin
+  if FAnimated and HandleAllocated then
+    StartAnimation
+  else
+  begin
+    FAnimProgress := Ord(FChecked);
+    FAnimTarget := FAnimProgress;
+  end;
 end;
 
 procedure TFluentToggleSwitch.HandleAnimTimer(Sender: TObject);
@@ -450,14 +445,21 @@ end;
 procedure TFluentToggleSwitch.Toggle;
 begin
   Checked := not FChecked;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if (Button = mbLeft) and PtInRect(GetTrackRect, Point(X, Y)) then
+  if Button = mbLeft then
   begin
+    if CanFocus then
+      SetFocus;
     FPressed := True;
+    FDragStartX := X;
+    FDragDelta := 0;
+    FDragged := False;
     Invalidate;
   end;
 end;
@@ -467,7 +469,17 @@ begin
   if (Button = mbLeft) and FPressed then
   begin
     FPressed := False;
-    if PtInRect(GetTrackRect, Point(X, Y)) then
+    if FDragged then
+    begin
+      // The thumb settles into the state on its side of the track
+      FAnimProgress := Ord(FChecked) + FDragDelta / DragTravel;
+      FDragDelta := 0;
+      if (FAnimProgress >= 0.5) <> FChecked then
+        Toggle
+      else
+        SettleThumb;
+    end
+    else if PtInRect(ClientRect, Point(X, Y)) then
       Toggle;
     Invalidate;
   end;
@@ -485,6 +497,42 @@ begin
     FHovered := IsOver;
     Invalidate;
   end;
+  if FPressed then
+    DragThumb(X);
+end;
+
+function TFluentToggleSwitch.DragTravel: Single;
+begin
+  Result := FScaledThumbCenterOnX[isPressed] - FScaledThumbCenterOffX[isPressed];
+end;
+
+procedure TFluentToggleSwitch.DragThumb(X: Integer);
+var
+  Delta: Single;
+begin
+  Delta := X - FDragStartX;
+  if Abs(Delta) >= MulDiv(DragThreshold, FScalePPI, USER_DEFAULT_SCREEN_DPI) then
+    FDragged := True;
+  // The thumb stays within the track
+  if FChecked then
+  begin
+    if Delta > 0 then
+      Delta := 0
+    else if Delta < -DragTravel then
+      Delta := -DragTravel;
+  end
+  else
+  begin
+    if Delta < 0 then
+      Delta := 0
+    else if Delta > DragTravel then
+      Delta := DragTravel;
+  end;
+  if Delta <> FDragDelta then
+  begin
+    FDragDelta := Delta;
+    Invalidate;
+  end;
 end;
 
 procedure TFluentToggleSwitch.CMMouseEnter(var Msg: TMessage);
@@ -498,30 +546,10 @@ procedure TFluentToggleSwitch.CMMouseLeave(var Msg: TMessage);
 begin
   inherited;
   FHovered := False;
-  FPressed := False;
+  // The mouse is captured while pressed, so a drag may leave the control
+  if not MouseCapture then
+    FPressed := False;
   Invalidate;
-end;
-
-procedure TFluentToggleSwitch.WMSetFocus(var Msg: TWMSetFocus);
-begin
-  inherited;
-  Invalidate;
-end;
-
-procedure TFluentToggleSwitch.WMKillFocus(var Msg: TWMKillFocus);
-begin
-  inherited;
-  Invalidate;
-end;
-
-procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
-begin
-  inherited;
-  if (Key = VK_SPACE) or (Key = VK_RETURN) then
-  begin
-    Toggle;
-    inherited Click;
-  end;
 end;
 
 function TFluentToggleSwitch.GetInteractionState: TInteractionState;
@@ -540,33 +568,48 @@ procedure TFluentToggleSwitch.Paint;
 var
   G: TGPGraphics;
   Path: TGPGraphicsPath;
-  Brush: TGPSolidBrush;
-  Pen: TGPPen;
-  BgColor: TColor;
   TrackX, TrackY: Single;
   State: TInteractionState;
-  OffFill, OnFill, FillColor: TColor;
-  StrokeColor, ThumbColor: TColor;
-  OffThumb, OnThumb: TColor;
+  OffFill, OffStroke, OnFill: ARGB;
+  OffThumb, OnThumb: ARGB;
+  OffOpacity: Single;
+  StrokeWidth: Single;
   ThumbCX, ThumbCY: Single;
-  ThumbD: Single;
+  ThumbW, ThumbH: Single;
   TextX, TextY: Integer;
   TextH: Integer;
   LabelText: string;
+
+  procedure FillShape(Color: ARGB);
+  var
+    Brush: TGPSolidBrush;
+  begin
+    Brush := TGPSolidBrush.Create(Color);
+    try
+      G.FillPath(Brush, Path);
+    finally
+      Brush.Free;
+    end;
+  end;
+
+  procedure StrokeShape(Color: ARGB);
+  var
+    Pen: TGPPen;
+  begin
+    Pen := TGPPen.Create(Color, StrokeWidth);
+    try
+      G.DrawPath(Pen, Path);
+    finally
+      Pen.Free;
+    end;
+  end;
+
 begin
   TextX := 0;
   TextY := 0;
 
   // Background
-  BgColor := Self.Color;
-  if BgColor = clNone then
-  begin
-    if Parent <> nil then
-      BgColor := Parent.Brush.Color
-    else
-      BgColor := clBtnFace;
-  end;
-  Canvas.Brush.Color := BgColor;
+  Canvas.Brush.Color := Color;
   Canvas.FillRect(ClientRect);
 
   // Text layout
@@ -588,94 +631,78 @@ begin
   TrackY := (Height - FScaledTrackHeight) / 2;
 
   State := GetInteractionState;
+  OffOpacity := 1 - FAnimProgress;
+  // Stroke is centered on the outline and scaled with DPI, as in WinUI
+  StrokeWidth := FScalePPI / USER_DEFAULT_SCREEN_DPI;
 
-  // Track fill — Off
+  // Track colors; user colors override the theme
   if FTrackColorOff <> clNone then
-    OffFill := FTrackColorOff
+    OffFill := TColorToARGB(FTrackColorOff)
   else
-  begin
     OffFill := OffTrackFill[State];
-    if OffFill = clNone then
-      OffFill := BgColor;
-  end;
 
-  // Track fill — On
+  if FTrackFrameColor <> clNone then
+    OffStroke := TColorToARGB(FTrackFrameColor)
+  else
+    OffStroke := OffTrackStroke[State];
+
   if FTrackColorOn <> clNone then
-    OnFill := FTrackColorOn
+    OnFill := TColorToARGB(FTrackColorOn)
   else
     OnFill := OnTrackFill[State];
 
-  FillColor := LerpColor(OffFill, OnFill, FAnimProgress);
-
-  // Track stroke (frame)
-  if FTrackFrameColor <> clNone then
-    StrokeColor := FTrackFrameColor
-  else
-    StrokeColor := LerpColor(OffTrackStroke[State], OnTrackStroke[State], FAnimProgress);
-
-  // Thumb
+  // Thumb colors
   if FThumbColorOff <> clNone then
-    OffThumb := FThumbColorOff
+    OffThumb := TColorToARGB(FThumbColorOff)
   else
     OffThumb := OffThumbFill[State];
 
   if FThumbColorOn <> clNone then
-    OnThumb := FThumbColorOn
+    OnThumb := TColorToARGB(FThumbColorOn)
   else
     OnThumb := OnThumbFill[State];
 
-  ThumbColor := LerpColor(OffThumb, OnThumb, FAnimProgress);
-
-  // Thumb geometry — position interpolated
-  ThumbD := FScaledThumbDiameters[State];
+  // Thumb geometry; position interpolated
+  ThumbW := FScaledThumbWidths[State];
+  ThumbH := FScaledThumbHeights[State];
   ThumbCY := TrackY + FScaledTrackHeight / 2;
-  ThumbCX := TrackX + FScaledThumbCenterOffX
-    + (FScaledThumbCenterOnX - FScaledThumbCenterOffX) * FAnimProgress;
+  ThumbCX := TrackX + FScaledThumbCenterOffX[State]
+    + (FScaledThumbCenterOnX[State] - FScaledThumbCenterOffX[State]) * FAnimProgress
+    + FDragDelta;
 
   G := TGPGraphics.Create(Canvas.Handle);
   try
     G.SetSmoothingMode(SmoothingModeAntiAlias);
 
-    // Draw track
     Path := TGPGraphicsPath.Create;
     try
+      // Off and On tracks cross-fade, as in WinUI
       AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
-
-      // Track fill
-      Brush := TGPSolidBrush.Create(TColorToARGB(FillColor));
-      try
-        G.FillPath(Brush, Path);
-      finally
-        Brush.Free;
+      if OffOpacity > 0 then
+      begin
+        FillShape(ScaleAlpha(OffFill, OffOpacity));
+        StrokeShape(ScaleAlpha(OffStroke, OffOpacity));
+      end;
+      if FAnimProgress > 0 then
+      begin
+        FillShape(ScaleAlpha(OnFill, FAnimProgress));
+        if FTrackFrameColor <> clNone then
+          StrokeShape(ScaleAlpha(TColorToARGB(FTrackFrameColor), FAnimProgress));
       end;
 
-      // Track stroke
-      Pen := TGPPen.Create(TColorToARGB(StrokeColor), 1.0);
-      try
-        Pen.SetAlignment(PenAlignmentInset);
-        G.DrawPath(Pen, Path);
-      finally
-        Pen.Free;
-      end;
+      // Thumb cross-fades the same way
+      Path.Reset;
+      AddPillPath(Path, ThumbCX - ThumbW / 2, ThumbCY - ThumbH / 2, ThumbW, ThumbH);
+      if OffOpacity > 0 then
+        FillShape(ScaleAlpha(OffThumb, OffOpacity));
+      if FAnimProgress > 0 then
+        FillShape(ScaleAlpha(OnThumb, FAnimProgress));
     finally
       Path.Free;
-    end;
-
-    // Draw thumb
-    Brush := TGPSolidBrush.Create(TColorToARGB(ThumbColor));
-    try
-      G.FillEllipse(Brush,
-        ThumbCX - ThumbD / 2, ThumbCY - ThumbD / 2, ThumbD, ThumbD);
-    finally
-      Brush.Free;
     end;
   finally
     G.Free;
   end;
-
-  // Focus rectangle
-  if Focused then
-    Canvas.DrawFocusRect(ClientRect);
 
   // Text label
   if FShowText then
