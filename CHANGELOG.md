@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-10
+
+### Added
+
+- The package carries its version. It is stamped into the compiled `.bpl` and into the package description, so the installed version is visible in Component → Install Packages without opening any file.
+
+### Changed
+
+- The switch no longer takes focus. Clicking it leaves focus where it was, and `TabStop` now defaults to `False`, so the Tab key skips it. It already ignored the keyboard and drew no focus indicator, so the focus it held was invisible and did nothing.
+
 ## [1.5.0] - 2026-09-10
 
 ### Changed
@@ -105,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First public release: GDI+ rendering, EaseOutCubic animation, 8 visual states, WinUI 3 Light colors, mouse and keyboard input, design-time package.
 
+[1.6.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.2.0...v1.3.0

@@ -25,6 +25,7 @@ package ToggleSwitch;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Fluent ToggleSwitch 1.6.0'}
 {$IMPLICITBUILD ON}
 
 requires

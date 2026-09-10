@@ -22,7 +22,7 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 - WinUI 3 Light Theme color scheme, using the accent color configured in Windows (falls back to `#0067C0`, the Windows 11 default)
 - Customizable colors — override track fill, track border, and thumb colors for On/Off states
 - Optional text label — configurable text, position (left/right), and spacing with auto-resize
-- Mouse support (click, hover, pressed, dragging the thumb)
+- Mouse only — click, hover, press and drag the thumb. The switch never takes focus
 - DPI-aware — correct rendering on high-DPI displays (per-monitor V2)
 - Anti-aliased rendering via GDI+
 - DoubleBuffered — flicker-free
@@ -87,6 +87,8 @@ This will load all three projects: package, demo, and tests.
 2. Right-click → **Compile** (this places `.dcu` files into the global Dcp directory, making the unit available to all projects)
 3. Right-click → **Install**
 4. The component `TFluentToggleSwitch` will appear in the **"ToggleSwitch"** tab of the component palette
+
+The installed version is listed in **Component → Install Packages**, next to the package name.
 
 After this, any new project can simply `uses ToggleSwitch;` — no additional Search Path configuration needed.
 
@@ -166,7 +168,7 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | `Animated` | `Boolean` | `True` | Enable smooth transition animation |
 | `AnimationDuration` | `Integer` | `367` | Thumb slide duration in milliseconds |
 | `Enabled` | `Boolean` | `True` | Whether the component is interactive |
-| `TabStop` | `Boolean` | `True` | Include in Tab key navigation |
+| `TabStop` | `Boolean` | `False` | The switch is mouse-only and takes no focus |
 | `ParentColor` | `Boolean` | `True` | Follow the parent's background color |
 | `Color` | `TColor` | *(parent)* | Background color; assigning it turns `ParentColor` off |
 | **Color customization** | | | |
@@ -189,12 +191,6 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 |-------|------|-------------|
 | `OnChange` | `TNotifyEvent` | Fires when the user toggles the switch. Setting `Checked` in code does not fire it |
 | `OnClick` | `TNotifyEvent` | Standard click event (inherited) |
-
-## Keyboard
-
-| Key | Action |
-|-----|--------|
-| `Tab` | Move focus to/from the component |
 
 ## Adding to an Existing Project (without IDE installation)
 
