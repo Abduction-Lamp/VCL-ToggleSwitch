@@ -116,7 +116,7 @@ type
     property Animated: Boolean read FAnimated write FAnimated default True;
     property AnimationDuration: Integer read FAnimationDuration write SetAnimationDuration default 367;
     property Enabled;
-    property TabStop default True;
+    property TabStop default False;
     property TabOrder;
     property Color;
     property ParentColor;
@@ -312,7 +312,6 @@ begin
   FStateT := 1.0;
   FStateDuration := StateDuration;
   QueryPerformanceFrequency(FAnimFrequency);
-  TabStop := True;
   DoubleBuffered := True;
   FTrackFrameColor := clNone;
   FTrackColorOff := clNone;
@@ -610,8 +609,6 @@ begin
   inherited;
   if Button = mbLeft then
   begin
-    if CanFocus then
-      SetFocus;
     FPressed := True;
     FDragStartX := X;
     FDragDelta := 0;
