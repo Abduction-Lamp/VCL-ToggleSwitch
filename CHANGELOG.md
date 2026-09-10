@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-10
+
+### Added
+
+- The form designer now gets the baseline of the text label, so the switch can be lined up with the captions of buttons and edits next to it. A new design-time unit carries this; the component unit itself stays free of design-time dependencies. A vertical centre guide is not possible, as the designer has no guide type for it.
+
+### Fixed
+
+- `TextSpacing` was not scaled for the display. On a screen at 300% the gap stayed at its unscaled size while everything around it tripled.
+
+### Changed
+
+- `TextSpacing` is measured from the track outline rather than from the edge of the control, and now defaults to 12, which is the gap the WinUI template uses. It previously produced a gap of 10.
+
 ## [1.6.0] - 2026-09-10
 
 ### Added
@@ -115,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First public release: GDI+ rendering, EaseOutCubic animation, 8 visual states, WinUI 3 Light colors, mouse and keyboard input, design-time package.
 
+[1.7.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Abduction-Lamp/VCL-ToggleSwitch/compare/v1.3.0...v1.4.0
