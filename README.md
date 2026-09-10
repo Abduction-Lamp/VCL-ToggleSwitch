@@ -39,7 +39,8 @@ Standard VCL does not include a toggle switch. Existing third-party solutions ei
 ```
 VCL-ToggleSwitch/
 ├── source/
-│   └── ToggleSwitch.pas              — component source code (TFluentToggleSwitch)
+│   ├── ToggleSwitch.pas              — component source code (TFluentToggleSwitch)
+│   └── ToggleSwitch.Design.pas       — design-time only: form designer guidelines
 ├── packages/
 │   ├── ToggleSwitch.dpk              — design-time package for IDE installation
 │   ├── ToggleSwitch.dproj            — package project file
@@ -155,8 +156,10 @@ Toggle.ShowText := True;
 Toggle.TextOn := 'Enabled';
 Toggle.TextOff := 'Disabled';
 Toggle.TextPosition := tpRight;  // tpLeft or tpRight
-Toggle.TextSpacing := 8;         // pixels between toggle and text
+Toggle.TextSpacing := 12;        // pixels from the track outline to the text
 ```
+
+In the form designer the label publishes its text baseline, so the switch can be lined up with the captions of buttons and edits placed next to it.
 
 The component auto-adjusts its width to fit the longer of the two texts. Text is rendered using the component's `Font` property. Clicking anywhere on the component, including the label, toggles the switch.
 
@@ -182,7 +185,7 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | `TextOn` | `string` | `'On'` | Label text when Checked = True |
 | `TextOff` | `string` | `'Off'` | Label text when Checked = False |
 | `TextPosition` | `TTextPosition` | `tpRight` | Label position: `tpLeft` or `tpRight` |
-| `TextSpacing` | `Integer` | `8` | Distance in pixels between toggle and text |
+| `TextSpacing` | `Integer` | `12` | Distance in pixels from the track outline to the text |
 | `Font` | `TFont` | *(inherited)* | Font used for text label rendering |
 
 ## Events
