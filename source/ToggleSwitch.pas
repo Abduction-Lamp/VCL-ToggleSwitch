@@ -82,6 +82,7 @@ type
     function DragTravel: Single;
     procedure DragThumb(X: Integer);
     function GetInteractionState: TInteractionState;
+    function TextGap: Integer;
     function StateVisual(S: TInteractionState): TVisualState;
     function CurrentVisual: TVisualState;
     procedure UpdateVisualState;
@@ -132,7 +133,7 @@ type
     property TextOn: string read FTextOn write SetTextOn;
     property TextOff: string read FTextOff write SetTextOff;
     property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
-    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 8;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 12;
   end;
 
 procedure Register;
@@ -322,7 +323,7 @@ begin
   FTextOff := 'Off';
   FShowText := False;
   FTextPosition := tpRight;
-  FTextSpacing := 8;
+  FTextSpacing := 12;
   FTrackOffsetX := 0;
 end;
 
@@ -423,6 +424,17 @@ begin
   end;
 end;
 
+// Distance from the edge of the track area to the text. TextSpacing is measured
+// from the track outline, and the area is wider than the track by the room the
+// stroke needs on each side.
+function TFluentToggleSwitch.TextGap: Integer;
+begin
+  Result := MulDiv(FTextSpacing, FScalePPI, USER_DEFAULT_SCREEN_DPI)
+    - (FScaledTrackAreaWidth - FScaledTrackWidth) div 2;
+  if Result < 0 then
+    Result := 0;
+end;
+
 procedure TFluentToggleSwitch.AdjustBounds;
 var
   DC: HDC;
@@ -452,10 +464,10 @@ begin
     end;
     TextW := Max(SizeOn.cx, SizeOff.cx);
     FTextHeight := TM.tmHeight;
-    NewWidth := FScaledTrackAreaWidth + FTextSpacing + TextW;
+    NewWidth := FScaledTrackAreaWidth + TextGap + TextW;
     NewHeight := Max(FScaledTrackAreaHeight, FTextHeight);
     if FTextPosition = tpLeft then
-      FTrackOffsetX := TextW + FTextSpacing
+      FTrackOffsetX := TextW + TextGap
     else
       FTrackOffsetX := 0;
   end;
@@ -831,7 +843,7 @@ begin
     if FTextPosition = tpLeft then
       TextX := 0
     else
-      TextX := FScaledTrackAreaWidth + FTextSpacing;
+      TextX := FScaledTrackAreaWidth + TextGap;
 
     TextY := (Height - FTextHeight) div 2;
   end;
