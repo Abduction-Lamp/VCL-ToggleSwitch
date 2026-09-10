@@ -105,6 +105,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="..\source\ToggleSwitch.pas"/>
+        <DCCReference Include="..\source\ToggleSwitch.Design.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
