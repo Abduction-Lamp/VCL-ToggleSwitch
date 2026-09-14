@@ -71,6 +71,8 @@ type
     FHeaderPosition: THeaderPosition;
     FHeaderAlignment: TAlignment;
     FHeaderSpacing: Integer;
+    FHeaderFont: TFont;
+    FHeaderFontCustom: Boolean;
     FHeaderWidth: Integer;
     FHeaderHeight: Integer;
     procedure SetChecked(Value: Boolean);
@@ -104,6 +106,8 @@ type
     procedure SetHeaderPosition(Value: THeaderPosition);
     procedure SetHeaderAlignment(Value: TAlignment);
     procedure SetHeaderSpacing(Value: Integer);
+    procedure SetHeaderFont(Value: TFont);
+    procedure HeaderFontChanged(Sender: TObject);
     procedure Measure;
     procedure LayoutChanged;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
@@ -168,6 +172,7 @@ type
     property HeaderPosition: THeaderPosition read FHeaderPosition write SetHeaderPosition default hpTop;
     property HeaderAlignment: TAlignment read FHeaderAlignment write SetHeaderAlignment default taLeftJustify;
     property HeaderSpacing: Integer read FHeaderSpacing write SetHeaderSpacing default 7;
+    property HeaderFont: TFont read FHeaderFont write SetHeaderFont stored FHeaderFontCustom;
     property OnContextPopup;
     property OnDblClick;
     property OnEnter;
@@ -369,6 +374,9 @@ begin
   FHeaderPosition := hpTop;
   FHeaderAlignment := taLeftJustify;
   FHeaderSpacing := 7;
+  FHeaderFont := TFont.Create;
+  FHeaderFont.Assign(Font);
+  FHeaderFont.OnChange := HeaderFontChanged;
   AutoSize := True;
   LayoutChanged;
 end;
@@ -501,6 +509,17 @@ begin
   end;
 end;
 
+procedure TFluentToggleSwitch.SetHeaderFont(Value: TFont);
+begin
+  FHeaderFont.Assign(Value);
+end;
+
+procedure TFluentToggleSwitch.HeaderFontChanged(Sender: TObject);
+begin
+  FHeaderFontCustom := True;
+  LayoutChanged;
+end;
+
 procedure TFluentToggleSwitch.SetHeaderSpacing(Value: Integer);
 begin
   if Value < 0 then
@@ -557,9 +576,9 @@ begin
   DC := GetDC(0);
   try
     SaveFont := SelectObject(DC, Font.Handle);
-    GetTextMetrics(DC, TM);
     if FShowText then
     begin
+      GetTextMetrics(DC, TM);
       GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
       GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
       FTextWidth := Max(SizeOn.cx, SizeOff.cx);
@@ -567,6 +586,8 @@ begin
     end;
     if FShowHeader then
     begin
+      SelectObject(DC, FHeaderFont.Handle);
+      GetTextMetrics(DC, TM);
       GetTextExtentPoint32(DC, PChar(FHeaderText), Length(FHeaderText), SizeHeader);
       FHeaderWidth := SizeHeader.cx;
       FHeaderHeight := TM.tmHeight;
@@ -626,6 +647,17 @@ end;
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
 begin
   inherited;
+  // The header follows the control font until it is given one of its own,
+  // which also carries it through a scale change
+  if not FHeaderFontCustom then
+  begin
+    FHeaderFont.OnChange := nil;
+    try
+      FHeaderFont.Assign(Font);
+    finally
+      FHeaderFont.OnChange := HeaderFontChanged;
+    end;
+  end;
   LayoutChanged;
 end;
 
@@ -634,6 +666,9 @@ begin
   // Inherited updates the scale VCL keeps and the font; the layout is measured
   // afterwards, against both
   inherited;
+  // VCL scales the control font, and a header font of its own has to follow
+  if FHeaderFontCustom then
+    FHeaderFont.Height := MulDiv(FHeaderFont.Height, M, D);
   // A state snapshot taken at the old scale would be wrong now
   FStateT := 1.0;
   LayoutChanged;
@@ -649,6 +684,7 @@ end;
 destructor TFluentToggleSwitch.Destroy;
 begin
   FAnimTimer.Free;
+  FHeaderFont.Free;
   inherited;
 end;
 
@@ -1112,12 +1148,12 @@ begin
   // Labels
   if FShowText or FShowHeader then
   begin
-    Canvas.Font.Assign(Font);
     Canvas.Brush.Style := bsClear;
-    if not Enabled then
-      Canvas.Font.Color := clGrayText;
     if FShowText then
     begin
+      Canvas.Font.Assign(Font);
+      if not Enabled then
+        Canvas.Font.Color := clGrayText;
       if FChecked then
         LabelText := FTextOn
       else
@@ -1125,7 +1161,12 @@ begin
       Canvas.TextOut(TextX, TextY, LabelText);
     end;
     if FShowHeader then
+    begin
+      Canvas.Font.Assign(FHeaderFont);
+      if not Enabled then
+        Canvas.Font.Color := clGrayText;
       Canvas.TextOut(HeaderX, HeaderY, FHeaderText);
+    end;
   end;
 end;
 
