@@ -107,6 +107,25 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
+    // Standard properties, so the switch answers to a designer and to a layout
+    // container the way every other VCL control does
+    property Align;
+    property AlignWithMargins;
+    property Anchors;
+    property AutoSize default True;
+    property BiDiMode;
+    property Constraints;
+    property Cursor;
+    property DoubleBuffered;
+    property Hint;
+    property Margins;
+    property ParentBiDiMode;
+    property ParentDoubleBuffered;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property Visible;
     property Checked: Boolean read FChecked write SetChecked default False;
     property Animated: Boolean read FAnimated write FAnimated default True;
     property AnimationDuration: Integer read FAnimationDuration write SetAnimationDuration default 367;
@@ -128,6 +147,17 @@ type
     property TextOff: string read FTextOff write SetTextOff;
     property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 12;
+    property OnContextPopup;
+    property OnDblClick;
+    property OnEnter;
+    property OnExit;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnResize;
   end;
 
 procedure Register;
