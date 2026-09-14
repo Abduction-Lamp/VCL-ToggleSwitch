@@ -7,14 +7,13 @@ object Form1: TForm1
   Margins.Bottom = 6
   Caption = 'TFluentToggleSwitch Demo'
   ClientHeight = 506
-  ClientWidth = 1049
+  ClientWidth = 285
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -24
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnCreate = FormCreate
   PixelsPerInch = 192
   TextHeight = 32
   object GridPanel: TGridPanel
@@ -37,14 +36,8 @@ object Form1: TForm1
         SizeStyle = ssAuto
       end
       item
-        SizeStyle = ssAuto
-      end
-      item
         SizeStyle = ssAbsolute
-        Value = 25.000000000000000000
-      end
-      item
-        SizeStyle = ssAuto
+        Value = 48.000000000000000000
       end
       item
         SizeStyle = ssAuto
@@ -64,23 +57,13 @@ object Form1: TForm1
         Row = 0
       end
       item
-        Column = 2
-        Control = Panel1
-        Row = 0
-      end
-      item
-        Column = 4
+        Column = 3
         Control = Label6
         Row = 0
       end
       item
-        Column = 5
+        Column = 4
         Control = FluentToggleSwitch6
-        Row = 0
-      end
-      item
-        Column = 6
-        Control = Panel6
         Row = 0
       end
       item
@@ -94,23 +77,13 @@ object Form1: TForm1
         Row = 1
       end
       item
-        Column = 2
-        Control = Panel2
-        Row = 1
-      end
-      item
-        Column = 4
+        Column = 3
         Control = Label7
         Row = 1
       end
       item
-        Column = 5
+        Column = 4
         Control = FluentToggleSwitch7
-        Row = 1
-      end
-      item
-        Column = 6
-        Control = Panel7
         Row = 1
       end
       item
@@ -124,23 +97,13 @@ object Form1: TForm1
         Row = 2
       end
       item
-        Column = 2
-        Control = Panel3
-        Row = 2
-      end
-      item
-        Column = 4
+        Column = 3
         Control = Label8
         Row = 2
       end
       item
-        Column = 5
+        Column = 4
         Control = FluentToggleSwitch8
-        Row = 2
-      end
-      item
-        Column = 6
-        Control = Panel8
         Row = 2
       end
       item
@@ -154,23 +117,13 @@ object Form1: TForm1
         Row = 3
       end
       item
-        Column = 2
-        Control = Panel4
-        Row = 3
-      end
-      item
-        Column = 4
+        Column = 3
         Control = Label9
         Row = 3
       end
       item
-        Column = 5
+        Column = 4
         Control = FluentToggleSwitch9
-        Row = 3
-      end
-      item
-        Column = 6
-        Control = Panel9
         Row = 3
       end
       item
@@ -184,23 +137,13 @@ object Form1: TForm1
         Row = 4
       end
       item
-        Column = 2
-        Control = Panel5
-        Row = 4
-      end
-      item
-        Column = 4
+        Column = 3
         Control = Label10
         Row = 4
       end
       item
-        Column = 5
+        Column = 4
         Control = FluentToggleSwitch10
-        Row = 4
-      end
-      item
-        Column = 6
-        Control = Panel10
         Row = 4
       end>
     ExpandStyle = emFixedSize
@@ -258,28 +201,6 @@ object Form1: TForm1
       TextOff = 'Off'
       ExplicitLeft = 251
     end
-    object Panel1: TPanel
-      AlignWithMargins = True
-      Left = 370
-      Top = 6
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel1'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 1
-      ExplicitLeft = 357
-    end
     object Label6: TLabel
       AlignWithMargins = True
       Left = 600
@@ -316,28 +237,6 @@ object Form1: TForm1
       TextPosition = tpLeft
       ExplicitLeft = 1017
     end
-    object Panel6: TPanel
-      AlignWithMargins = True
-      Left = 910
-      Top = 6
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel6'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 3
-      ExplicitLeft = 1177
-    end
     object Label2: TLabel
       AlignWithMargins = True
       Left = 6
@@ -371,28 +270,6 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
       ExplicitLeft = 251
-    end
-    object Panel2: TPanel
-      AlignWithMargins = True
-      Left = 370
-      Top = 100
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel2'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 5
-      ExplicitLeft = 357
     end
     object Label7: TLabel
       AlignWithMargins = True
@@ -430,28 +307,6 @@ object Form1: TForm1
       TextOff = 'Off'
       ExplicitLeft = 1017
     end
-    object Panel7: TPanel
-      AlignWithMargins = True
-      Left = 910
-      Top = 100
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel7'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 7
-      ExplicitLeft = 1177
-    end
     object Label3: TLabel
       AlignWithMargins = True
       Left = 19
@@ -485,28 +340,6 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
       ExplicitLeft = 251
-    end
-    object Panel3: TPanel
-      AlignWithMargins = True
-      Left = 370
-      Top = 194
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel3'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 9
-      ExplicitLeft = 357
     end
     object Label8: TLabel
       AlignWithMargins = True
@@ -545,28 +378,6 @@ object Form1: TForm1
       TextOff = 'Off'
       ExplicitLeft = 1017
     end
-    object Panel8: TPanel
-      AlignWithMargins = True
-      Left = 910
-      Top = 194
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel8'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 11
-      ExplicitLeft = 1177
-    end
     object Label4: TLabel
       AlignWithMargins = True
       Left = 85
@@ -604,28 +415,6 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
       ExplicitLeft = 251
-    end
-    object Panel4: TPanel
-      AlignWithMargins = True
-      Left = 370
-      Top = 292
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel4'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 13
-      ExplicitLeft = 357
     end
     object Label9: TLabel
       AlignWithMargins = True
@@ -669,28 +458,6 @@ object Form1: TForm1
       HeaderFont.Style = [fsBold]
       ExplicitLeft = 1044
     end
-    object Panel9: TPanel
-      AlignWithMargins = True
-      Left = 910
-      Top = 292
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel9'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 15
-      ExplicitLeft = 1177
-    end
     object Label5: TLabel
       AlignWithMargins = True
       Left = 42
@@ -725,28 +492,6 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
       ExplicitLeft = 251
-    end
-    object Panel5: TPanel
-      AlignWithMargins = True
-      Left = 370
-      Top = 396
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel5'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 17
-      ExplicitLeft = 357
     end
     object Label10: TLabel
       AlignWithMargins = True
@@ -791,28 +536,6 @@ object Form1: TForm1
       HeaderFont.Name = 'Segoe UI'
       HeaderFont.Style = [fsUnderline]
       ExplicitLeft = 1044
-    end
-    object Panel10: TPanel
-      AlignWithMargins = True
-      Left = 910
-      Top = 396
-      Width = 100
-      Height = 82
-      Margins.Left = 6
-      Margins.Top = 6
-      Margins.Right = 6
-      Margins.Bottom = 6
-      Anchors = []
-      BevelOuter = bvNone
-      Caption = 'Panel10'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 19
-      ExplicitLeft = 1177
     end
   end
 end
