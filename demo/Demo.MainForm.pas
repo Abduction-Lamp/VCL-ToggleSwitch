@@ -13,6 +13,27 @@ type
     Label1: TLabel;
     FluentToggleSwitch1: TFluentToggleSwitch;
     Panel1: TPanel;
+    Label2: TLabel;
+    FluentToggleSwitch2: TFluentToggleSwitch;
+    Panel2: TPanel;
+    Label3: TLabel;
+    FluentToggleSwitch3: TFluentToggleSwitch;
+    Panel3: TPanel;
+    Label4: TLabel;
+    FluentToggleSwitch4: TFluentToggleSwitch;
+    Panel4: TPanel;
+    Label5: TLabel;
+    FluentToggleSwitch5: TFluentToggleSwitch;
+    Panel5: TPanel;
+    Label6: TLabel;
+    FluentToggleSwitch6: TFluentToggleSwitch;
+    Panel6: TPanel;
+    Label7: TLabel;
+    FluentToggleSwitch7: TFluentToggleSwitch;
+    Panel7: TPanel;
+    Label8: TLabel;
+    FluentToggleSwitch8: TFluentToggleSwitch;
+    Panel8: TPanel;
   private
     FToggleDefault: TFluentToggleSwitch;
     FToggleOn: TFluentToggleSwitch;
