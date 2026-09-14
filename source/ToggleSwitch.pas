@@ -75,6 +75,7 @@ type
     FHeaderFontCustom: Boolean;
     FHeaderWidth: Integer;
     FHeaderHeight: Integer;
+    FHeaderLeading: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartTimer;
@@ -87,6 +88,7 @@ type
     function CurrentScale: Single;
     function TextGap: Integer;
     function HeaderGap: Integer;
+    function HeaderBand: Integer;
     function StateVisual(S: TInteractionState): TVisualState;
     function CurrentVisual: TVisualState;
     procedure UpdateVisualState;
@@ -559,6 +561,14 @@ begin
   Result := Round(FHeaderSpacing * CurrentScale);
 end;
 
+// Height the header claims. Measured from the visible top of the glyphs
+// rather than the top of the text box, so the gap reads the same whether the
+// header sits above the switch or below it.
+function TFluentToggleSwitch.HeaderBand: Integer;
+begin
+  Result := FHeaderHeight - FHeaderLeading + HeaderGap;
+end;
+
 // Measures the wider of the two labels. Both the auto size and the painting
 // read the result, so measuring is kept apart from anything that resizes.
 procedure TFluentToggleSwitch.Measure;
@@ -572,6 +582,7 @@ begin
   FTextHeight := 0;
   FHeaderWidth := 0;
   FHeaderHeight := 0;
+  FHeaderLeading := 0;
   if not (FShowText or FShowHeader) then
     Exit;
   DC := GetDC(0);
@@ -592,6 +603,7 @@ begin
       GetTextExtentPoint32(DC, PChar(FHeaderText), Length(FHeaderText), SizeHeader);
       FHeaderWidth := SizeHeader.cx;
       FHeaderHeight := TM.tmHeight;
+      FHeaderLeading := TM.tmInternalLeading;
     end;
     SelectObject(DC, SaveFont);
   finally
@@ -614,7 +626,7 @@ begin
   if FShowHeader then
   begin
     NewWidth := Max(NewWidth, FHeaderWidth);
-    Inc(NewHeight, FHeaderHeight + HeaderGap);
+    Inc(NewHeight, HeaderBand);
   end;
 end;
 
@@ -990,7 +1002,7 @@ var
   ThumbW, ThumbH: Single;
   TextX, TextY: Integer;
   HeaderX, HeaderY: Integer;
-  RowTop, RowHeight: Integer;
+  RowTop, RowHeight, Band: Integer;
   LabelText: string;
 
   procedure FillShape(Color: ARGB);
@@ -1031,9 +1043,15 @@ begin
   RowHeight := Height;
   if FShowHeader then
   begin
-    Dec(RowHeight, FHeaderHeight + HeaderGap);
+    // Never let the header eat more than the control has
+    Band := Min(HeaderBand, Height);
+    Dec(RowHeight, Band);
     if FHeaderPosition = hpTop then
-      RowTop := FHeaderHeight + HeaderGap
+    begin
+      RowTop := Band;
+      // Pull the box up by its leading so the glyphs start at the top edge
+      HeaderY := -FHeaderLeading;
+    end
     else
       HeaderY := Height - FHeaderHeight;
     case FHeaderAlignment of
