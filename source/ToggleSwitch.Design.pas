@@ -1,4 +1,4 @@
-unit ToggleSwitch.Design;
+﻿unit ToggleSwitch.Design;
 
 interface
 
@@ -6,6 +6,7 @@ uses
   System.Classes,
   System.UITypes,
   Vcl.Controls,
+  Vcl.StdCtrls,
   DesignIntf,
   DesignEditors,
   VCLEditors,
