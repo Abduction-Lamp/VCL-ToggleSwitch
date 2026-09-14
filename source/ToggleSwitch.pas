@@ -149,8 +149,8 @@ const
   ThumbWidths:  array[TInteractionState] of Integer =   (12,     14,    17,      12);
   ThumbHeights: array[TInteractionState] of Integer =   (12,     14,    14,      12);
   // Thumb center from the left edge of the track
-  ThumbCenterOffX: array[TInteractionState] of Single = (9.5,    9.5,   11.5,    9.5);
-  ThumbCenterOnX:  array[TInteractionState] of Single = (29.5,   29.5,  28.5,    29.5);
+  ThumbCenterOffX: array[TInteractionState] of Single = (10,      10,    11.5,    10);
+  ThumbCenterOnX:  array[TInteractionState] of Single = (30,      30,    28.5,    30);
 
   // Colors are ARGB ($AARRGGBB) from the WinUI 3 Light theme. Off-state colors
   // are translucent black blended over the parent background; the On track has
