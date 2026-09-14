@@ -34,6 +34,9 @@ type
     Label8: TLabel;
     FluentToggleSwitch8: TFluentToggleSwitch;
     Panel8: TPanel;
+    Label9: TLabel;
+    FluentToggleSwitch9: TFluentToggleSwitch;
+    Panel9: TPanel;
   private
     FToggleDefault: TFluentToggleSwitch;
     FToggleOn: TFluentToggleSwitch;
