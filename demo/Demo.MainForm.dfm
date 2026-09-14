@@ -14,7 +14,6 @@ object Form1: TForm1
   Font.Height = -24
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnShow = FormShow
   PixelsPerInch = 192
   TextHeight = 32
   object GridPanel: TGridPanel

@@ -30,7 +30,6 @@ type
     FluentToggleSwitch5: TFluentToggleSwitch;
     Label10: TLabel;
     FluentToggleSwitch10: TFluentToggleSwitch;
-    procedure FormShow(Sender: TObject);
   end;
 
 var
@@ -38,20 +37,6 @@ var
 
 implementation
 
-//uses
-//  System.SysUtils;
-
 {$R *.dfm}
-
-// Temporary: shows what the control believes about the screen it is on
-procedure TForm1.FormShow(Sender: TObject);
-begin
-  Caption := Format(
-    'form PPI %d, scale %.2f | switch PPI %d, scale %.2f, %dx%d | monitor %d | font %d',
-    [CurrentPPI, ScaleFactor,
-     FluentToggleSwitch1.CurrentPPI, FluentToggleSwitch1.ScaleFactor,
-     FluentToggleSwitch1.Width, FluentToggleSwitch1.Height,
-     Monitor.PixelsPerInch, Font.Height]);
-end;
 
 end.
