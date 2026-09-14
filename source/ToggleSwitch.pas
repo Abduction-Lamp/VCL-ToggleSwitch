@@ -62,7 +62,7 @@ type
     FShowText: Boolean;
     FTextPosition: TTextPosition;
     FTextSpacing: Integer;
-    FTrackOffsetX: Integer;
+    FTextWidth: Integer;
     FTextHeight: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
@@ -89,13 +89,15 @@ type
     procedure SetShowText(Value: Boolean);
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
-    procedure AdjustBounds;
+    procedure Measure;
+    procedure LayoutChanged;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure CMEnabledChanged(var Msg: TMessage); message CM_ENABLEDCHANGED;
   protected
     procedure Paint; override;
+    function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
     procedure CreateWnd; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -312,8 +314,8 @@ begin
   FShowText := False;
   FTextPosition := tpRight;
   FTextSpacing := 12;
-  FTrackOffsetX := 0;
-  AdjustBounds;
+  AutoSize := True;
+  LayoutChanged;
 end;
 
 procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
@@ -366,8 +368,7 @@ begin
   if FTextOn <> Value then
   begin
     FTextOn := Value;
-    AdjustBounds;
-    Invalidate;
+    LayoutChanged;
   end;
 end;
 
@@ -376,8 +377,7 @@ begin
   if FTextOff <> Value then
   begin
     FTextOff := Value;
-    AdjustBounds;
-    Invalidate;
+    LayoutChanged;
   end;
 end;
 
@@ -386,8 +386,7 @@ begin
   if FShowText <> Value then
   begin
     FShowText := Value;
-    AdjustBounds;
-    Invalidate;
+    LayoutChanged;
   end;
 end;
 
@@ -396,8 +395,7 @@ begin
   if FTextPosition <> Value then
   begin
     FTextPosition := Value;
-    AdjustBounds;
-    Invalidate;
+    LayoutChanged;
   end;
 end;
 
@@ -408,8 +406,7 @@ begin
   if FTextSpacing <> Value then
   begin
     FTextSpacing := Value;
-    AdjustBounds;
-    Invalidate;
+    LayoutChanged;
   end;
 end;
 
@@ -434,50 +431,70 @@ begin
     Result := 0;
 end;
 
-procedure TFluentToggleSwitch.AdjustBounds;
+// Measures the wider of the two labels. Both the auto size and the painting
+// read the result, so measuring is kept apart from anything that resizes.
+procedure TFluentToggleSwitch.Measure;
 var
   DC: HDC;
   SaveFont: HFONT;
   TM: TTextMetric;
   SizeOn, SizeOff: TSize;
-  TextW: Integer;
-  NewWidth, NewHeight: Integer;
 begin
   if not FShowText then
   begin
-    FTrackOffsetX := 0;
-    NewWidth := Round(TrackAreaWidth * CurrentScale);
-    NewHeight := Round(TrackAreaHeight * CurrentScale);
-  end
-  else
-  begin
-    DC := GetDC(0);
-    try
-      SaveFont := SelectObject(DC, Font.Handle);
-      GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
-      GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
-      GetTextMetrics(DC, TM);
-      SelectObject(DC, SaveFont);
-    finally
-      ReleaseDC(0, DC);
-    end;
-    TextW := Max(SizeOn.cx, SizeOff.cx);
-    FTextHeight := TM.tmHeight;
-    NewWidth := Round(TrackAreaWidth * CurrentScale) + TextGap + TextW;
-    NewHeight := Max(Round(TrackAreaHeight * CurrentScale), FTextHeight);
-    if FTextPosition = tpLeft then
-      FTrackOffsetX := TextW + TextGap
-    else
-      FTrackOffsetX := 0;
+    FTextWidth := 0;
+    FTextHeight := 0;
+    Exit;
   end;
-  SetBounds(Left, Top, NewWidth, NewHeight);
+  DC := GetDC(0);
+  try
+    SaveFont := SelectObject(DC, Font.Handle);
+    GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
+    GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
+    GetTextMetrics(DC, TM);
+    SelectObject(DC, SaveFont);
+  finally
+    ReleaseDC(0, DC);
+  end;
+  FTextWidth := Max(SizeOn.cx, SizeOff.cx);
+  FTextHeight := TM.tmHeight;
+end;
+
+// Free of side effects, so VCL may call it as often as it likes: every resize
+// runs it again from WMWindowPosChanging
+function TFluentToggleSwitch.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
+begin
+  Result := True;
+  NewWidth := Round(TrackAreaWidth * CurrentScale);
+  NewHeight := Round(TrackAreaHeight * CurrentScale);
+  if FShowText then
+  begin
+    Inc(NewWidth, TextGap + FTextWidth);
+    NewHeight := Max(NewHeight, FTextHeight);
+  end;
+end;
+
+// Measures again and hands the size to VCL, so that whoever lays the control
+// out - a grid panel, an aligned parent - hears about the change
+procedure TFluentToggleSwitch.LayoutChanged;
+var
+  W, H: Integer;
+begin
+  Measure;
+  if AutoSize then
+  begin
+    W := Width;
+    H := Height;
+    if CanAutoSize(W, H) then
+      SetBounds(Left, Top, W, H);
+  end;
+  Invalidate;
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
 begin
   inherited;
-  AdjustBounds;
-  Invalidate;
+  LayoutChanged;
 end;
 
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
@@ -487,14 +504,14 @@ begin
   inherited;
   // A state snapshot taken at the old scale would be wrong now
   FStateT := 1.0;
-  AdjustBounds;
+  LayoutChanged;
 end;
 
 // The control only learns which monitor it sits on once the window exists
 procedure TFluentToggleSwitch.CreateWnd;
 begin
   inherited;
-  AdjustBounds;
+  LayoutChanged;
 end;
 
 destructor TFluentToggleSwitch.Destroy;
@@ -794,7 +811,7 @@ var
   Path: TGPGraphicsPath;
   Brush: TGPSolidBrush;
   Pen: TGPPen;
-  TrackX, TrackY: Single;
+  TrackX, TrackY, TrackOffsetX: Single;
   TrackW, TrackH, PenW, K: Single;
   VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
@@ -822,6 +839,7 @@ var
   end;
 
 begin
+  TrackOffsetX := 0;
   K := CurrentScale;
   TrackW := TrackWidth * K;
   TrackH := TrackHeight * K;
@@ -838,7 +856,7 @@ begin
   if FShowText then
   begin
     if FTextPosition = tpLeft then
-      TextX := 0
+      TrackOffsetX := FTextWidth + TextGap
     else
       TextX := Round(TrackAreaWidth * K) + TextGap;
 
@@ -846,7 +864,7 @@ begin
   end;
 
   // Track position, kept on whole pixels so the outline stays crisp
-  TrackX := FTrackOffsetX + Round((TrackAreaWidth - TrackWidth) * K / 2);
+  TrackX := TrackOffsetX + Round((TrackAreaWidth - TrackWidth) * K / 2);
   TrackY := Round((Height - TrackH) / 2);
 
   VS := CurrentVisual;
