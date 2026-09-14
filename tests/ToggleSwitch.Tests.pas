@@ -118,6 +118,29 @@ type
 
     [Test]
     procedure CreateAndDestroy_ShouldNotLeak;
+
+    // --- Scaling ---
+
+    [Test]
+    procedure Scale_96_ShouldUseTheDesignSize;
+
+    [Test]
+    procedure Scale_120_ShouldGrowWithTheScale;
+
+    [Test]
+    procedure Scale_144_ShouldGrowWithTheScale;
+
+    [Test]
+    procedure Scale_192_ShouldGrowWithTheScale;
+
+    [Test]
+    procedure Scale_ThereAndBack_ShouldNotDrift;
+
+    [Test]
+    procedure AutoSize_False_ShouldKeepTheGivenSize;
+
+    [Test]
+    procedure AutoSize_True_ShouldMeasureAgain;
   end;
 
 implementation
@@ -389,6 +412,66 @@ end;
 procedure TToggleSwitchTest.DefaultChecked_ShouldBeFalse;
 begin
   Assert.IsFalse(FToggle.Checked);
+end;
+
+// --- Scaling tests ---
+
+procedure TToggleSwitchTest.Scale_96_ShouldUseTheDesignSize;
+begin
+  FToggle.ScaleForPPI(96);
+  Assert.AreEqual(44, FToggle.Width);
+  Assert.AreEqual(24, FToggle.Height);
+end;
+
+procedure TToggleSwitchTest.Scale_120_ShouldGrowWithTheScale;
+begin
+  FToggle.ScaleForPPI(120);
+  Assert.AreEqual(55, FToggle.Width);
+  Assert.AreEqual(30, FToggle.Height);
+end;
+
+procedure TToggleSwitchTest.Scale_144_ShouldGrowWithTheScale;
+begin
+  FToggle.ScaleForPPI(144);
+  Assert.AreEqual(66, FToggle.Width);
+  Assert.AreEqual(36, FToggle.Height);
+end;
+
+procedure TToggleSwitchTest.Scale_192_ShouldGrowWithTheScale;
+begin
+  FToggle.ScaleForPPI(192);
+  Assert.AreEqual(88, FToggle.Width);
+  Assert.AreEqual(48, FToggle.Height);
+end;
+
+// The control used to count the scale itself, multiplying it step by step, so
+// a walk across monitors drifted away from the design size
+procedure TToggleSwitchTest.Scale_ThereAndBack_ShouldNotDrift;
+begin
+  FToggle.ScaleForPPI(120);
+  FToggle.ScaleForPPI(144);
+  FToggle.ScaleForPPI(192);
+  FToggle.ScaleForPPI(96);
+  Assert.AreEqual(44, FToggle.Width);
+  Assert.AreEqual(24, FToggle.Height);
+end;
+
+procedure TToggleSwitchTest.AutoSize_False_ShouldKeepTheGivenSize;
+begin
+  FToggle.AutoSize := False;
+  FToggle.SetBounds(0, 0, 100, 50);
+  Assert.AreEqual(100, FToggle.Width);
+  Assert.AreEqual(50, FToggle.Height);
+end;
+
+procedure TToggleSwitchTest.AutoSize_True_ShouldMeasureAgain;
+begin
+  FToggle.ScaleForPPI(96);
+  FToggle.AutoSize := False;
+  FToggle.SetBounds(0, 0, 100, 50);
+  FToggle.AutoSize := True;
+  Assert.AreEqual(44, FToggle.Width);
+  Assert.AreEqual(24, FToggle.Height);
 end;
 
 initialization
