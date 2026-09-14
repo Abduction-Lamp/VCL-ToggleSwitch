@@ -141,6 +141,20 @@ type
 
     [Test]
     procedure AutoSize_True_ShouldMeasureAgain;
+
+    // --- Header ---
+
+    [Test]
+    procedure DefaultHeaderValues;
+
+    [Test]
+    procedure ShowHeader_True_ShouldMakeRoomAbove;
+
+    [Test]
+    procedure ShowHeader_LongText_ShouldWidenTheControl;
+
+    [Test]
+    procedure HeaderPosition_ShouldNotChangeTheSize;
   end;
 
 implementation
@@ -472,6 +486,52 @@ begin
   FToggle.AutoSize := True;
   Assert.AreEqual(44, FToggle.Width);
   Assert.AreEqual(24, FToggle.Height);
+end;
+
+// --- Header tests ---
+
+procedure TToggleSwitchTest.DefaultHeaderValues;
+begin
+  Assert.IsFalse(FToggle.ShowHeader);
+  Assert.AreEqual('', FToggle.HeaderText);
+  Assert.IsTrue(FToggle.HeaderPosition = hpTop);
+  Assert.IsTrue(FToggle.HeaderAlignment = taLeftJustify);
+  Assert.AreEqual(7, FToggle.HeaderSpacing);
+end;
+
+procedure TToggleSwitchTest.ShowHeader_True_ShouldMakeRoomAbove;
+var
+  HeightBefore: Integer;
+begin
+  HeightBefore := FToggle.Height;
+  FToggle.HeaderText := 'Header';
+  FToggle.ShowHeader := True;
+  Assert.IsTrue(FToggle.Height > HeightBefore,
+    'Height should grow by the header and its gap');
+end;
+
+procedure TToggleSwitchTest.ShowHeader_LongText_ShouldWidenTheControl;
+var
+  WidthBefore: Integer;
+begin
+  WidthBefore := FToggle.Width;
+  FToggle.HeaderText := 'A header far wider than the switch itself';
+  FToggle.ShowHeader := True;
+  Assert.IsTrue(FToggle.Width > WidthBefore,
+    'A header wider than the row should widen the control');
+end;
+
+procedure TToggleSwitchTest.HeaderPosition_ShouldNotChangeTheSize;
+var
+  W, H: Integer;
+begin
+  FToggle.HeaderText := 'Header';
+  FToggle.ShowHeader := True;
+  W := FToggle.Width;
+  H := FToggle.Height;
+  FToggle.HeaderPosition := hpBottom;
+  Assert.AreEqual(W, FToggle.Width);
+  Assert.AreEqual(H, FToggle.Height);
 end;
 
 initialization

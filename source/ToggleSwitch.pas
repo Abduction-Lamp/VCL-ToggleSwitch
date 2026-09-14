@@ -18,6 +18,8 @@ uses
 type
   TTextPosition = (tpLeft, tpRight);
 
+  THeaderPosition = (hpTop, hpBottom);
+
   TInteractionState = (isNormal, isHover, isPressed, isDisabled);
 
   // Everything an interaction state contributes to the drawing. Kept as values
@@ -64,6 +66,13 @@ type
     FTextSpacing: Integer;
     FTextWidth: Integer;
     FTextHeight: Integer;
+    FShowHeader: Boolean;
+    FHeaderText: string;
+    FHeaderPosition: THeaderPosition;
+    FHeaderAlignment: TAlignment;
+    FHeaderSpacing: Integer;
+    FHeaderWidth: Integer;
+    FHeaderHeight: Integer;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartTimer;
@@ -75,6 +84,7 @@ type
     function GetInteractionState: TInteractionState;
     function CurrentScale: Single;
     function TextGap: Integer;
+    function HeaderGap: Integer;
     function StateVisual(S: TInteractionState): TVisualState;
     function CurrentVisual: TVisualState;
     procedure UpdateVisualState;
@@ -89,6 +99,11 @@ type
     procedure SetShowText(Value: Boolean);
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
+    procedure SetShowHeader(Value: Boolean);
+    procedure SetHeaderText(const Value: string);
+    procedure SetHeaderPosition(Value: THeaderPosition);
+    procedure SetHeaderAlignment(Value: TAlignment);
+    procedure SetHeaderSpacing(Value: Integer);
     procedure Measure;
     procedure LayoutChanged;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
@@ -148,6 +163,11 @@ type
     property TextOff: string read FTextOff write SetTextOff;
     property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 12;
+    property ShowHeader: Boolean read FShowHeader write SetShowHeader default False;
+    property HeaderText: string read FHeaderText write SetHeaderText;
+    property HeaderPosition: THeaderPosition read FHeaderPosition write SetHeaderPosition default hpTop;
+    property HeaderAlignment: TAlignment read FHeaderAlignment write SetHeaderAlignment default taLeftJustify;
+    property HeaderSpacing: Integer read FHeaderSpacing write SetHeaderSpacing default 7;
     property OnContextPopup;
     property OnDblClick;
     property OnEnter;
@@ -345,6 +365,10 @@ begin
   FShowText := False;
   FTextPosition := tpRight;
   FTextSpacing := 12;
+  FShowHeader := False;
+  FHeaderPosition := hpTop;
+  FHeaderAlignment := taLeftJustify;
+  FHeaderSpacing := 7;
   AutoSize := True;
   LayoutChanged;
 end;
@@ -441,6 +465,53 @@ begin
   end;
 end;
 
+procedure TFluentToggleSwitch.SetShowHeader(Value: Boolean);
+begin
+  if FShowHeader <> Value then
+  begin
+    FShowHeader := Value;
+    LayoutChanged;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetHeaderText(const Value: string);
+begin
+  if FHeaderText <> Value then
+  begin
+    FHeaderText := Value;
+    LayoutChanged;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetHeaderPosition(Value: THeaderPosition);
+begin
+  if FHeaderPosition <> Value then
+  begin
+    FHeaderPosition := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetHeaderAlignment(Value: TAlignment);
+begin
+  if FHeaderAlignment <> Value then
+  begin
+    FHeaderAlignment := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFluentToggleSwitch.SetHeaderSpacing(Value: Integer);
+begin
+  if Value < 0 then
+    Value := 0;
+  if FHeaderSpacing <> Value then
+  begin
+    FHeaderSpacing := Value;
+    LayoutChanged;
+  end;
+end;
+
 // Scale of the monitor the control sits on, kept by VCL. CurrentPPI stays zero
 // until the control is scaled for the first time, and the design metrics are
 // already in the units of that first scale.
@@ -462,6 +533,12 @@ begin
     Result := 0;
 end;
 
+// Distance between the header and the row holding the switch
+function TFluentToggleSwitch.HeaderGap: Integer;
+begin
+  Result := Round(FHeaderSpacing * CurrentScale);
+end;
+
 // Measures the wider of the two labels. Both the auto size and the painting
 // read the result, so measuring is kept apart from anything that resizes.
 procedure TFluentToggleSwitch.Measure;
@@ -469,26 +546,35 @@ var
   DC: HDC;
   SaveFont: HFONT;
   TM: TTextMetric;
-  SizeOn, SizeOff: TSize;
+  SizeOn, SizeOff, SizeHeader: TSize;
 begin
-  if not FShowText then
-  begin
-    FTextWidth := 0;
-    FTextHeight := 0;
+  FTextWidth := 0;
+  FTextHeight := 0;
+  FHeaderWidth := 0;
+  FHeaderHeight := 0;
+  if not (FShowText or FShowHeader) then
     Exit;
-  end;
   DC := GetDC(0);
   try
     SaveFont := SelectObject(DC, Font.Handle);
-    GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
-    GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
     GetTextMetrics(DC, TM);
+    if FShowText then
+    begin
+      GetTextExtentPoint32(DC, PChar(FTextOn), Length(FTextOn), SizeOn);
+      GetTextExtentPoint32(DC, PChar(FTextOff), Length(FTextOff), SizeOff);
+      FTextWidth := Max(SizeOn.cx, SizeOff.cx);
+      FTextHeight := TM.tmHeight;
+    end;
+    if FShowHeader then
+    begin
+      GetTextExtentPoint32(DC, PChar(FHeaderText), Length(FHeaderText), SizeHeader);
+      FHeaderWidth := SizeHeader.cx;
+      FHeaderHeight := TM.tmHeight;
+    end;
     SelectObject(DC, SaveFont);
   finally
     ReleaseDC(0, DC);
   end;
-  FTextWidth := Max(SizeOn.cx, SizeOff.cx);
-  FTextHeight := TM.tmHeight;
 end;
 
 // Free of side effects, so VCL may call it as often as it likes: every resize
@@ -502,6 +588,11 @@ begin
   begin
     Inc(NewWidth, TextGap + FTextWidth);
     NewHeight := Max(NewHeight, FTextHeight);
+  end;
+  if FShowHeader then
+  begin
+    NewWidth := Max(NewWidth, FHeaderWidth);
+    Inc(NewHeight, FHeaderHeight + HeaderGap);
   end;
 end;
 
@@ -861,6 +952,8 @@ var
   ThumbCX, ThumbCY: Single;
   ThumbW, ThumbH: Single;
   TextX, TextY: Integer;
+  HeaderX, HeaderY: Integer;
+  RowTop, RowHeight: Integer;
   LabelText: string;
 
   procedure FillShape(Color: ARGB);
@@ -887,13 +980,32 @@ begin
   PenW := K;
   TextX := 0;
   TextY := 0;
+  HeaderX := 0;
+  HeaderY := 0;
 
   // Background. csOpaque suppresses WM_ERASEBKGND, so this is the only erase
   Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := Color;
   Canvas.FillRect(ClientRect);
 
-  // Text layout; the height was measured when the font or the text last changed
+  // The header takes a band off the top or the bottom, and the switch shares
+  // what is left with its label
+  RowTop := 0;
+  RowHeight := Height;
+  if FShowHeader then
+  begin
+    Dec(RowHeight, FHeaderHeight + HeaderGap);
+    if FHeaderPosition = hpTop then
+      RowTop := FHeaderHeight + HeaderGap
+    else
+      HeaderY := Height - FHeaderHeight;
+    case FHeaderAlignment of
+      taCenter: HeaderX := (Width - FHeaderWidth) div 2;
+      taRightJustify: HeaderX := Width - FHeaderWidth;
+    end;
+  end;
+
+  // Text layout; the sizes were measured when the font or the text last changed
   if FShowText then
   begin
     if FTextPosition = tpLeft then
@@ -901,12 +1013,12 @@ begin
     else
       TextX := Round(TrackAreaWidth * K) + TextGap;
 
-    TextY := (Height - FTextHeight) div 2;
+    TextY := RowTop + (RowHeight - FTextHeight) div 2;
   end;
 
   // Track position, kept on whole pixels so the outline stays crisp
   TrackX := TrackOffsetX + Round((TrackAreaWidth - TrackWidth) * K / 2);
-  TrackY := Round((Height - TrackH) / 2);
+  TrackY := RowTop + Round((RowHeight - TrackH) / 2);
 
   VS := CurrentVisual;
   OffOpacity := 1 - FAnimProgress;
@@ -997,19 +1109,23 @@ begin
     G.Free;
   end;
 
-  // Text label
-  if FShowText then
+  // Labels
+  if FShowText or FShowHeader then
   begin
-    if FChecked then
-      LabelText := FTextOn
-    else
-      LabelText := FTextOff;
-
     Canvas.Font.Assign(Font);
     Canvas.Brush.Style := bsClear;
     if not Enabled then
       Canvas.Font.Color := clGrayText;
-    Canvas.TextOut(TextX, TextY, LabelText);
+    if FShowText then
+    begin
+      if FChecked then
+        LabelText := FTextOn
+      else
+        LabelText := FTextOff;
+      Canvas.TextOut(TextX, TextY, LabelText);
+    end;
+    if FShowHeader then
+      Canvas.TextOut(HeaderX, HeaderY, FHeaderText);
   end;
 end;
 
