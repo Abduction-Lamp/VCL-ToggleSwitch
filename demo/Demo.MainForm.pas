@@ -88,6 +88,13 @@ procedure TForm1.ShowState(Toggle: TFluentToggleSwitch);
 var
   Panel: TPanel;
 begin
+  // The Left/Right row puts its label on the side it names
+  if SameText(Toggle.TextOff, 'Left') and SameText(Toggle.TextOn, 'Right') then
+    if Toggle.Checked then
+      Toggle.TextPosition := tpRight
+    else
+      Toggle.TextPosition := tpLeft;
+
   Panel := PanelOf(Toggle);
   if Panel = nil then
     Exit;
