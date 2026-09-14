@@ -1,4 +1,4 @@
-object Form1: TForm1
+﻿object Form1: TForm1
   Left = 0
   Top = 0
   Margins.Left = 6
@@ -14,6 +14,7 @@ object Form1: TForm1
   Font.Height = -24
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OnCreate = FormCreate
   PixelsPerInch = 192
   TextHeight = 32
   object GridPanel: TGridPanel

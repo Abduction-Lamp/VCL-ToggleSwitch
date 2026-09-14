@@ -1,4 +1,4 @@
-unit Demo.MainForm;
+﻿unit Demo.MainForm;
 
 interface
 
@@ -37,16 +37,10 @@ type
     Label9: TLabel;
     FluentToggleSwitch9: TFluentToggleSwitch;
     Panel9: TPanel;
+    procedure FormCreate(Sender: TObject);
   private
-    FToggleDefault: TFluentToggleSwitch;
-    FToggleOn: TFluentToggleSwitch;
-    FToggleDisabledOff: TFluentToggleSwitch;
-    FToggleDisabledOn: TFluentToggleSwitch;
-    FToggleNoAnim: TFluentToggleSwitch;
-    FToggleCustomColors: TFluentToggleSwitch;
-    FToggleWithText: TFluentToggleSwitch;
-    FToggleTextLeft: TFluentToggleSwitch;
-    FStatusLabel: TLabel;
+    function PanelOf(Toggle: TFluentToggleSwitch): TPanel;
+    procedure ShowState(Toggle: TFluentToggleSwitch);
     procedure OnToggleChange(Sender: TObject);
   end;
 
@@ -57,17 +51,55 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.OnToggleChange(Sender: TObject);
+procedure TForm1.FormCreate(Sender: TObject);
 var
-  Toggle: TFluentToggleSwitch;
-  StateName: string;
+  I: Integer;
+  Control: TControl;
 begin
-  Toggle := Sender as TFluentToggleSwitch;
+  for I := 0 to GridPanel.ControlCollection.Count - 1 do
+  begin
+    Control := GridPanel.ControlCollection[I].Control;
+    if Control is TFluentToggleSwitch then
+    begin
+      TFluentToggleSwitch(Control).OnChange := OnToggleChange;
+      ShowState(TFluentToggleSwitch(Control));
+    end;
+  end;
+end;
+
+// The panel sharing a row with the switch
+function TForm1.PanelOf(Toggle: TFluentToggleSwitch): TPanel;
+var
+  Controls: TControlCollection;
+  I, Row: Integer;
+begin
+  Result := nil;
+  Controls := GridPanel.ControlCollection;
+  I := Controls.IndexOf(Toggle);
+  if I < 0 then
+    Exit;
+  Row := Controls[I].Row;
+  for I := 0 to Controls.Count - 1 do
+    if (Controls[I].Row = Row) and (Controls[I].Control is TPanel) then
+      Exit(TPanel(Controls[I].Control));
+end;
+
+procedure TForm1.ShowState(Toggle: TFluentToggleSwitch);
+var
+  Panel: TPanel;
+begin
+  Panel := PanelOf(Toggle);
+  if Panel = nil then
+    Exit;
   if Toggle.Checked then
-    StateName := 'On'
+    Panel.Caption := Toggle.TextOn
   else
-    StateName := 'Off';
-  FStatusLabel.Caption := Format('Toggle changed: %s', [StateName]);
+    Panel.Caption := Toggle.TextOff;
+end;
+
+procedure TForm1.OnToggleChange(Sender: TObject);
+begin
+  ShowState(Sender as TFluentToggleSwitch);
 end;
 
 end.
