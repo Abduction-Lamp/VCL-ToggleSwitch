@@ -29,7 +29,7 @@ type
     // --- Color properties ---
 
     [Test]
-    procedure DefaultColorsShouldBeClNone;
+    procedure DefaultColorsShouldBeClDefault;
 
     [Test]
     procedure SetTrackFrameColor_ShouldStoreValue;
@@ -176,13 +176,13 @@ end;
 
 // --- Color tests ---
 
-procedure TToggleSwitchTest.DefaultColorsShouldBeClNone;
+procedure TToggleSwitchTest.DefaultColorsShouldBeClDefault;
 begin
-  Assert.AreEqual(TColor(clNone), FToggle.TrackFrameColor);
-  Assert.AreEqual(TColor(clNone), FToggle.TrackColorOff);
-  Assert.AreEqual(TColor(clNone), FToggle.TrackColorOn);
-  Assert.AreEqual(TColor(clNone), FToggle.ThumbColorOff);
-  Assert.AreEqual(TColor(clNone), FToggle.ThumbColorOn);
+  Assert.AreEqual(TColor(clDefault), FToggle.TrackFrameColor);
+  Assert.AreEqual(TColor(clDefault), FToggle.TrackColorOff);
+  Assert.AreEqual(TColor(clDefault), FToggle.TrackColorOn);
+  Assert.AreEqual(TColor(clDefault), FToggle.ThumbColorOff);
+  Assert.AreEqual(TColor(clDefault), FToggle.ThumbColorOn);
 end;
 
 procedure TToggleSwitchTest.SetTrackFrameColor_ShouldStoreValue;

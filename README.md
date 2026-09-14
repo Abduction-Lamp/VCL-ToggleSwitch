@@ -147,7 +147,7 @@ Toggle.ThumbColorOn := clWhite;
 Toggle.ThumbColorOff := clBlack;
 ```
 
-Set any color property to `clNone` (default) to use the built-in WinUI 3 color scheme.
+Set any color property to `clDefault` (default) to use the built-in WinUI 3 color scheme. The scheme carries a separate, partly translucent color for every interaction state, and the On track follows the Windows accent, so a single `TColor` cannot stand in for it: assigning one paints that color in every state.
 
 ### Text label
 
@@ -175,11 +175,11 @@ The component auto-adjusts its width to fit the longer of the two texts. Text is
 | `ParentColor` | `Boolean` | `True` | Follow the parent's background color |
 | `Color` | `TColor` | *(parent)* | Background color; assigning it turns `ParentColor` off |
 | **Color customization** | | | |
-| `TrackFrameColor` | `TColor` | `clNone` | Track border/stroke color |
-| `TrackColorOff` | `TColor` | `clNone` | Track fill color when Off |
-| `TrackColorOn` | `TColor` | `clNone` | Track fill color when On |
-| `ThumbColorOff` | `TColor` | `clNone` | Thumb color when Off |
-| `ThumbColorOn` | `TColor` | `clNone` | Thumb color when On |
+| `TrackFrameColor` | `TColor` | `clDefault` | Track border/stroke color |
+| `TrackColorOff` | `TColor` | `clDefault` | Track fill color when Off |
+| `TrackColorOn` | `TColor` | `clDefault` | Track fill color when On |
+| `ThumbColorOff` | `TColor` | `clDefault` | Thumb color when Off |
+| `ThumbColorOn` | `TColor` | `clDefault` | Thumb color when On |
 | **Text label** | | | |
 | `ShowText` | `Boolean` | `False` | Show or hide the text label |
 | `TextOn` | `string` | `'On'` | Label text when Checked = True |

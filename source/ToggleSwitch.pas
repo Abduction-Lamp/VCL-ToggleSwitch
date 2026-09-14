@@ -158,11 +158,11 @@ type
     property ParentColor;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnClick;
-    property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clNone;
-    property TrackColorOff: TColor read FTrackColorOff write SetTrackColorOff default clNone;
-    property TrackColorOn: TColor read FTrackColorOn write SetTrackColorOn default clNone;
-    property ThumbColorOff: TColor read FThumbColorOff write SetThumbColorOff default clNone;
-    property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clNone;
+    property TrackFrameColor: TColor read FTrackFrameColor write SetTrackFrameColor default clDefault;
+    property TrackColorOff: TColor read FTrackColorOff write SetTrackColorOff default clDefault;
+    property TrackColorOn: TColor read FTrackColorOn write SetTrackColorOn default clDefault;
+    property ThumbColorOff: TColor read FThumbColorOff write SetThumbColorOff default clDefault;
+    property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clDefault;
     property Font;
     property ShowText: Boolean read FShowText write SetShowText default False;
     property TextOn: string read FTextOn write SetTextOn;
@@ -362,11 +362,11 @@ begin
   FStateDuration := StateDuration;
   QueryPerformanceFrequency(FAnimFrequency);
   DoubleBuffered := True;
-  FTrackFrameColor := clNone;
-  FTrackColorOff := clNone;
-  FTrackColorOn := clNone;
-  FThumbColorOff := clNone;
-  FThumbColorOn := clNone;
+  FTrackFrameColor := clDefault;
+  FTrackColorOff := clDefault;
+  FTrackColorOn := clDefault;
+  FThumbColorOff := clDefault;
+  FThumbColorOn := clDefault;
   FTextOn := 'On';
   FTextOff := 'Off';
   FShowText := False;
@@ -1079,28 +1079,28 @@ begin
   OffOpacity := 1 - FAnimProgress;
 
   // Track colors; user colors override the theme
-  if FTrackColorOff <> clNone then
+  if FTrackColorOff <> clDefault then
     OffFill := TColorToARGB(FTrackColorOff)
   else
     OffFill := VS.TrackOff;
 
-  if FTrackFrameColor <> clNone then
+  if FTrackFrameColor <> clDefault then
     OffStroke := TColorToARGB(FTrackFrameColor)
   else
     OffStroke := VS.StrokeOff;
 
-  if FTrackColorOn <> clNone then
+  if FTrackColorOn <> clDefault then
     OnFill := TColorToARGB(FTrackColorOn)
   else
     OnFill := VS.TrackOn;
 
   // Thumb colors
-  if FThumbColorOff <> clNone then
+  if FThumbColorOff <> clDefault then
     OffThumb := TColorToARGB(FThumbColorOff)
   else
     OffThumb := VS.ThumbOff;
 
-  if FThumbColorOn <> clNone then
+  if FThumbColorOn <> clDefault then
     OnThumb := TColorToARGB(FThumbColorOn)
   else
     OnThumb := VS.ThumbOn;
@@ -1144,7 +1144,7 @@ begin
       FillShape(ScaleAlpha(OnFill, FAnimProgress));
       // The On track carries a stroke of its own color; that stroke is what
       // fills the outer pixel of the pill
-      if FTrackFrameColor <> clNone then
+      if FTrackFrameColor <> clDefault then
         StrokeShape(ScaleAlpha(OffStroke, FAnimProgress))
       else
         StrokeShape(ScaleAlpha(OnFill, FAnimProgress));
