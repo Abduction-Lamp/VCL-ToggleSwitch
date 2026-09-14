@@ -38,8 +38,8 @@ var
 
 implementation
 
-uses
-  System.SysUtils;
+//uses
+//  System.SysUtils;
 
 {$R *.dfm}
 
