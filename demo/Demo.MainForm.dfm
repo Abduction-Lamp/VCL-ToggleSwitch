@@ -70,122 +70,122 @@ object Form1: TForm1
       end
       item
         Column = 4
-        Control = Label2
-        Row = 0
-      end
-      item
-        Column = 5
-        Control = FluentToggleSwitch2
-        Row = 0
-      end
-      item
-        Column = 6
-        Control = Panel2
-        Row = 0
-      end
-      item
-        Column = 0
-        Control = Label3
-        Row = 1
-      end
-      item
-        Column = 1
-        Control = FluentToggleSwitch3
-        Row = 1
-      end
-      item
-        Column = 2
-        Control = Panel3
-        Row = 1
-      end
-      item
-        Column = 4
-        Control = Label4
-        Row = 1
-      end
-      item
-        Column = 5
-        Control = FluentToggleSwitch4
-        Row = 1
-      end
-      item
-        Column = 6
-        Control = Panel4
-        Row = 1
-      end
-      item
-        Column = 0
-        Control = Label5
-        Row = 2
-      end
-      item
-        Column = 1
-        Control = FluentToggleSwitch5
-        Row = 2
-      end
-      item
-        Column = 2
-        Control = Panel5
-        Row = 2
-      end
-      item
-        Column = 4
         Control = Label6
-        Row = 2
+        Row = 0
       end
       item
         Column = 5
         Control = FluentToggleSwitch6
-        Row = 2
+        Row = 0
       end
       item
         Column = 6
         Control = Panel6
-        Row = 2
+        Row = 0
       end
       item
         Column = 0
-        Control = Label7
-        Row = 3
+        Control = Label2
+        Row = 1
       end
       item
         Column = 1
-        Control = FluentToggleSwitch7
-        Row = 3
+        Control = FluentToggleSwitch2
+        Row = 1
       end
       item
         Column = 2
+        Control = Panel2
+        Row = 1
+      end
+      item
+        Column = 4
+        Control = Label7
+        Row = 1
+      end
+      item
+        Column = 5
+        Control = FluentToggleSwitch7
+        Row = 1
+      end
+      item
+        Column = 6
         Control = Panel7
-        Row = 3
+        Row = 1
+      end
+      item
+        Column = 0
+        Control = Label3
+        Row = 2
+      end
+      item
+        Column = 1
+        Control = FluentToggleSwitch3
+        Row = 2
+      end
+      item
+        Column = 2
+        Control = Panel3
+        Row = 2
       end
       item
         Column = 4
         Control = Label8
-        Row = 3
+        Row = 2
       end
       item
         Column = 5
         Control = FluentToggleSwitch8
-        Row = 3
+        Row = 2
       end
       item
         Column = 6
         Control = Panel8
+        Row = 2
+      end
+      item
+        Column = 0
+        Control = Label4
+        Row = 3
+      end
+      item
+        Column = 1
+        Control = FluentToggleSwitch4
+        Row = 3
+      end
+      item
+        Column = 2
+        Control = Panel4
+        Row = 3
+      end
+      item
+        Column = 4
+        Control = Label9
+        Row = 3
+      end
+      item
+        Column = 5
+        Control = FluentToggleSwitch9
+        Row = 3
+      end
+      item
+        Column = 6
+        Control = Panel9
         Row = 3
       end
       item
         Column = 0
-        Control = Label9
+        Control = Label5
         Row = 4
       end
       item
         Column = 1
-        Control = FluentToggleSwitch9
+        Control = FluentToggleSwitch5
         Row = 4
       end
       item
         Column = 2
-        Control = Panel9
+        Control = Panel5
         Row = 4
       end
       item
@@ -196,6 +196,11 @@ object Form1: TForm1
       item
         Column = 5
         Control = FluentToggleSwitch10
+        Row = 4
+      end
+      item
+        Column = 6
+        Control = Panel10
         Row = 4
       end>
     ExpandStyle = emFixedSize
@@ -273,7 +278,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 1
     end
-    object Label2: TLabel
+    object Label6: TLabel
       AlignWithMargins = True
       Left = 874
       Top = 6
@@ -289,7 +294,7 @@ object Form1: TForm1
       ExplicitLeft = 812
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch2: TFluentToggleSwitch
+    object FluentToggleSwitch6: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 1011
       Top = 23
@@ -308,7 +313,7 @@ object Form1: TForm1
       TextOff = 'Off'
       TextPosition = tpLeft
     end
-    object Panel2: TPanel
+    object Panel6: TPanel
       AlignWithMargins = True
       Left = 1171
       Top = 6
@@ -320,7 +325,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel2'
+      Caption = 'Panel6'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -329,7 +334,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 3
     end
-    object Label3: TLabel
+    object Label2: TLabel
       AlignWithMargins = True
       Left = 6
       Top = 100
@@ -344,7 +349,7 @@ object Form1: TForm1
       Layout = tlCenter
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch3: TFluentToggleSwitch
+    object FluentToggleSwitch2: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 251
       Top = 117
@@ -362,7 +367,7 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
     end
-    object Panel3: TPanel
+    object Panel2: TPanel
       AlignWithMargins = True
       Left = 357
       Top = 100
@@ -374,7 +379,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel3'
+      Caption = 'Panel2'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -383,7 +388,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 5
     end
-    object Label4: TLabel
+    object Label7: TLabel
       AlignWithMargins = True
       Left = 858
       Top = 100
@@ -399,7 +404,7 @@ object Form1: TForm1
       ExplicitLeft = 812
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch4: TFluentToggleSwitch
+    object FluentToggleSwitch7: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 1011
       Top = 117
@@ -418,7 +423,7 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
     end
-    object Panel4: TPanel
+    object Panel7: TPanel
       AlignWithMargins = True
       Left = 1171
       Top = 100
@@ -430,7 +435,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel4'
+      Caption = 'Panel7'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -439,7 +444,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 7
     end
-    object Label5: TLabel
+    object Label3: TLabel
       AlignWithMargins = True
       Left = 19
       Top = 194
@@ -455,7 +460,7 @@ object Form1: TForm1
       ExplicitLeft = 6
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch5: TFluentToggleSwitch
+    object FluentToggleSwitch3: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 251
       Top = 211
@@ -473,7 +478,7 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
     end
-    object Panel5: TPanel
+    object Panel3: TPanel
       AlignWithMargins = True
       Left = 357
       Top = 194
@@ -485,7 +490,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel5'
+      Caption = 'Panel3'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -494,7 +499,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 9
     end
-    object Label6: TLabel
+    object Label8: TLabel
       AlignWithMargins = True
       Left = 781
       Top = 194
@@ -510,7 +515,7 @@ object Form1: TForm1
       ExplicitLeft = 794
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch6: TFluentToggleSwitch
+    object FluentToggleSwitch8: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 1011
       Top = 211
@@ -531,7 +536,7 @@ object Form1: TForm1
       TextOff = 'Off'
       ExplicitLeft = 1038
     end
-    object Panel6: TPanel
+    object Panel8: TPanel
       AlignWithMargins = True
       Left = 1171
       Top = 194
@@ -543,7 +548,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel6'
+      Caption = 'Panel8'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -552,7 +557,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 11
     end
-    object Label7: TLabel
+    object Label4: TLabel
       AlignWithMargins = True
       Left = 85
       Top = 288
@@ -568,7 +573,7 @@ object Form1: TForm1
       ExplicitLeft = 6
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch7: TFluentToggleSwitch
+    object FluentToggleSwitch4: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 251
       Top = 311
@@ -590,7 +595,7 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
     end
-    object Panel7: TPanel
+    object Panel4: TPanel
       AlignWithMargins = True
       Left = 357
       Top = 294
@@ -602,7 +607,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel7'
+      Caption = 'Panel4'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -611,7 +616,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 13
     end
-    object Label8: TLabel
+    object Label9: TLabel
       AlignWithMargins = True
       Left = 910
       Top = 288
@@ -627,7 +632,7 @@ object Form1: TForm1
       ExplicitLeft = 812
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch8: TFluentToggleSwitch
+    object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 1038
       Top = 290
@@ -653,7 +658,7 @@ object Form1: TForm1
       HeaderFont.Style = [fsBold]
       ExplicitTop = 288
     end
-    object Panel8: TPanel
+    object Panel9: TPanel
       AlignWithMargins = True
       Left = 1171
       Top = 294
@@ -665,7 +670,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel8'
+      Caption = 'Panel9'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -674,7 +679,7 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 15
     end
-    object Label9: TLabel
+    object Label5: TLabel
       AlignWithMargins = True
       Left = 42
       Top = 394
@@ -691,7 +696,7 @@ object Form1: TForm1
       ExplicitTop = 382
       ExplicitHeight = 32
     end
-    object FluentToggleSwitch9: TFluentToggleSwitch
+    object FluentToggleSwitch5: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 251
       Top = 417
@@ -709,7 +714,7 @@ object Form1: TForm1
       TextOn = 'On'
       TextOff = 'Off'
     end
-    object Panel9: TPanel
+    object Panel5: TPanel
       AlignWithMargins = True
       Left = 357
       Top = 400
@@ -721,7 +726,7 @@ object Form1: TForm1
       Margins.Bottom = 6
       Anchors = []
       BevelOuter = bvNone
-      Caption = 'Panel9'
+      Caption = 'Panel5'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -24
@@ -772,6 +777,27 @@ object Form1: TForm1
       HeaderFont.Height = -24
       HeaderFont.Name = 'Segoe UI'
       HeaderFont.Style = [fsUnderline]
+    end
+    object Panel10: TPanel
+      AlignWithMargins = True
+      Left = 1171
+      Top = 400
+      Width = 370
+      Height = 82
+      Margins.Left = 6
+      Margins.Top = 6
+      Margins.Right = 6
+      Margins.Bottom = 6
+      Anchors = []
+      BevelOuter = bvNone
+      Caption = 'Panel10'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 19
     end
   end
 end
