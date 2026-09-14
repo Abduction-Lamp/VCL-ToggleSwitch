@@ -70,21 +70,21 @@ begin
   end;
 end;
 
-// The panel sharing a row with the switch
+// The panel sits in the cell right of the switch
 function TForm1.PanelOf(Toggle: TFluentToggleSwitch): TPanel;
 var
   Controls: TControlCollection;
-  I, Row: Integer;
+  Neighbour: TControl;
+  I: Integer;
 begin
   Result := nil;
   Controls := GridPanel.ControlCollection;
   I := Controls.IndexOf(Toggle);
   if I < 0 then
     Exit;
-  Row := Controls[I].Row;
-  for I := 0 to Controls.Count - 1 do
-    if (Controls[I].Row = Row) and (Controls[I].Control is TPanel) then
-      Exit(TPanel(Controls[I].Control));
+  Neighbour := Controls.Controls[Controls[I].Column + 1, Controls[I].Row];
+  if Neighbour is TPanel then
+    Result := TPanel(Neighbour);
 end;
 
 procedure TForm1.ShowState(Toggle: TFluentToggleSwitch);
