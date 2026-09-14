@@ -423,9 +423,9 @@ object Form1: TForm1
     object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 758
-      Top = 186
+      Top = 188
       Width = 88
-      Height = 90
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
@@ -496,9 +496,9 @@ object Form1: TForm1
     object FluentToggleSwitch10: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 758
-      Top = 288
+      Top = 292
       Width = 88
-      Height = 94
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
