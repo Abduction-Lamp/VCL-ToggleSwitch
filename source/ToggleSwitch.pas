@@ -98,6 +98,7 @@ type
   protected
     procedure Paint; override;
     function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
+    procedure AdjustSize; override;
     procedure CreateWnd; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -504,20 +505,30 @@ begin
   end;
 end;
 
-// Measures again and hands the size to VCL, so that whoever lays the control
-// out - a grid panel, an aligned parent - hears about the change
-procedure TFluentToggleSwitch.LayoutChanged;
+// With a window, the inherited call resizes it and VCL runs CanAutoSize from
+// WMWindowPosChanging. Without one it does nothing at all, which would leave
+// the control at a stale size until it is first shown.
+procedure TFluentToggleSwitch.AdjustSize;
 var
   W, H: Integer;
 begin
-  Measure;
-  if AutoSize then
+  if HandleAllocated then
+    inherited
+  else if AutoSize and not (csLoading in ComponentState) then
   begin
     W := Width;
     H := Height;
     if CanAutoSize(W, H) then
       SetBounds(Left, Top, W, H);
   end;
+end;
+
+// Measures again and hands the size to VCL, so that whoever lays the control
+// out - a grid panel, an aligned parent - hears about the change
+procedure TFluentToggleSwitch.LayoutChanged;
+begin
+  Measure;
+  AdjustSize;
   Invalidate;
 end;
 
