@@ -205,7 +205,6 @@ object Form1: TForm1
         SizeStyle = ssAuto
       end>
     TabOrder = 0
-    ExplicitWidth = 789
     DesignSize = (
       570
       839)
@@ -599,7 +598,7 @@ object Form1: TForm1
       Left = 150
       Top = 664
       Width = 77
-      Height = 82
+      Height = 90
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
@@ -613,9 +612,9 @@ object Form1: TForm1
     object FluentToggleSwitch8: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 251
-      Top = 681
+      Top = 664
       Width = 173
-      Height = 48
+      Height = 94
       Margins.Left = 12
       Margins.Top = 6
       Margins.Right = 12
@@ -634,11 +633,19 @@ object Form1: TForm1
       TextOn = 'Right'
       TextOff = 'Left'
       TextPosition = tpLeft
+      ShowHeader = True
+      HeaderText = 'Header'
+      HeaderAlignment = taCenter
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clWindowText
+      HeaderFont.Height = -24
+      HeaderFont.Name = 'Segoe UI'
+      HeaderFont.Style = []
     end
     object Panel8: TPanel
       AlignWithMargins = True
       Left = 442
-      Top = 664
+      Top = 668
       Width = 100
       Height = 82
       Margins.Left = 6
@@ -659,7 +666,7 @@ object Form1: TForm1
     object Label9: TLabel
       AlignWithMargins = True
       Left = 42
-      Top = 758
+      Top = 766
       Width = 185
       Height = 82
       Margins.Left = 6
@@ -674,7 +681,7 @@ object Form1: TForm1
     object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 293
-      Top = 775
+      Top = 783
       Width = 88
       Height = 48
       Margins.Left = 6
@@ -692,7 +699,7 @@ object Form1: TForm1
     object Panel9: TPanel
       AlignWithMargins = True
       Left = 442
-      Top = 758
+      Top = 766
       Width = 100
       Height = 82
       Margins.Left = 6
