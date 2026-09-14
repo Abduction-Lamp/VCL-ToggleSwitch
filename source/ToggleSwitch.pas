@@ -795,7 +795,7 @@ var
   Brush: TGPSolidBrush;
   Pen: TGPPen;
   TrackX, TrackY: Single;
-  TrackW, TrackH, K: Single;
+  TrackW, TrackH, PenW, K: Single;
   VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
   OffThumb, OnThumb: ARGB;
@@ -825,6 +825,7 @@ begin
   K := CurrentScale;
   TrackW := TrackWidth * K;
   TrackH := TrackHeight * K;
+  PenW := K;
   TextX := 0;
   TextY := 0;
 
@@ -898,11 +899,15 @@ begin
     G.SetSmoothingMode(SmoothingModeAntiAlias);
     Path := TGPGraphicsPath.Create;
     Brush := TGPSolidBrush.Create(0);
-    // Stroke is centered on the outline and scaled with DPI, as in WinUI
-    Pen := TGPPen.Create(0, K);
+    // One logical pixel wide, as in WinUI
+    Pen := TGPPen.Create(0, PenW);
 
+    // The outline sits inside the track box, so the stroke ends on its edge
+    // instead of straddling it: the pill measures the full 40x20 of the kit,
+    // where the stroke is drawn outside a 38x18 fill.
     // Off and On tracks cross-fade, as in WinUI
-    AddPillPath(Path, TrackX, TrackY, TrackW, TrackH);
+    AddPillPath(Path, TrackX + PenW / 2, TrackY + PenW / 2,
+      TrackW - PenW, TrackH - PenW);
     if OffOpacity > 0 then
     begin
       FillShape(ScaleAlpha(OffFill, OffOpacity));
@@ -911,8 +916,12 @@ begin
     if FAnimProgress > 0 then
     begin
       FillShape(ScaleAlpha(OnFill, FAnimProgress));
+      // The On track carries a stroke of its own color; that stroke is what
+      // fills the outer pixel of the pill
       if FTrackFrameColor <> clNone then
-        StrokeShape(ScaleAlpha(OffStroke, FAnimProgress));
+        StrokeShape(ScaleAlpha(OffStroke, FAnimProgress))
+      else
+        StrokeShape(ScaleAlpha(OnFill, FAnimProgress));
     end;
 
     // Thumb cross-fades the same way
