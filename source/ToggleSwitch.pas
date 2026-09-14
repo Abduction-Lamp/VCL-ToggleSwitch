@@ -531,13 +531,14 @@ begin
   end;
 end;
 
-// Scale of the monitor the control sits on, kept by VCL. CurrentPPI stays zero
-// until the control is scaled for the first time, and the design metrics are
-// already in the units of that first scale.
+// Scale of the monitor the control sits on. CurrentPPI is what VCL keeps in
+// step with the monitor; ScaleFactor is not the same number, since it also
+// carries the design PPI of the form. CurrentPPI stays zero until the control
+// is scaled for the first time, and the design metrics are in 96 dpi units.
 function TFluentToggleSwitch.CurrentScale: Single;
 begin
   if CurrentPPI > 0 then
-    Result := ScaleFactor
+    Result := CurrentPPI / USER_DEFAULT_SCREEN_DPI
   else
     Result := 1;
 end;
