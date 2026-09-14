@@ -1,4 +1,4 @@
-﻿object Form1: TForm1
+object Form1: TForm1
   Left = 0
   Top = 0
   Margins.Left = 6
@@ -7,7 +7,7 @@
   Margins.Bottom = 6
   Caption = 'TFluentToggleSwitch Demo'
   ClientHeight = 851
-  ClientWidth = 813
+  ClientWidth = 594
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,7 +21,7 @@
     AlignWithMargins = True
     Left = 12
     Top = 6
-    Width = 789
+    Width = 570
     Height = 839
     Margins.Left = 12
     Margins.Top = 6
@@ -205,12 +205,9 @@
         SizeStyle = ssAuto
       end>
     TabOrder = 0
-    ExplicitLeft = 11
-    ExplicitTop = 1
-    ExplicitWidth = 801
-    ExplicitHeight = 782
+    ExplicitWidth = 789
     DesignSize = (
-      789
+      570
       839)
     object Label1: TLabel
       AlignWithMargins = True
@@ -225,12 +222,11 @@
       Align = alRight
       Caption = 'Default'
       Layout = tlCenter
-      ExplicitLeft = 6
       ExplicitHeight = 32
     end
     object FluentToggleSwitch1: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 289
+      Left = 293
       Top = 23
       Width = 88
       Height = 48
@@ -244,13 +240,12 @@
       TabOrder = 0
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 108
     end
     object Panel1: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 6
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -266,7 +261,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 1
-      ExplicitLeft = 214
     end
     object Label2: TLabel
       AlignWithMargins = True
@@ -281,12 +275,11 @@
       Align = alRight
       Caption = 'Checked = True (On)'
       Layout = tlCenter
-      ExplicitTop = 125
       ExplicitHeight = 32
     end
     object FluentToggleSwitch2: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 289
+      Left = 293
       Top = 117
       Width = 88
       Height = 48
@@ -301,14 +294,12 @@
       TabOrder = 2
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 344
-      ExplicitTop = 228
     end
     object Panel2: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 100
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -324,8 +315,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 3
-      ExplicitLeft = 696
-      ExplicitTop = 210
     end
     object Label3: TLabel
       AlignWithMargins = True
@@ -340,13 +329,11 @@
       Align = alRight
       Caption = 'Enable = False (Off)'
       Layout = tlCenter
-      ExplicitLeft = 6
-      ExplicitTop = 219
       ExplicitHeight = 32
     end
     object FluentToggleSwitch3: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 289
+      Left = 293
       Top = 211
       Width = 88
       Height = 48
@@ -361,14 +348,12 @@
       TabOrder = 4
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 344
-      ExplicitTop = 392
     end
     object Panel3: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 194
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -384,8 +369,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 5
-      ExplicitLeft = 696
-      ExplicitTop = 374
     end
     object Label4: TLabel
       AlignWithMargins = True
@@ -400,13 +383,11 @@
       Align = alRight
       Caption = 'Enable = False (On)'
       Layout = tlCenter
-      ExplicitLeft = 20
-      ExplicitTop = 313
       ExplicitHeight = 32
     end
     object FluentToggleSwitch4: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 262
+      Left = 266
       Top = 305
       Width = 142
       Height = 48
@@ -426,9 +407,9 @@
     end
     object Panel4: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 288
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -444,8 +425,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 7
-      ExplicitLeft = 696
-      ExplicitTop = 538
     end
     object Label5: TLabel
       AlignWithMargins = True
@@ -460,13 +439,11 @@
       Align = alRight
       Caption = 'Custom color'
       Layout = tlCenter
-      ExplicitLeft = 49
-      ExplicitTop = 407
       ExplicitHeight = 32
     end
     object FluentToggleSwitch5: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 289
+      Left = 293
       Top = 399
       Width = 88
       Height = 48
@@ -485,14 +462,12 @@
       ThumbColorOn = clGold
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 344
-      ExplicitTop = 720
     end
     object Panel5: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 382
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -508,8 +483,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 9
-      ExplicitLeft = 696
-      ExplicitTop = 702
     end
     object Label6: TLabel
       AlignWithMargins = True
@@ -524,13 +497,11 @@
       Align = alRight
       Caption = 'Text = Right'
       Layout = tlCenter
-      ExplicitLeft = 56
-      ExplicitTop = 495
       ExplicitHeight = 32
     end
     object FluentToggleSwitch6: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 262
+      Left = 266
       Top = 493
       Width = 142
       Height = 48
@@ -545,14 +516,12 @@
       ShowText = True
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 251
-      ExplicitTop = 487
     end
     object Panel6: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 476
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -568,8 +537,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 11
-      ExplicitLeft = 898
-      ExplicitTop = 962
     end
     object Label7: TLabel
       AlignWithMargins = True
@@ -584,13 +551,11 @@
       Align = alRight
       Caption = 'Text = Left'
       Layout = tlCenter
-      ExplicitLeft = 64
-      ExplicitTop = 577
       ExplicitHeight = 32
     end
     object FluentToggleSwitch7: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 261
+      Left = 265
       Top = 587
       Width = 144
       Height = 48
@@ -607,13 +572,12 @@
       TextOn = 'Yes'
       TextOff = 'No'
       TextPosition = tpLeft
-      ExplicitLeft = 251
     end
     object Panel7: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 570
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -629,8 +593,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 13
-      ExplicitLeft = 898
-      ExplicitTop = 1126
     end
     object Label8: TLabel
       AlignWithMargins = True
@@ -646,8 +608,6 @@
       Anchors = [akRight]
       Caption = 'Header'
       Layout = tlCenter
-      ExplicitLeft = 82
-      ExplicitTop = 659
       ExplicitHeight = 32
     end
     object FluentToggleSwitch8: TFluentToggleSwitch
@@ -677,9 +637,9 @@
     end
     object Panel8: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 664
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -695,8 +655,6 @@
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 15
-      ExplicitLeft = 898
-      ExplicitTop = 1290
     end
     object Label9: TLabel
       AlignWithMargins = True
@@ -711,12 +669,11 @@
       Align = alRight
       Caption = 'Animated = False'
       Layout = tlCenter
-      ExplicitLeft = 61
       ExplicitHeight = 32
     end
     object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 289
+      Left = 293
       Top = 775
       Width = 88
       Height = 48
@@ -731,14 +688,12 @@
       TabOrder = 16
       TextOn = 'On'
       TextOff = 'Off'
-      ExplicitLeft = 622
-      ExplicitTop = 1544
     end
     object Panel9: TPanel
       AlignWithMargins = True
-      Left = 433
+      Left = 442
       Top = 758
-      Width = 370
+      Width = 100
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
