@@ -37,6 +37,8 @@ type
     Label9: TLabel;
     FluentToggleSwitch9: TFluentToggleSwitch;
     Panel9: TPanel;
+    Label10: TLabel;
+    FluentToggleSwitch10: TFluentToggleSwitch;
     procedure FormCreate(Sender: TObject);
   private
     function PanelOf(Toggle: TFluentToggleSwitch): TPanel;
