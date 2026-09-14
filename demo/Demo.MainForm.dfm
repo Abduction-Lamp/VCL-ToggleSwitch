@@ -216,11 +216,14 @@ object Form1: TForm1
         SizeStyle = ssAuto
       end>
     TabOrder = 0
+    DesignSize = (
+      1570
+      494)
     object Label1: TLabel
       AlignWithMargins = True
-      Left = 6
+      Left = 149
       Top = 6
-      Width = 240
+      Width = 78
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -229,10 +232,12 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Default'
       Layout = tlCenter
+      ExplicitLeft = 6
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch1: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 252
+      Left = 251
       Top = 23
       Width = 88
       Height = 48
@@ -249,7 +254,7 @@ object Form1: TForm1
     end
     object Panel1: TPanel
       AlignWithMargins = True
-      Left = 376
+      Left = 357
       Top = 6
       Width = 370
       Height = 82
@@ -270,9 +275,9 @@ object Form1: TForm1
     end
     object Label2: TLabel
       AlignWithMargins = True
-      Left = 812
+      Left = 874
       Top = 6
-      Width = 240
+      Width = 113
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -281,12 +286,14 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Text = Left'
       Layout = tlCenter
+      ExplicitLeft = 812
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch2: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 1058
+      Left = 1011
       Top = 23
-      Width = 88
+      Width = 142
       Height = 48
       Margins.Left = 12
       Margins.Top = 6
@@ -297,13 +304,13 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       TabOrder = 2
       ShowText = True
-      TextPosition = tpLeft
       TextOn = 'On'
       TextOff = 'Off'
+      TextPosition = tpLeft
     end
     object Panel2: TPanel
       AlignWithMargins = True
-      Left = 1200
+      Left = 1171
       Top = 6
       Width = 370
       Height = 82
@@ -326,7 +333,7 @@ object Form1: TForm1
       AlignWithMargins = True
       Left = 6
       Top = 100
-      Width = 240
+      Width = 221
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -335,10 +342,11 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Checked = True (On)'
       Layout = tlCenter
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch3: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 252
+      Left = 251
       Top = 117
       Width = 88
       Height = 48
@@ -349,14 +357,14 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 4
       Checked = True
+      TabOrder = 4
       TextOn = 'On'
       TextOff = 'Off'
     end
     object Panel3: TPanel
       AlignWithMargins = True
-      Left = 376
+      Left = 357
       Top = 100
       Width = 370
       Height = 82
@@ -377,9 +385,9 @@ object Form1: TForm1
     end
     object Label4: TLabel
       AlignWithMargins = True
-      Left = 812
+      Left = 858
       Top = 100
-      Width = 240
+      Width = 129
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -388,12 +396,14 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Text = Right'
       Layout = tlCenter
+      ExplicitLeft = 812
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch4: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 1058
+      Left = 1011
       Top = 117
-      Width = 88
+      Width = 142
       Height = 48
       Margins.Left = 12
       Margins.Top = 6
@@ -402,6 +412,7 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      Checked = True
       TabOrder = 6
       ShowText = True
       TextOn = 'On'
@@ -409,7 +420,7 @@ object Form1: TForm1
     end
     object Panel4: TPanel
       AlignWithMargins = True
-      Left = 1200
+      Left = 1171
       Top = 100
       Width = 370
       Height = 82
@@ -430,9 +441,9 @@ object Form1: TForm1
     end
     object Label5: TLabel
       AlignWithMargins = True
-      Left = 6
+      Left = 19
       Top = 194
-      Width = 240
+      Width = 208
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
@@ -441,10 +452,12 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Enable = False (Off)'
       Layout = tlCenter
+      ExplicitLeft = 6
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch5: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 252
+      Left = 251
       Top = 211
       Width = 88
       Height = 48
@@ -455,14 +468,14 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 8
       Enabled = False
+      TabOrder = 8
       TextOn = 'On'
       TextOff = 'Off'
     end
     object Panel5: TPanel
       AlignWithMargins = True
-      Left = 376
+      Left = 357
       Top = 194
       Width = 370
       Height = 82
@@ -483,23 +496,25 @@ object Form1: TForm1
     end
     object Label6: TLabel
       AlignWithMargins = True
-      Left = 812
+      Left = 781
       Top = 194
-      Width = 240
+      Width = 206
       Height = 82
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
       Margins.Bottom = 6
       Align = alRight
-      Caption = 'Enable = True (On)'
+      Caption = 'Enable = False (On)'
       Layout = tlCenter
+      ExplicitLeft = 794
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch6: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 1058
+      Left = 1011
       Top = 211
-      Width = 88
+      Width = 142
       Height = 48
       Margins.Left = 12
       Margins.Top = 6
@@ -508,14 +523,17 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 10
       Checked = True
+      Enabled = False
+      TabOrder = 10
+      ShowText = True
       TextOn = 'On'
       TextOff = 'Off'
+      ExplicitLeft = 1038
     end
     object Panel6: TPanel
       AlignWithMargins = True
-      Left = 1200
+      Left = 1171
       Top = 194
       Width = 370
       Height = 82
@@ -536,10 +554,10 @@ object Form1: TForm1
     end
     object Label7: TLabel
       AlignWithMargins = True
-      Left = 6
+      Left = 85
       Top = 288
-      Width = 240
-      Height = 82
+      Width = 142
+      Height = 94
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
@@ -547,11 +565,13 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Custom color'
       Layout = tlCenter
+      ExplicitLeft = 6
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch7: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 252
-      Top = 305
+      Left = 251
+      Top = 311
       Width = 88
       Height = 48
       Margins.Left = 12
@@ -561,6 +581,7 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      Checked = True
       TabOrder = 12
       TrackColorOff = clOrangered
       TrackColorOn = clGreen
@@ -571,8 +592,8 @@ object Form1: TForm1
     end
     object Panel7: TPanel
       AlignWithMargins = True
-      Left = 376
-      Top = 288
+      Left = 357
+      Top = 294
       Width = 370
       Height = 82
       Margins.Left = 6
@@ -592,10 +613,10 @@ object Form1: TForm1
     end
     object Label8: TLabel
       AlignWithMargins = True
-      Left = 812
+      Left = 910
       Top = 288
-      Width = 240
-      Height = 82
+      Width = 77
+      Height = 94
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
@@ -603,13 +624,15 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Header'
       Layout = tlCenter
+      ExplicitLeft = 812
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch8: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 1058
-      Top = 305
+      Left = 1038
+      Top = 290
       Width = 88
-      Height = 48
+      Height = 90
       Margins.Left = 12
       Margins.Top = 6
       Margins.Right = 12
@@ -618,15 +641,22 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 14
-      ShowHeader = True
-      HeaderText = 'Header'
       TextOn = 'On'
       TextOff = 'Off'
+      ShowHeader = True
+      HeaderText = 'Top'
+      HeaderAlignment = taCenter
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clWindowText
+      HeaderFont.Height = -24
+      HeaderFont.Name = 'Consolas'
+      HeaderFont.Style = [fsBold]
+      ExplicitTop = 288
     end
     object Panel8: TPanel
       AlignWithMargins = True
-      Left = 1200
-      Top = 288
+      Left = 1171
+      Top = 294
       Width = 370
       Height = 82
       Margins.Left = 6
@@ -646,10 +676,10 @@ object Form1: TForm1
     end
     object Label9: TLabel
       AlignWithMargins = True
-      Left = 6
-      Top = 382
-      Width = 240
-      Height = 82
+      Left = 42
+      Top = 394
+      Width = 185
+      Height = 94
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
@@ -657,11 +687,14 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Animated = False'
       Layout = tlCenter
+      ExplicitLeft = 6
+      ExplicitTop = 382
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 252
-      Top = 399
+      Left = 251
+      Top = 417
       Width = 88
       Height = 48
       Margins.Left = 12
@@ -671,15 +704,15 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 16
       Animated = False
+      TabOrder = 16
       TextOn = 'On'
       TextOff = 'Off'
     end
     object Panel9: TPanel
       AlignWithMargins = True
-      Left = 376
-      Top = 382
+      Left = 357
+      Top = 400
       Width = 370
       Height = 82
       Margins.Left = 6
@@ -699,10 +732,10 @@ object Form1: TForm1
     end
     object Label10: TLabel
       AlignWithMargins = True
-      Left = 812
-      Top = 382
-      Width = 240
-      Height = 82
+      Left = 801
+      Top = 394
+      Width = 186
+      Height = 94
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 12
@@ -710,13 +743,16 @@ object Form1: TForm1
       Align = alRight
       Caption = 'Header = Bottom'
       Layout = tlCenter
+      ExplicitLeft = 812
+      ExplicitTop = 382
+      ExplicitHeight = 32
     end
     object FluentToggleSwitch10: TFluentToggleSwitch
       AlignWithMargins = True
-      Left = 1058
-      Top = 399
+      Left = 1038
+      Top = 394
       Width = 88
-      Height = 48
+      Height = 94
       Margins.Left = 12
       Margins.Top = 6
       Margins.Right = 12
@@ -725,11 +761,17 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 18
-      ShowHeader = True
-      HeaderText = 'Header'
-      HeaderPosition = hpBottom
       TextOn = 'On'
       TextOff = 'Off'
+      ShowHeader = True
+      HeaderText = 'Bottom'
+      HeaderPosition = hpBottom
+      HeaderAlignment = taCenter
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clWindowText
+      HeaderFont.Height = -24
+      HeaderFont.Name = 'Segoe UI'
+      HeaderFont.Style = [fsUnderline]
     end
   end
 end
