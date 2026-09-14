@@ -64,15 +64,6 @@ type
     FTextSpacing: Integer;
     FTrackOffsetX: Integer;
     FTextHeight: Integer;
-    FScalePPI: Integer;
-    FScaledTrackAreaWidth: Integer;
-    FScaledTrackAreaHeight: Integer;
-    FScaledTrackWidth: Integer;
-    FScaledTrackHeight: Integer;
-    FScaledThumbWidths: array[TInteractionState] of Integer;
-    FScaledThumbHeights: array[TInteractionState] of Integer;
-    FScaledThumbCenterOffX: array[TInteractionState] of Single;
-    FScaledThumbCenterOnX: array[TInteractionState] of Single;
     procedure SetChecked(Value: Boolean);
     procedure SetAnimationDuration(Value: Integer);
     procedure StartTimer;
@@ -82,6 +73,7 @@ type
     function DragTravel: Single;
     procedure DragThumb(X: Integer);
     function GetInteractionState: TInteractionState;
+    function CurrentScale: Single;
     function TextGap: Integer;
     function StateVisual(S: TInteractionState): TVisualState;
     function CurrentVisual: TVisualState;
@@ -98,13 +90,13 @@ type
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
     procedure AdjustBounds;
-    procedure Rescale;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure CMEnabledChanged(var Msg: TMessage); message CM_ENABLEDCHANGED;
   protected
     procedure Paint; override;
+    procedure CreateWnd; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -300,10 +292,6 @@ begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
   ParentColor := True;
-  FScalePPI := USER_DEFAULT_SCREEN_DPI;
-  Rescale;
-  Width := FScaledTrackAreaWidth;
-  Height := FScaledTrackAreaHeight;
   FChecked := False;
   FAnimated := True;
   FAnimationDuration := 367;
@@ -325,6 +313,7 @@ begin
   FTextPosition := tpRight;
   FTextSpacing := 12;
   FTrackOffsetX := 0;
+  AdjustBounds;
 end;
 
 procedure TFluentToggleSwitch.SetTrackFrameColor(Value: TColor);
@@ -424,13 +413,23 @@ begin
   end;
 end;
 
+// Scale of the monitor the control sits on, kept by VCL. CurrentPPI stays zero
+// until the control is scaled for the first time, and the design metrics are
+// already in the units of that first scale.
+function TFluentToggleSwitch.CurrentScale: Single;
+begin
+  if CurrentPPI > 0 then
+    Result := ScaleFactor
+  else
+    Result := 1;
+end;
+
 // Distance from the edge of the track area to the text. TextSpacing is measured
 // from the track outline, and the area is wider than the track by the room the
 // stroke needs on each side.
 function TFluentToggleSwitch.TextGap: Integer;
 begin
-  Result := MulDiv(FTextSpacing, FScalePPI, USER_DEFAULT_SCREEN_DPI)
-    - (FScaledTrackAreaWidth - FScaledTrackWidth) div 2;
+  Result := Round((FTextSpacing - (TrackAreaWidth - TrackWidth) / 2) * CurrentScale);
   if Result < 0 then
     Result := 0;
 end;
@@ -447,8 +446,8 @@ begin
   if not FShowText then
   begin
     FTrackOffsetX := 0;
-    NewWidth := FScaledTrackAreaWidth;
-    NewHeight := FScaledTrackAreaHeight;
+    NewWidth := Round(TrackAreaWidth * CurrentScale);
+    NewHeight := Round(TrackAreaHeight * CurrentScale);
   end
   else
   begin
@@ -464,31 +463,14 @@ begin
     end;
     TextW := Max(SizeOn.cx, SizeOff.cx);
     FTextHeight := TM.tmHeight;
-    NewWidth := FScaledTrackAreaWidth + TextGap + TextW;
-    NewHeight := Max(FScaledTrackAreaHeight, FTextHeight);
+    NewWidth := Round(TrackAreaWidth * CurrentScale) + TextGap + TextW;
+    NewHeight := Max(Round(TrackAreaHeight * CurrentScale), FTextHeight);
     if FTextPosition = tpLeft then
       FTrackOffsetX := TextW + TextGap
     else
       FTrackOffsetX := 0;
   end;
   SetBounds(Left, Top, NewWidth, NewHeight);
-end;
-
-procedure TFluentToggleSwitch.Rescale;
-begin
-  FScaledTrackAreaWidth := MulDiv(TrackAreaWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledTrackAreaHeight := MulDiv(TrackAreaHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledTrackWidth := MulDiv(TrackWidth, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  FScaledTrackHeight := MulDiv(TrackHeight, FScalePPI, USER_DEFAULT_SCREEN_DPI);
-  for var S := Low(TInteractionState) to High(TInteractionState) do
-  begin
-    FScaledThumbWidths[S] := MulDiv(ThumbWidths[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
-    FScaledThumbHeights[S] := MulDiv(ThumbHeights[S], FScalePPI, USER_DEFAULT_SCREEN_DPI);
-    FScaledThumbCenterOffX[S] := ThumbCenterOffX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
-    FScaledThumbCenterOnX[S] := ThumbCenterOnX[S] * FScalePPI / USER_DEFAULT_SCREEN_DPI;
-  end;
-  // A snapshot taken at the old scale would be wrong now
-  FStateT := 1.0;
 end;
 
 procedure TFluentToggleSwitch.CMFontChanged(var Msg: TMessage);
@@ -500,10 +482,17 @@ end;
 
 procedure TFluentToggleSwitch.ChangeScale(M, D: Integer; isDpiChange: Boolean);
 begin
-  // Rescale first: inherited changes the font, and the CM_FONTCHANGED handler
-  // it triggers measures the layout at the current scale
-  FScalePPI := MulDiv(FScalePPI, M, D);
-  Rescale;
+  // Inherited updates the scale VCL keeps and the font; the layout is measured
+  // afterwards, against both
+  inherited;
+  // A state snapshot taken at the old scale would be wrong now
+  FStateT := 1.0;
+  AdjustBounds;
+end;
+
+// The control only learns which monitor it sits on once the window exists
+procedure TFluentToggleSwitch.CreateWnd;
+begin
   inherited;
   AdjustBounds;
 end;
@@ -674,7 +663,7 @@ end;
 
 function TFluentToggleSwitch.DragTravel: Single;
 begin
-  Result := FScaledThumbCenterOnX[isPressed] - FScaledThumbCenterOffX[isPressed];
+  Result := (ThumbCenterOnX[isPressed] - ThumbCenterOffX[isPressed]) * CurrentScale;
 end;
 
 procedure TFluentToggleSwitch.DragThumb(X: Integer);
@@ -682,7 +671,7 @@ var
   Delta: Single;
 begin
   Delta := X - FDragStartX;
-  if Abs(Delta) >= MulDiv(DragThreshold, FScalePPI, USER_DEFAULT_SCREEN_DPI) then
+  if Abs(Delta) >= DragThreshold * CurrentScale then
     FDragged := True;
   // The thumb stays within the track
   if FChecked then
@@ -748,11 +737,14 @@ begin
 end;
 
 function TFluentToggleSwitch.StateVisual(S: TInteractionState): TVisualState;
+var
+  K: Single;
 begin
-  Result.ThumbW := FScaledThumbWidths[S];
-  Result.ThumbH := FScaledThumbHeights[S];
-  Result.ThumbOffX := FScaledThumbCenterOffX[S];
-  Result.ThumbOnX := FScaledThumbCenterOnX[S];
+  K := CurrentScale;
+  Result.ThumbW := ThumbWidths[S] * K;
+  Result.ThumbH := ThumbHeights[S] * K;
+  Result.ThumbOffX := ThumbCenterOffX[S] * K;
+  Result.ThumbOnX := ThumbCenterOnX[S] * K;
   Result.TrackOff := OffTrackFill[S];
   Result.StrokeOff := OffTrackStroke[S];
   Result.TrackOn := OnTrackFill[S];
@@ -803,6 +795,7 @@ var
   Brush: TGPSolidBrush;
   Pen: TGPPen;
   TrackX, TrackY: Single;
+  TrackW, TrackH, K: Single;
   VS: TVisualState;
   OffFill, OffStroke, OnFill: ARGB;
   OffThumb, OnThumb: ARGB;
@@ -829,6 +822,9 @@ var
   end;
 
 begin
+  K := CurrentScale;
+  TrackW := TrackWidth * K;
+  TrackH := TrackHeight * K;
   TextX := 0;
   TextY := 0;
 
@@ -843,14 +839,14 @@ begin
     if FTextPosition = tpLeft then
       TextX := 0
     else
-      TextX := FScaledTrackAreaWidth + TextGap;
+      TextX := Round(TrackAreaWidth * K) + TextGap;
 
     TextY := (Height - FTextHeight) div 2;
   end;
 
   // Track position, kept on whole pixels so the outline stays crisp
-  TrackX := FTrackOffsetX + Round((FScaledTrackAreaWidth - FScaledTrackWidth) / 2);
-  TrackY := Round((Height - FScaledTrackHeight) / 2);
+  TrackX := FTrackOffsetX + Round((TrackAreaWidth - TrackWidth) * K / 2);
+  TrackY := Round((Height - TrackH) / 2);
 
   VS := CurrentVisual;
   OffOpacity := 1 - FAnimProgress;
@@ -885,7 +881,7 @@ begin
   // Thumb geometry; position interpolated
   ThumbW := VS.ThumbW;
   ThumbH := VS.ThumbH;
-  ThumbCY := TrackY + FScaledTrackHeight / 2;
+  ThumbCY := TrackY + TrackH / 2;
   ThumbCX := TrackX + VS.ThumbOffX
     + (VS.ThumbOnX - VS.ThumbOffX) * FAnimProgress
     + FDragDelta;
@@ -903,10 +899,10 @@ begin
     Path := TGPGraphicsPath.Create;
     Brush := TGPSolidBrush.Create(0);
     // Stroke is centered on the outline and scaled with DPI, as in WinUI
-    Pen := TGPPen.Create(0, FScalePPI / USER_DEFAULT_SCREEN_DPI);
+    Pen := TGPPen.Create(0, K);
 
     // Off and On tracks cross-fade, as in WinUI
-    AddPillPath(Path, TrackX, TrackY, FScaledTrackWidth, FScaledTrackHeight);
+    AddPillPath(Path, TrackX, TrackY, TrackW, TrackH);
     if OffOpacity > 0 then
     begin
       FillShape(ScaleAlpha(OffFill, OffOpacity));
