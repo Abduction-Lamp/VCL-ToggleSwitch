@@ -58,7 +58,7 @@ type
     procedure DefaultTextPosition_ShouldBeTpRight;
 
     [Test]
-    procedure DefaultTextSpacing_ShouldBe8;
+    procedure DefaultTextSpacing_ShouldBe12;
 
     [Test]
     procedure SetShowText_True_ShouldIncreaseWidth;
@@ -196,9 +196,9 @@ begin
   Assert.AreEqual(Ord(tpRight), Ord(FToggle.TextPosition));
 end;
 
-procedure TToggleSwitchTest.DefaultTextSpacing_ShouldBe8;
+procedure TToggleSwitchTest.DefaultTextSpacing_ShouldBe12;
 begin
-  Assert.AreEqual(8, FToggle.TextSpacing);
+  Assert.AreEqual(12, FToggle.TextSpacing);
 end;
 
 procedure TToggleSwitchTest.SetShowText_True_ShouldIncreaseWidth;
