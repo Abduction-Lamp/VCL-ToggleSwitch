@@ -200,9 +200,10 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
+  DragThreshold = 4;  // pointer travel that turns a press into a drag
+  // Property defaults that a directive cannot spell out
   DefaultTextOn  = 'On';
   DefaultTextOff = 'Off';
-  DragThreshold = 4;  // pointer travel that turns a press into a drag
   // Animation timings from the WinUI template. The thumb waits out the delay,
   // then slides for AnimationDuration; interaction states cross-fade faster.
   ThumbSlideDelay = 33;
@@ -702,16 +703,16 @@ begin
   LayoutChanged;
 end;
 
-// The control only learns which monitor it sits on once the window exists
-// AdjustSize sits out csLoading, so the size read from the DFM stands until
-// every property is in; measure once they are, as the AutoSize controls of
-// the VCL do
+// AdjustSize sits out csLoading, so the size measured before the last
+// property was read stands until now; measure once, as the AutoSize controls
+// of the VCL do in Loaded
 procedure TFluentToggleSwitch.Loaded;
 begin
   inherited;
   LayoutChanged;
 end;
 
+// The control only learns which monitor it sits on once the window exists
 procedure TFluentToggleSwitch.CreateWnd;
 begin
   inherited;
