@@ -96,30 +96,50 @@ begin
   Result := AllocatedBytes(FPostTearDown) - AllocatedBytes(FPreTearDown);
 end;
 
-// Lists the block sizes still allocated after TearDown; the size alone often
-// tells a grown list from a leaked object
+// Lists the block sizes left over across the same three spans DUnitX sums up
+// (Setup, Test, TearDown), so the runner's own bookkeeping between them stays
+// out; the size alone often tells a grown list from a leaked object
 function TRtlMemoryLeakMonitor.GetReport: string;
+
+  // Index selects a small block type; -1 stands for medium, -2 for large blocks
+  function Delta(const Pre, Post: TMemoryManagerState; Index: Integer): Int64;
+  begin
+    if Index >= 0 then
+      Result := Int64(Post.SmallBlockTypeStates[Index].AllocatedBlockCount)
+        - Int64(Pre.SmallBlockTypeStates[Index].AllocatedBlockCount)
+    else if Index = -1 then
+      Result := Int64(Post.AllocatedMediumBlockCount)
+        - Int64(Pre.AllocatedMediumBlockCount)
+    else
+      Result := Int64(Post.AllocatedLargeBlockCount)
+        - Int64(Pre.AllocatedLargeBlockCount);
+  end;
+
+  function LeftOver(Index: Integer): Int64;
+  begin
+    Result := Delta(FPreSetup, FPostSetup, Index)
+      + Delta(FPreTest, FPostTest, Index)
+      + Delta(FPreTearDown, FPostTearDown, Index);
+  end;
+
 var
   I: Integer;
-  Delta: Int64;
+  Count: Int64;
 begin
   Result := '';
   for I := Low(FPreSetup.SmallBlockTypeStates) to High(FPreSetup.SmallBlockTypeStates) do
   begin
-    Delta := Int64(FPostTearDown.SmallBlockTypeStates[I].AllocatedBlockCount)
-      - Int64(FPreSetup.SmallBlockTypeStates[I].AllocatedBlockCount);
-    if Delta <> 0 then
+    Count := LeftOver(I);
+    if Count <> 0 then
       Result := Result + Format(' %d x %d B,',
-        [Delta, FPreSetup.SmallBlockTypeStates[I].UseableBlockSize]);
+        [Count, FPreSetup.SmallBlockTypeStates[I].UseableBlockSize]);
   end;
-  Delta := Int64(FPostTearDown.AllocatedMediumBlockCount)
-    - Int64(FPreSetup.AllocatedMediumBlockCount);
-  if Delta <> 0 then
-    Result := Result + Format(' %d medium,', [Delta]);
-  Delta := Int64(FPostTearDown.AllocatedLargeBlockCount)
-    - Int64(FPreSetup.AllocatedLargeBlockCount);
-  if Delta <> 0 then
-    Result := Result + Format(' %d large,', [Delta]);
+  Count := LeftOver(-1);
+  if Count <> 0 then
+    Result := Result + Format(' %d medium,', [Count]);
+  Count := LeftOver(-2);
+  if Count <> 0 then
+    Result := Result + Format(' %d large,', [Count]);
   if Result <> '' then
     Result := ' [blocks:' + Copy(Result, 1, Length(Result) - 1) + ']';
 end;
