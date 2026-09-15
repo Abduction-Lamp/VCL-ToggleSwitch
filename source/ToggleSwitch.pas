@@ -100,6 +100,8 @@ type
     procedure SetThumbColorOn(Value: TColor);
     procedure SetTextOn(const Value: string);
     procedure SetTextOff(const Value: string);
+    function IsTextOnStored: Boolean;
+    function IsTextOffStored: Boolean;
     procedure SetShowText(Value: Boolean);
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
@@ -165,8 +167,8 @@ type
     property ThumbColorOn: TColor read FThumbColorOn write SetThumbColorOn default clDefault;
     property Font;
     property ShowText: Boolean read FShowText write SetShowText default False;
-    property TextOn: string read FTextOn write SetTextOn;
-    property TextOff: string read FTextOff write SetTextOff;
+    property TextOn: string read FTextOn write SetTextOn stored IsTextOnStored;
+    property TextOff: string read FTextOff write SetTextOff stored IsTextOffStored;
     property TextPosition: TTextPosition read FTextPosition write SetTextPosition default tpRight;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 12;
     property ShowHeader: Boolean read FShowHeader write SetShowHeader default False;
@@ -197,6 +199,8 @@ const
   TrackAreaHeight = 24;
   TrackWidth  = 40;
   TrackHeight = 20;
+  DefaultTextOn  = 'On';
+  DefaultTextOff = 'Off';
   DragThreshold = 4;  // pointer travel that turns a press into a drag
   // Animation timings from the WinUI template. The thumb waits out the delay,
   // then slides for AnimationDuration; interaction states cross-fade faster.
@@ -367,8 +371,8 @@ begin
   FTrackColorOn := clDefault;
   FThumbColorOff := clDefault;
   FThumbColorOn := clDefault;
-  FTextOn := 'On';
-  FTextOff := 'Off';
+  FTextOn := DefaultTextOn;
+  FTextOff := DefaultTextOff;
   FShowText := False;
   FTextPosition := tpRight;
   FTextSpacing := 12;
@@ -444,6 +448,16 @@ begin
     FTextOff := Value;
     LayoutChanged;
   end;
+end;
+
+function TFluentToggleSwitch.IsTextOnStored: Boolean;
+begin
+  Result := FTextOn <> DefaultTextOn;
+end;
+
+function TFluentToggleSwitch.IsTextOffStored: Boolean;
+begin
+  Result := FTextOff <> DefaultTextOff;
 end;
 
 procedure TFluentToggleSwitch.SetShowText(Value: Boolean);
