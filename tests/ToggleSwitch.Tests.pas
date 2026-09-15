@@ -22,6 +22,9 @@ type
     procedure HandleOnChange(Sender: TObject);
     procedure Render(Toggle: TFluentToggleSwitch);
     procedure CreateRenderDestroy;
+    procedure Press(X: Integer);
+    procedure MoveTo(X: Integer);
+    procedure Release(X: Integer);
     procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
     function StreamFormWithSwitch(out Loaded: TFluentToggleSwitch;
       out SourceWidth: Integer): TForm;
@@ -111,6 +114,27 @@ type
     procedure DragShort_ShouldSnapBack;
 
     [Test]
+    procedure Click_ShouldToggleAndFireOnChange;
+
+    [Test]
+    procedure Click_ReleasedOutside_ShouldNotToggle;
+
+    [Test]
+    procedure Click_OnLabel_ShouldToggle;
+
+    [Test]
+    procedure DragBackPastMiddle_ShouldTurnOffAndFireOnChange;
+
+    [Test]
+    procedure RightButton_ShouldNotToggle;
+
+    [Test]
+    procedure Enabled_False_Click_ShouldNotToggle;
+
+    [Test]
+    procedure Enabled_False_WhilePressed_ShouldCancelThePress;
+
+    [Test]
     procedure ParentColor_ShouldBeTrueByDefault;
 
     [Test]
@@ -197,11 +221,23 @@ implementation
 uses
   System.SysUtils;
 
+const
+  // Design pixels the expectations below are written in. Setup pins the
+  // control to this scale, so the numbers hold on any machine.
+  DesignPPI = 96;
+  // Thumb centers and the drag threshold of the component, at DesignPPI
+  ThumbOffX = 12;
+  ThumbOnX = 32;
+  DragThreshold = 4;
+
 procedure TToggleSwitchTest.Setup;
 begin
   FForm := TForm.CreateNew(nil);
   FToggle := TFluentToggleSwitch.Create(FForm);
   FToggle.Parent := FForm;
+  // Every expectation below is in design pixels, so the suite has to say at
+  // which scale it reads them instead of inheriting the machine's
+  FToggle.ScaleForPPI(DesignPPI);
 end;
 
 procedure TToggleSwitchTest.TearDown;
@@ -224,9 +260,9 @@ begin
   try
     FToggle.ShowText := True;
     Render(FToggle);
-    FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
-    FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
-    FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+    Press(ThumbOffX);
+    MoveTo(ThumbOnX);
+    Release(ThumbOnX);
     // Destroying a child while its parent lives is a path of its own
     CreateRenderDestroy;
     // Parsing a text DFM brings up the RTL encoding singletons
@@ -271,6 +307,22 @@ begin
   finally
     Tmp.Free;
   end;
+end;
+
+// Mouse messages land at the vertical middle of the control
+procedure TToggleSwitchTest.Press(X: Integer);
+begin
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(X, FToggle.Height div 2));
+end;
+
+procedure TToggleSwitchTest.MoveTo(X: Integer);
+begin
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(X, FToggle.Height div 2));
+end;
+
+procedure TToggleSwitchTest.Release(X: Integer);
+begin
+  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(X, FToggle.Height div 2));
 end;
 
 // --- Color tests ---
@@ -448,19 +500,96 @@ procedure TToggleSwitchTest.DragPastMiddle_ShouldTurnOnAndFireOnChange;
 begin
   FOnChangeFired := False;
   FToggle.OnChange := HandleOnChange;
-  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
-  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
-  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+  Press(ThumbOffX);
+  MoveTo(ThumbOnX);
+  Release(ThumbOnX);
   Assert.IsTrue(FToggle.Checked, 'Thumb released past the middle turns the switch on');
   Assert.IsTrue(FOnChangeFired, 'OnChange fires on a user drag');
 end;
 
 procedure TToggleSwitchTest.DragShort_ShouldSnapBack;
 begin
-  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
-  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(15, 12));
-  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(15, 12));
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  MoveTo(ThumbOffX + DragThreshold + 1);
+  Release(ThumbOffX + DragThreshold + 1);
   Assert.IsFalse(FToggle.Checked, 'Thumb released before the middle snaps back');
+  Assert.IsFalse(FOnChangeFired, 'and nothing changed, so OnChange stays quiet');
+end;
+
+procedure TToggleSwitchTest.Click_ShouldToggleAndFireOnChange;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  Release(ThumbOffX);
+  Assert.IsTrue(FToggle.Checked, 'A click without any travel toggles the switch');
+  Assert.IsTrue(FOnChangeFired, 'and fires OnChange');
+end;
+
+procedure TToggleSwitchTest.Click_ReleasedOutside_ShouldNotToggle;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  Release(FToggle.Width + 10);
+  Assert.IsFalse(FToggle.Checked, 'A press let go outside the control is no click');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.Click_OnLabel_ShouldToggle;
+begin
+  FToggle.ShowText := True;
+  // The caption belongs to the control, which is why it is drawn rather than
+  // parked in a TLabel: clicking it has to work
+  Press(FToggle.Width - 1);
+  Release(FToggle.Width - 1);
+  Assert.IsTrue(FToggle.Checked, 'Clicking the caption toggles the switch');
+end;
+
+procedure TToggleSwitchTest.DragBackPastMiddle_ShouldTurnOffAndFireOnChange;
+begin
+  FToggle.Checked := True;
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOnX);
+  MoveTo(ThumbOffX);
+  Release(ThumbOffX);
+  Assert.IsFalse(FToggle.Checked, 'Thumb dragged back past the middle turns the switch off');
+  Assert.IsTrue(FOnChangeFired, 'and fires OnChange');
+end;
+
+procedure TToggleSwitchTest.RightButton_ShouldNotToggle;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  FToggle.Perform(WM_RBUTTONDOWN, MK_RBUTTON, MakeLParam(ThumbOffX, FToggle.Height div 2));
+  FToggle.Perform(WM_RBUTTONUP, 0, MakeLParam(ThumbOffX, FToggle.Height div 2));
+  Assert.IsFalse(FToggle.Checked, 'Only the left button toggles the switch');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.Enabled_False_Click_ShouldNotToggle;
+begin
+  FToggle.Enabled := False;
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  Release(ThumbOffX);
+  Assert.IsFalse(FToggle.Checked, 'A disabled switch ignores the pointer');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.Enabled_False_WhilePressed_ShouldCancelThePress;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  FToggle.Enabled := False;
+  Release(ThumbOffX);
+  Assert.IsFalse(FToggle.Checked, 'Being disabled mid-press drops the press');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
 end;
 
 procedure TToggleSwitchTest.DefaultAnimationDuration_ShouldMatchWinUI;
