@@ -31,6 +31,8 @@ type
     Label10: TLabel;
     FluentToggleSwitch10: TFluentToggleSwitch;
     procedure FluentToggleSwitch2Change(Sender: TObject);
+    procedure FluentToggleSwitch3Change(Sender: TObject);
+    procedure FluentToggleSwitch8Change(Sender: TObject);
   end;
 
 var
@@ -46,6 +48,24 @@ begin
     Label2.Caption := 'Checked = True (On)'
   else
     Label2.Caption := 'Checked = False (Off)';
+end;
+
+// The two switches below are disabled, so these captions must never change.
+// If one of them flips, the switch answered the pointer when it should not
+procedure TForm1.FluentToggleSwitch3Change(Sender: TObject);
+begin
+  if FluentToggleSwitch3.Checked then
+    Label3.Caption := 'Enable = False (On)'
+  else
+    Label3.Caption := 'Enable = False (Off)';
+end;
+
+procedure TForm1.FluentToggleSwitch8Change(Sender: TObject);
+begin
+  if FluentToggleSwitch8.Checked then
+    Label8.Caption := 'Enable = False (On)'
+  else
+    Label8.Caption := 'Enable = False (Off)';
 end;
 
 end.

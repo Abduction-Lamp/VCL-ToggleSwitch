@@ -323,6 +323,7 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       Enabled = False
       TabOrder = 8
+      OnChange = FluentToggleSwitch3Change
     end
     object Label8: TLabel
       AlignWithMargins = True
@@ -355,6 +356,7 @@ object Form1: TForm1
       Checked = True
       Enabled = False
       TabOrder = 3
+      OnChange = FluentToggleSwitch8Change
       ShowText = True
     end
     object Label4: TLabel
