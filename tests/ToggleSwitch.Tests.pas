@@ -21,6 +21,7 @@ type
     FOnChangeFired: Boolean;
     procedure HandleOnChange(Sender: TObject);
     procedure Render(Toggle: TFluentToggleSwitch);
+    procedure PaintOnto(Toggle: TFluentToggleSwitch; Target: TBitmap);
     procedure CreateRenderDestroy;
     procedure Press(X: Integer);
     procedure MoveTo(X: Integer);
@@ -304,10 +305,22 @@ begin
   Bmp := TBitmap.Create;
   try
     Bmp.SetSize(Toggle.Width, Toggle.Height);
-    Toggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
+    PaintOnto(Toggle, Bmp);
   finally
     Bmp.Free;
   end;
+end;
+
+// A control with no window of its own paints nothing at all, and PaintTo says
+// so by leaving the bitmap untouched. Asking for the handle is what makes the
+// difference between a real drawing and a blank one
+procedure TToggleSwitchTest.PaintOnto(Toggle: TFluentToggleSwitch; Target: TBitmap);
+var
+  Window: HWND;
+begin
+  Window := Toggle.Handle;
+  Assert.IsTrue(Window <> 0, 'The control has a window to paint from');
+  Toggle.PaintTo(Target.Canvas.Handle, 0, 0);
 end;
 
 // Painting is what builds the GDI+ objects, so a lifetime worth checking
@@ -354,7 +367,7 @@ begin
   try
     Result.PixelFormat := pf32bit;
     Result.SetSize(Toggle.Width, Toggle.Height);
-    Toggle.PaintTo(Result.Canvas.Handle, 0, 0);
+    PaintOnto(Toggle, Result);
   except
     Result.Free;
     raise;
