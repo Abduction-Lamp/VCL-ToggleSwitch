@@ -22,6 +22,9 @@ type
     procedure HandleOnChange(Sender: TObject);
     procedure Render(Toggle: TFluentToggleSwitch);
     procedure CreateRenderDestroy;
+    procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
+    function AsText(Source: TFluentToggleSwitch): string;
+    procedure LoadText(const Dfm: string; Target: TFluentToggleSwitch);
   public
     [SetupFixture]
     procedure SetupFixture;
@@ -159,6 +162,26 @@ type
 
     [Test]
     procedure HeaderPosition_ShouldNotChangeTheSize;
+
+    // --- Streaming ---
+
+    [Test]
+    procedure Stream_RoundTrip_ShouldRestoreEveryPublishedProperty;
+
+    [Test]
+    procedure Stream_Defaults_ShouldWriteNoOwnProperty;
+
+    [Test]
+    procedure Stream_Load_ShouldNotFireOnChange;
+
+    [Test]
+    procedure Stream_HeaderFont_Custom_ShouldRoundTrip;
+
+    [Test]
+    procedure Stream_HeaderFont_Default_ShouldNotBeStored;
+
+    [Test]
+    procedure Stream_Load_WithShowText_ShouldMeasureOnceTheWindowExists;
   end;
 
 implementation
@@ -568,6 +591,189 @@ begin
   FToggle.HeaderPosition := hpBottom;
   Assert.AreEqual(W, FToggle.Width);
   Assert.AreEqual(H, FToggle.Height);
+end;
+
+// --- Streaming ---
+
+procedure TToggleSwitchTest.CopyThroughStream(Source, Target: TFluentToggleSwitch);
+var
+  Stream: TMemoryStream;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    Stream.WriteComponent(Source);
+    Stream.Position := 0;
+    Stream.ReadComponent(Target);
+  finally
+    Stream.Free;
+  end;
+end;
+
+function TToggleSwitchTest.AsText(Source: TFluentToggleSwitch): string;
+var
+  Binary: TMemoryStream;
+  Text: TStringStream;
+begin
+  Binary := TMemoryStream.Create;
+  Text := TStringStream.Create;
+  try
+    Binary.WriteComponent(Source);
+    Binary.Position := 0;
+    ObjectBinaryToText(Binary, Text);
+    Result := Text.DataString;
+  finally
+    Text.Free;
+    Binary.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.LoadText(const Dfm: string; Target: TFluentToggleSwitch);
+var
+  Text: TStringStream;
+  Binary: TMemoryStream;
+begin
+  Text := TStringStream.Create(Dfm);
+  Binary := TMemoryStream.Create;
+  try
+    ObjectTextToBinary(Text, Binary);
+    Binary.Position := 0;
+    Binary.ReadComponent(Target);
+  finally
+    Binary.Free;
+    Text.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Stream_RoundTrip_ShouldRestoreEveryPublishedProperty;
+var
+  Loaded: TFluentToggleSwitch;
+begin
+  FToggle.Checked := True;
+  FToggle.Animated := False;
+  FToggle.AnimationDuration := 100;
+  FToggle.TabStop := True;
+  FToggle.TrackFrameColor := clRed;
+  FToggle.TrackColorOff := clGreen;
+  FToggle.TrackColorOn := clBlue;
+  FToggle.ThumbColorOff := clYellow;
+  FToggle.ThumbColorOn := clPurple;
+  FToggle.ShowText := True;
+  FToggle.TextOn := 'Yes';
+  FToggle.TextOff := 'No';
+  FToggle.TextPosition := tpLeft;
+  FToggle.TextSpacing := 5;
+  FToggle.ShowHeader := True;
+  FToggle.HeaderText := 'Header';
+  FToggle.HeaderPosition := hpBottom;
+  FToggle.HeaderAlignment := taCenter;
+  FToggle.HeaderSpacing := 3;
+  FToggle.HeaderFont.Style := [fsBold];
+  Loaded := TFluentToggleSwitch.Create(nil);
+  try
+    CopyThroughStream(FToggle, Loaded);
+    Assert.IsTrue(Loaded.Checked, 'Checked');
+    Assert.IsFalse(Loaded.Animated, 'Animated');
+    Assert.AreEqual(100, Loaded.AnimationDuration, 'AnimationDuration');
+    Assert.IsTrue(Loaded.TabStop, 'TabStop');
+    Assert.AreEqual(TColor(clRed), Loaded.TrackFrameColor, 'TrackFrameColor');
+    Assert.AreEqual(TColor(clGreen), Loaded.TrackColorOff, 'TrackColorOff');
+    Assert.AreEqual(TColor(clBlue), Loaded.TrackColorOn, 'TrackColorOn');
+    Assert.AreEqual(TColor(clYellow), Loaded.ThumbColorOff, 'ThumbColorOff');
+    Assert.AreEqual(TColor(clPurple), Loaded.ThumbColorOn, 'ThumbColorOn');
+    Assert.IsTrue(Loaded.ShowText, 'ShowText');
+    Assert.AreEqual('Yes', Loaded.TextOn, 'TextOn');
+    Assert.AreEqual('No', Loaded.TextOff, 'TextOff');
+    Assert.AreEqual<TTextPosition>(tpLeft, Loaded.TextPosition, 'TextPosition');
+    Assert.AreEqual(5, Loaded.TextSpacing, 'TextSpacing');
+    Assert.IsTrue(Loaded.ShowHeader, 'ShowHeader');
+    Assert.AreEqual('Header', Loaded.HeaderText, 'HeaderText');
+    Assert.AreEqual<THeaderPosition>(hpBottom, Loaded.HeaderPosition, 'HeaderPosition');
+    Assert.AreEqual<TAlignment>(taCenter, Loaded.HeaderAlignment, 'HeaderAlignment');
+    Assert.AreEqual(3, Loaded.HeaderSpacing, 'HeaderSpacing');
+    Assert.IsTrue(fsBold in Loaded.HeaderFont.Style, 'HeaderFont.Style');
+  finally
+    Loaded.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Stream_Defaults_ShouldWriteNoOwnProperty;
+const
+  OwnProperties: array[0..19] of string = ('Checked', 'Animated',
+    'AnimationDuration', 'TabStop', 'TrackFrameColor', 'TrackColorOff',
+    'TrackColorOn', 'ThumbColorOff', 'ThumbColorOn', 'ShowText', 'TextOn',
+    'TextOff', 'TextPosition', 'TextSpacing', 'ShowHeader', 'HeaderText',
+    'HeaderPosition', 'HeaderAlignment', 'HeaderSpacing', 'HeaderFont');
+var
+  Text: string;
+  Name: string;
+begin
+  Text := AsText(FToggle);
+  for Name in OwnProperties do
+    Assert.AreEqual(0, Pos('  ' + Name, Text), Name + ' stays out of a default DFM');
+end;
+
+procedure TToggleSwitchTest.Stream_Load_ShouldNotFireOnChange;
+var
+  Loaded: TFluentToggleSwitch;
+begin
+  FToggle.Checked := True;
+  Loaded := TFluentToggleSwitch.Create(nil);
+  try
+    FOnChangeFired := False;
+    Loaded.OnChange := HandleOnChange;
+    CopyThroughStream(FToggle, Loaded);
+    Assert.IsTrue(Loaded.Checked, 'Checked came back from the stream');
+    Assert.IsFalse(FOnChangeFired, 'Loading a DFM is not a change');
+  finally
+    Loaded.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Stream_HeaderFont_Custom_ShouldRoundTrip;
+var
+  Loaded: TFluentToggleSwitch;
+begin
+  FToggle.HeaderFont.Style := [fsBold];
+  Loaded := TFluentToggleSwitch.Create(nil);
+  try
+    CopyThroughStream(FToggle, Loaded);
+    Assert.IsTrue(fsBold in Loaded.HeaderFont.Style, 'A header font of its own comes back');
+    Assert.IsTrue(Pos('  HeaderFont', AsText(Loaded)) > 0,
+      'and is written again, so the load marked it as custom');
+  finally
+    Loaded.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Stream_HeaderFont_Default_ShouldNotBeStored;
+var
+  Text: string;
+begin
+  FToggle.Font.Size := 14;
+  Text := AsText(FToggle);
+  Assert.IsTrue(Pos('  Font.', Text) > 0, 'The control font itself is written');
+  Assert.AreEqual(0, Pos('  HeaderFont', Text),
+    'A header font that only follows Font stays out of the DFM');
+end;
+
+procedure TToggleSwitchTest.Stream_Load_WithShowText_ShouldMeasureOnceTheWindowExists;
+var
+  Loaded: TFluentToggleSwitch;
+begin
+  FToggle.ShowText := True;
+  Loaded := TFluentToggleSwitch.Create(nil);
+  try
+    LoadText('object TFluentToggleSwitch'#13#10 +
+      '  Width = 10'#13#10 +
+      '  Height = 10'#13#10 +
+      '  ShowText = True'#13#10 +
+      'end', Loaded);
+    Loaded.Parent := FForm;
+    Assert.AreEqual(FToggle.Width, Loaded.Width, 'The window brings the measured width');
+    Assert.AreEqual(FToggle.Height, Loaded.Height, 'and the measured height');
+  finally
+    Loaded.Free;
+  end;
 end;
 
 initialization
