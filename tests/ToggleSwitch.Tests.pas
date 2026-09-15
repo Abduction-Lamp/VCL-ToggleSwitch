@@ -182,6 +182,12 @@ type
 
     [Test]
     procedure Stream_Load_WithShowText_ShouldMeasureAfterLoad;
+
+    [Test]
+    procedure Stream_Font_WithHeaderFollowing_ShouldRoundTrip;
+
+    [Test]
+    procedure Stream_InsideForm_ShouldRestoreParentAndSize;
   end;
 
 implementation
@@ -621,35 +627,35 @@ end;
 function TToggleSwitchTest.AsText(Source: TFluentToggleSwitch): string;
 var
   Binary: TMemoryStream;
-  Text: TStringStream;
+  Written: TStringStream;
 begin
   Binary := TMemoryStream.Create;
-  Text := TStringStream.Create;
+  Written := TStringStream.Create;
   try
     Binary.WriteComponent(Source);
     Binary.Position := 0;
-    ObjectBinaryToText(Binary, Text);
-    Result := Text.DataString;
+    ObjectBinaryToText(Binary, Written);
+    Result := Written.DataString;
   finally
-    Text.Free;
+    Written.Free;
     Binary.Free;
   end;
 end;
 
 procedure TToggleSwitchTest.LoadText(const Dfm: string; Target: TFluentToggleSwitch);
 var
-  Text: TStringStream;
+  Source: TStringStream;
   Binary: TMemoryStream;
 begin
-  Text := TStringStream.Create(Dfm);
+  Source := TStringStream.Create(Dfm);
   Binary := TMemoryStream.Create;
   try
-    ObjectTextToBinary(Text, Binary);
+    ObjectTextToBinary(Source, Binary);
     Binary.Position := 0;
     Binary.ReadComponent(Target);
   finally
     Binary.Free;
-    Text.Free;
+    Source.Free;
   end;
 end;
 
@@ -713,12 +719,14 @@ const
     'TextOff', 'TextPosition', 'TextSpacing', 'ShowHeader', 'HeaderText',
     'HeaderPosition', 'HeaderAlignment', 'HeaderSpacing', 'HeaderFont');
 var
-  Text: string;
+  Dfm: string;
   Name: string;
 begin
-  Text := AsText(FToggle);
+  Dfm := AsText(FToggle);
   for Name in OwnProperties do
-    Assert.AreEqual(0, Pos('  ' + Name, Text), Name + ' stays out of a default DFM');
+    // HeaderFont streams as HeaderFont.Name and friends, the rest as Name =
+    Assert.AreEqual(0, Pos('  ' + Name + ' =', Dfm) + Pos('  ' + Name + '.', Dfm),
+      Name + ' stays out of a default DFM');
 end;
 
 procedure TToggleSwitchTest.Stream_Load_ShouldNotFireOnChange;
@@ -747,7 +755,7 @@ begin
   try
     CopyThroughStream(FToggle, Loaded);
     Assert.IsTrue(fsBold in Loaded.HeaderFont.Style, 'A header font of its own comes back');
-    Assert.IsTrue(Pos('  HeaderFont', AsText(Loaded)) > 0,
+    Assert.IsTrue(Pos('  HeaderFont.', AsText(Loaded)) > 0,
       'and is written again, so the load marked it as custom');
   finally
     Loaded.Free;
@@ -756,34 +764,95 @@ end;
 
 procedure TToggleSwitchTest.Stream_HeaderFont_Default_ShouldNotBeStored;
 var
-  Text: string;
+  Dfm: string;
 begin
   FToggle.Font.Size := 14;
-  Text := AsText(FToggle);
-  Assert.IsTrue(Pos('  Font.', Text) > 0, 'The control font itself is written');
-  Assert.AreEqual(0, Pos('  HeaderFont', Text),
+  Dfm := AsText(FToggle);
+  Assert.IsTrue(Pos('  Font.', Dfm) > 0, 'The control font itself is written');
+  Assert.AreEqual(0, Pos('  HeaderFont.', Dfm),
     'A header font that only follows Font stays out of the DFM');
 end;
 
 procedure TToggleSwitchTest.Stream_Load_WithShowText_ShouldMeasureAfterLoad;
 var
-  Loaded: TFluentToggleSwitch;
+  Loaded, Reference: TFluentToggleSwitch;
 begin
-  FToggle.ShowText := True;
+  // Both stay parentless, so nothing but Loaded can measure them
+  Reference := TFluentToggleSwitch.Create(nil);
   Loaded := TFluentToggleSwitch.Create(nil);
   try
-    // The DFM size is deliberately wrong; the same font as FToggle makes the
-    // measured size comparable
+    Reference.ShowText := True;
+    // The size in the DFM is deliberately wrong
     LoadText('object TFluentToggleSwitch'#13#10 +
       '  Width = 10'#13#10 +
       '  Height = 10'#13#10 +
       '  ShowText = True'#13#10 +
       'end', Loaded);
-    Loaded.Parent := FForm;
-    Assert.AreEqual(FToggle.Width, Loaded.Width, 'Loading measures the width, no window needed');
-    Assert.AreEqual(FToggle.Height, Loaded.Height, 'and the height');
+    Assert.AreEqual(Reference.Width, Loaded.Width, 'Loading measures the width');
+    Assert.AreEqual(Reference.Height, Loaded.Height, 'and the height');
   finally
     Loaded.Free;
+    Reference.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.Stream_Font_WithHeaderFollowing_ShouldRoundTrip;
+var
+  Loaded: TFluentToggleSwitch;
+begin
+  FToggle.ShowHeader := True;
+  FToggle.HeaderText := 'Header';
+  FToggle.Font.Size := 14;
+  Loaded := TFluentToggleSwitch.Create(nil);
+  try
+    CopyThroughStream(FToggle, Loaded);
+    Assert.AreEqual(14, Loaded.Font.Size, 'The control font comes back');
+    Assert.IsFalse(Loaded.ParentFont, 'and stops following the parent');
+    Assert.AreEqual(14, Loaded.HeaderFont.Size,
+      'A header font of its own was never set, so it follows the loaded font');
+    Assert.AreEqual(0, Pos('  HeaderFont.', AsText(Loaded)),
+      'and is still not worth writing');
+  finally
+    Loaded.Free;
+  end;
+end;
+
+// The path every real form takes: the switch is a child read as part of its
+// parent, not a root component read into an instance of its own
+procedure TToggleSwitchTest.Stream_InsideForm_ShouldRestoreParentAndSize;
+var
+  Source, Target: TForm;
+  Child, Loaded: TFluentToggleSwitch;
+  Stream: TMemoryStream;
+begin
+  RegisterClass(TFluentToggleSwitch);
+  Source := TForm.CreateNew(nil);
+  try
+    Child := TFluentToggleSwitch.Create(Source);
+    Child.Name := 'Switch';
+    Child.Parent := Source;
+    Child.ShowText := True;
+    Child.TextOn := 'Yes';
+    Stream := TMemoryStream.Create;
+    try
+      Stream.WriteComponent(Source);
+      Stream.Position := 0;
+      Target := TForm.CreateNew(nil);
+      try
+        Stream.ReadComponent(Target);
+        Loaded := Target.FindComponent('Switch') as TFluentToggleSwitch;
+        Assert.IsNotNull(Loaded, 'The child came back');
+        Assert.IsTrue(Loaded.Parent = Target, 'and it belongs to the form that read it');
+        Assert.AreEqual('Yes', Loaded.TextOn, 'with its properties');
+        Assert.AreEqual(Child.Width, Loaded.Width, 'and the size it was measured at');
+      finally
+        Target.Free;
+      end;
+    finally
+      Stream.Free;
+    end;
+  finally
+    Source.Free;
   end;
 end;
 
