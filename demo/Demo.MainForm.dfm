@@ -6,7 +6,7 @@ object Form1: TForm1
   Margins.Right = 6
   Margins.Bottom = 6
   Caption = 'TFluentToggleSwitch Demo'
-  ClientHeight = 423
+  ClientHeight = 581
   ClientWidth = 934
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,7 +21,7 @@ object Form1: TForm1
     Left = 12
     Top = 6
     Width = 910
-    Height = 411
+    Height = 569
     Margins.Left = 12
     Margins.Top = 6
     Margins.Right = 12
@@ -48,106 +48,134 @@ object Form1: TForm1
     ControlCollection = <
       item
         Column = 0
-        Control = Label1
+        ColumnSpan = 2
+        Control = LabelGroupKeyboard
         Row = 0
+      end
+      item
+        Column = 3
+        ColumnSpan = 2
+        Control = LabelGroupNoKeyboard
+        Row = 0
+      end
+      item
+        Column = 0
+        Control = Label1
+        Row = 1
       end
       item
         Column = 1
         Control = FluentToggleSwitch1
-        Row = 0
+        Row = 1
       end
       item
         Column = 3
         Control = Label6
-        Row = 0
+        Row = 1
       end
       item
         Column = 4
         Control = FluentToggleSwitch6
-        Row = 0
+        Row = 1
       end
       item
         Column = 0
         Control = Label2
-        Row = 1
+        Row = 2
       end
       item
         Column = 1
         Control = FluentToggleSwitch2
-        Row = 1
+        Row = 2
       end
       item
         Column = 3
         Control = Label7
-        Row = 1
+        Row = 2
       end
       item
         Column = 4
         Control = FluentToggleSwitch7
-        Row = 1
+        Row = 2
       end
       item
         Column = 0
         Control = Label3
-        Row = 2
+        Row = 3
       end
       item
         Column = 1
         Control = FluentToggleSwitch3
-        Row = 2
+        Row = 3
       end
       item
         Column = 3
         Control = Label8
-        Row = 2
+        Row = 3
       end
       item
         Column = 4
         Control = FluentToggleSwitch8
-        Row = 2
+        Row = 3
       end
       item
         Column = 0
         Control = Label4
-        Row = 3
+        Row = 4
       end
       item
         Column = 1
         Control = FluentToggleSwitch4
-        Row = 3
+        Row = 4
       end
       item
         Column = 3
         Control = Label9
-        Row = 3
+        Row = 4
       end
       item
         Column = 4
         Control = FluentToggleSwitch9
-        Row = 3
+        Row = 4
       end
       item
         Column = 0
         Control = Label5
-        Row = 4
+        Row = 5
       end
       item
         Column = 1
         Control = FluentToggleSwitch5
-        Row = 4
+        Row = 5
       end
       item
         Column = 3
         Control = Label10
-        Row = 4
+        Row = 5
       end
       item
         Column = 4
         Control = FluentToggleSwitch10
-        Row = 4
+        Row = 5
+      end
+      item
+        Column = 0
+        Control = Label11
+        Row = 6
+      end
+      item
+        Column = 1
+        Control = FluentToggleSwitch11
+        Row = 6
       end>
     ExpandStyle = emFixedSize
     RowCollection = <
+      item
+        SizeStyle = ssAuto
+      end
+      item
+        SizeStyle = ssAuto
+      end
       item
         SizeStyle = ssAuto
       end
@@ -166,7 +194,7 @@ object Form1: TForm1
     TabOrder = 0
     DesignSize = (
       910
-      411)
+      569)
     object Label1: TLabel
       AlignWithMargins = True
       Left = 167
@@ -225,6 +253,8 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      TabStop = False
+      KeyboardToggle = False
       TabOrder = 1
       ShowText = True
       TextPosition = tpLeft
@@ -289,6 +319,8 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      TabStop = False
+      KeyboardToggle = False
       Checked = True
       TabOrder = 5
       ShowText = True
@@ -353,6 +385,8 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      TabStop = False
+      KeyboardToggle = False
       Checked = True
       Enabled = False
       TabOrder = 3
@@ -422,6 +456,8 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      TabStop = False
+      KeyboardToggle = False
       TabOrder = 6
       ShowHeader = True
       HeaderText = 'Top'
@@ -491,6 +527,8 @@ object Form1: TForm1
       Anchors = []
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      TabStop = False
+      KeyboardToggle = False
       TabOrder = 9
       ShowHeader = True
       HeaderText = 'Bottom'
@@ -501,6 +539,68 @@ object Form1: TForm1
       HeaderFont.Height = -24
       HeaderFont.Name = 'Segoe UI'
       HeaderFont.Style = [fsUnderline]
+    end
+    object LabelGroupKeyboard: TLabel
+      AlignWithMargins = True
+      Left = 24
+      Top = 6
+      Width = 357
+      Height = 48
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Caption = 'Tab, Space and the focus ring'
+      Layout = tlCenter
+      ExplicitHeight = 32
+    end
+    object LabelGroupNoKeyboard: TLabel
+      AlignWithMargins = True
+      Left = 453
+      Top = 6
+      Width = 420
+      Height = 48
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Caption = 'TabStop = False, KeyboardToggle = False'
+      Layout = tlCenter
+      ExplicitHeight = 32
+    end
+    object Label11: TLabel
+      AlignWithMargins = True
+      Left = 60
+      Top = 471
+      Width = 185
+      Height = 86
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Align = alRight
+      Caption = 'Header and text'
+      Layout = tlCenter
+      ExplicitHeight = 32
+    end
+    object FluentToggleSwitch11: TFluentToggleSwitch
+      AlignWithMargins = True
+      Left = 293
+      Top = 471
+      Width = 142
+      Height = 86
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Anchors = []
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
+      TabOrder = 10
+      ShowText = True
+      ShowHeader = True
+      HeaderText = 'Header'
+      HeaderAlignment = taCenter
     end
   end
 end

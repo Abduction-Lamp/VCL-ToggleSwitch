@@ -30,6 +30,10 @@ type
     FluentToggleSwitch5: TFluentToggleSwitch;
     Label10: TLabel;
     FluentToggleSwitch10: TFluentToggleSwitch;
+    LabelGroupKeyboard: TLabel;
+    LabelGroupNoKeyboard: TLabel;
+    Label11: TLabel;
+    FluentToggleSwitch11: TFluentToggleSwitch;
     procedure FluentToggleSwitch2Change(Sender: TObject);
     procedure FluentToggleSwitch3Change(Sender: TObject);
     procedure FluentToggleSwitch8Change(Sender: TObject);
