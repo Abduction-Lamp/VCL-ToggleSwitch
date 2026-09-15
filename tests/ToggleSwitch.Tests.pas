@@ -23,6 +23,8 @@ type
     procedure Render(Toggle: TFluentToggleSwitch);
     procedure CreateRenderDestroy;
     procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
+    function StreamFormWithSwitch(out Loaded: TFluentToggleSwitch;
+      out SourceWidth: Integer): TForm;
     function AsText(Source: TFluentToggleSwitch): string;
     procedure LoadText(const Dfm: string; Target: TFluentToggleSwitch);
   public
@@ -216,6 +218,7 @@ end;
 procedure TToggleSwitchTest.SetupFixture;
 var
   Tmp: TFluentToggleSwitch;
+  Width: Integer;
 begin
   Setup;
   try
@@ -233,6 +236,9 @@ begin
     finally
       Tmp.Free;
     end;
+    // Streaming a whole form brings up the class registry entry and the
+    // reader's path for creating children
+    StreamFormWithSwitch(Tmp, Width).Free;
   finally
     TearDown;
   end;
@@ -659,6 +665,45 @@ begin
   end;
 end;
 
+// Writes a form holding one switch and reads it back into a fresh form: the
+// path every real form takes, where the switch is a child created by the
+// reader rather than a root read into an instance of its own. The caller owns
+// the form that comes back
+function TToggleSwitchTest.StreamFormWithSwitch(out Loaded: TFluentToggleSwitch;
+  out SourceWidth: Integer): TForm;
+var
+  Source: TForm;
+  Child: TFluentToggleSwitch;
+  Stream: TMemoryStream;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    Source := TForm.CreateNew(nil);
+    try
+      Child := TFluentToggleSwitch.Create(Source);
+      Child.Name := 'Switch';
+      Child.Parent := Source;
+      Child.ShowText := True;
+      Child.TextOn := 'Yes';
+      SourceWidth := Child.Width;
+      Stream.WriteComponent(Source);
+    finally
+      Source.Free;
+    end;
+    Stream.Position := 0;
+    Result := TForm.CreateNew(nil);
+    try
+      Stream.ReadComponent(Result);
+      Loaded := Result.FindComponent('Switch') as TFluentToggleSwitch;
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    Stream.Free;
+  end;
+end;
+
 procedure TToggleSwitchTest.Stream_RoundTrip_ShouldRestoreEveryPublishedProperty;
 var
   Loaded: TFluentToggleSwitch;
@@ -817,46 +862,26 @@ begin
   end;
 end;
 
-// The path every real form takes: the switch is a child read as part of its
-// parent, not a root component read into an instance of its own
 procedure TToggleSwitchTest.Stream_InsideForm_ShouldRestoreParentAndSize;
 var
-  Source, Target: TForm;
-  Child, Loaded: TFluentToggleSwitch;
-  Stream: TMemoryStream;
+  Target: TForm;
+  Loaded: TFluentToggleSwitch;
+  SourceWidth: Integer;
 begin
-  RegisterClass(TFluentToggleSwitch);
-  Source := TForm.CreateNew(nil);
+  Target := StreamFormWithSwitch(Loaded, SourceWidth);
   try
-    Child := TFluentToggleSwitch.Create(Source);
-    Child.Name := 'Switch';
-    Child.Parent := Source;
-    Child.ShowText := True;
-    Child.TextOn := 'Yes';
-    Stream := TMemoryStream.Create;
-    try
-      Stream.WriteComponent(Source);
-      Stream.Position := 0;
-      Target := TForm.CreateNew(nil);
-      try
-        Stream.ReadComponent(Target);
-        Loaded := Target.FindComponent('Switch') as TFluentToggleSwitch;
-        Assert.IsNotNull(Loaded, 'The child came back');
-        Assert.IsTrue(Loaded.Parent = Target, 'and it belongs to the form that read it');
-        Assert.AreEqual('Yes', Loaded.TextOn, 'with its properties');
-        Assert.AreEqual(Child.Width, Loaded.Width, 'and the size it was measured at');
-      finally
-        Target.Free;
-      end;
-    finally
-      Stream.Free;
-    end;
+    Assert.IsNotNull(Loaded, 'The child came back');
+    Assert.IsTrue(Loaded.Parent = Target, 'and it belongs to the form that read it');
+    Assert.AreEqual('Yes', Loaded.TextOn, 'with its properties');
+    Assert.AreEqual(SourceWidth, Loaded.Width, 'and the size it was measured at');
   finally
-    Source.Free;
+    Target.Free;
   end;
 end;
 
 initialization
+  // The reader needs the class by name to create the switch inside a form
+  RegisterClass(TFluentToggleSwitch);
   TDUnitX.RegisterTestFixture(TToggleSwitchTest);
 
 end.
