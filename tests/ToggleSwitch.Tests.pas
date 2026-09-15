@@ -415,7 +415,7 @@ begin
   finally
     Bmp.Free;
   end;
-  Assert.Pass('FastMM4 reports anything left behind at shutdown');
+  Assert.Pass('The per-test memory monitor flags anything left behind');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

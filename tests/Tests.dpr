@@ -5,9 +5,7 @@ program Tests;
 {$ENDIF}
 {$STRONGLINKTYPES ON}
 uses
-  {$IFDEF FASTMM}
   FastMM4,
-  {$ENDIF}
   DUnitX.MemoryLeakMonitor.FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}

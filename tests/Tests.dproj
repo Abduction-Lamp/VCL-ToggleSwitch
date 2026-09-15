@@ -52,7 +52,8 @@
         <UsingDelphiRTL>true</UsingDelphiRTL>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <DCC_UnitSearchPath>$(DUnitX);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(DUnitX);$(FastMM4);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_Define>USE_FASTMM4_LEAK_MONITOR;$(DCC_Define)</DCC_Define>
         <SanitizedProjectName>Tests</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
