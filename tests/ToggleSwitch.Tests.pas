@@ -208,6 +208,8 @@ end;
 // first-time VCL path fails once with a bogus leak: extend this warm-up
 // rather than ignore the test.
 procedure TToggleSwitchTest.SetupFixture;
+var
+  Tmp: TFluentToggleSwitch;
 begin
   Setup;
   try
@@ -218,6 +220,13 @@ begin
     FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
     // Destroying a child while its parent lives is a path of its own
     CreateRenderDestroy;
+    // Parsing a text DFM brings up the RTL encoding singletons
+    Tmp := TFluentToggleSwitch.Create(nil);
+    try
+      LoadText('object TFluentToggleSwitch'#13#10'  ShowText = True'#13#10'end', Tmp);
+    finally
+      Tmp.Free;
+    end;
   finally
     TearDown;
   end;
