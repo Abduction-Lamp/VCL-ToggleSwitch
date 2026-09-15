@@ -435,7 +435,8 @@ begin
       Tmp.Free;
     end;
   end;
-  Assert.Pass('The per-test memory monitor flags anything left behind');
+  // No assertion on purpose: the per-test leak monitor is the check, and
+  // Assert.Pass would raise ETestPass right through its measurement
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;
