@@ -34,6 +34,8 @@ type
     LabelGroupNoKeyboard: TLabel;
     Label11: TLabel;
     FluentToggleSwitch11: TFluentToggleSwitch;
+    Label12: TLabel;
+    FluentToggleSwitch12: TFluentToggleSwitch;
     procedure FluentToggleSwitch2Change(Sender: TObject);
     procedure FluentToggleSwitch3Change(Sender: TObject);
     procedure FluentToggleSwitch8Change(Sender: TObject);

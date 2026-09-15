@@ -165,6 +165,16 @@ object Form1: TForm1
         Column = 1
         Control = FluentToggleSwitch11
         Row = 6
+      end
+      item
+        Column = 3
+        Control = Label12
+        Row = 6
+      end
+      item
+        Column = 4
+        Control = FluentToggleSwitch12
+        Row = 6
       end>
     ExpandStyle = emFixedSize
     RowCollection = <
@@ -640,6 +650,59 @@ object Form1: TForm1
       ShowHeader = True
       HeaderText = 'Header'
       HeaderAlignment = taCenter
+    end
+    object Label12: TLabel
+      AlignWithMargins = True
+      Left = 434
+      Top = 426
+      Width = 249
+      Height = 86
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Align = alRight
+      Caption = 'Every colour of its own'
+      Layout = tlCenter
+      ExplicitHeight = 32
+    end
+    object FluentToggleSwitch12: TFluentToggleSwitch
+      AlignWithMargins = True
+      Left = 731
+      Top = 426
+      Width = 142
+      Height = 86
+      Margins.Left = 24
+      Margins.Top = 6
+      Margins.Right = 24
+      Margins.Bottom = 6
+      Anchors = []
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clMaroon
+      Font.Height = -24
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      TabStop = False
+      TabOrder = 11
+      KeyboardToggle = False
+      TrackColorOff = clSilver
+      TrackColorOn = clPurple
+      ThumbColorOff = clNavy
+      ThumbColorOn = clAqua
+      ShowText = True
+      TextOn = 'Yes'
+      TextOff = 'No'
+      ShowHeader = True
+      HeaderText = 'Colours'
+      HeaderAlignment = taCenter
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clTeal
+      HeaderFont.Height = -24
+      HeaderFont.Name = 'Segoe UI'
+      HeaderFont.Style = [fsBold]
     end
   end
 end
