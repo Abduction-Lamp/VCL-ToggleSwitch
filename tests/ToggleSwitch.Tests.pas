@@ -25,7 +25,8 @@ type
     procedure Press(X: Integer);
     procedure MoveTo(X: Integer);
     procedure Release(X: Integer);
-    function RenderToStream(Toggle: TFluentToggleSwitch): TMemoryStream;
+    function RenderToBitmap(Toggle: TFluentToggleSwitch): TBitmap;
+    function DescribeDifference(A, B: TBitmap): string;
     procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
     function StreamFormWithSwitch(out Loaded: TFluentToggleSwitch;
       out SourceWidth: Integer): TForm;
@@ -346,27 +347,52 @@ begin
     MakeLParam(Word(X), Word(FToggle.Height div 2)));
 end;
 
-// A bitmap of the control as it would paint right now. Two controls in the
-// same state have to come out byte for byte the same
-function TToggleSwitchTest.RenderToStream(Toggle: TFluentToggleSwitch): TMemoryStream;
-var
-  Bmp: TBitmap;
+// The control as it would paint right now
+function TToggleSwitchTest.RenderToBitmap(Toggle: TFluentToggleSwitch): TBitmap;
 begin
-  Result := TMemoryStream.Create;
+  Result := TBitmap.Create;
   try
-    Bmp := TBitmap.Create;
-    try
-      Bmp.SetSize(Toggle.Width, Toggle.Height);
-      Toggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
-      Bmp.SaveToStream(Result);
-    finally
-      Bmp.Free;
-    end;
-    Result.Position := 0;
+    Result.PixelFormat := pf32bit;
+    Result.SetSize(Toggle.Width, Toggle.Height);
+    Toggle.PaintTo(Result.Canvas.Handle, 0, 0);
   except
     Result.Free;
     raise;
   end;
+end;
+
+// Empty when the two look the same. Otherwise says how much differs and
+// where, which tells a thumb that moved from a color that changed
+function TToggleSwitchTest.DescribeDifference(A, B: TBitmap): string;
+type
+  PRow = ^TRow;
+  TRow = array[0..MaxInt div SizeOf(Cardinal) - 1] of Cardinal;
+var
+  X, Y, Count, MinX, MaxX: Integer;
+  RowA, RowB: PRow;
+begin
+  Count := 0;
+  MinX := A.Width;
+  MaxX := -1;
+  for Y := 0 to A.Height - 1 do
+  begin
+    RowA := A.ScanLine[Y];
+    RowB := B.ScanLine[Y];
+    for X := 0 to A.Width - 1 do
+      if RowA^[X] <> RowB^[X] then
+      begin
+        Inc(Count);
+        if X < MinX then
+          MinX := X;
+        if X > MaxX then
+          MaxX := X;
+      end;
+  end;
+  if Count = 0 then
+    Result := ''
+  else
+    Result := Format('%d of %d pixels differ, in columns %d..%d',
+      [Count, A.Width * A.Height, MinX, MaxX]);
 end;
 
 // --- Color tests ---
@@ -660,19 +686,19 @@ end;
 // to paint the same, so anything the drag left behind shows up here
 procedure TToggleSwitchTest.Enabled_False_MidDrag_ShouldSettleTheThumb;
 var
-  Expected, Actual: TMemoryStream;
+  Expected, Actual: TBitmap;
 begin
   Expected := nil;
   Actual := nil;
   try
     FToggle.Enabled := False;
-    Expected := RenderToStream(FToggle);
+    Expected := RenderToBitmap(FToggle);
     FToggle.Enabled := True;
     Press(ThumbOffX);
     MoveTo(ThumbOffX + DragThreshold + 4);
     FToggle.Enabled := False;
-    Actual := RenderToStream(FToggle);
-    Assert.AreEqual(Expected, Actual,
+    Actual := RenderToBitmap(FToggle);
+    Assert.AreEqual('', DescribeDifference(Expected, Actual),
       'A switch disabled mid-drag looks like one that was disabled untouched');
   finally
     Actual.Free;
