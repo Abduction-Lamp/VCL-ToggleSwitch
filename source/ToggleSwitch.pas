@@ -84,6 +84,7 @@ type
     procedure HandleAnimTimer(Sender: TObject);
     function DragTravel: Single;
     procedure DragThumb(X: Integer);
+    procedure CancelPress;
     function GetInteractionState: TInteractionState;
     function CurrentScale: Single;
     function TextGap: Integer;
@@ -927,13 +928,23 @@ begin
   UpdateVisualState;
 end;
 
+// Drops a press without acting on it. The thumb carries FDragDelta into its
+// painted position, so letting the press go is not enough: the offset has to
+// go with it, or the thumb stays where the drag left it
+procedure TFluentToggleSwitch.CancelPress;
+begin
+  FPressed := False;
+  FDragged := False;
+  FDragDelta := 0;
+end;
+
 procedure TFluentToggleSwitch.CMMouseLeave(var Msg: TMessage);
 begin
   inherited;
   FHovered := False;
   // The mouse is captured while pressed, so a drag may leave the control
   if not MouseCapture then
-    FPressed := False;
+    CancelPress;
   UpdateVisualState;
 end;
 
@@ -943,7 +954,7 @@ begin
   if not Enabled then
   begin
     // A disabled window loses the capture, so no MouseUp will arrive
-    FPressed := False;
+    CancelPress;
     FHovered := False;
   end;
   UpdateVisualState;
