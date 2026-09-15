@@ -120,6 +120,12 @@ type
     procedure Click_ReleasedOutside_ShouldNotToggle;
 
     [Test]
+    procedure DragPastMiddle_ReleasedOutside_ShouldStillToggle;
+
+    [Test]
+    procedure DragAwayFromTravel_ShouldNotToggle;
+
+    [Test]
     procedure Click_OnLabel_ShouldToggle;
 
     [Test]
@@ -536,6 +542,25 @@ begin
   Release(FToggle.Width + 10);
   Assert.IsFalse(FToggle.Checked, 'A press let go outside the control is no click');
   Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+// Once the pointer has travelled far enough to count as a drag, the thumb
+// decides, and the thumb is held inside the track wherever the pointer went
+procedure TToggleSwitchTest.DragPastMiddle_ReleasedOutside_ShouldStillToggle;
+begin
+  Press(ThumbOffX);
+  MoveTo(FToggle.Width + 50);
+  Release(FToggle.Width + 50);
+  Assert.IsTrue(FToggle.Checked, 'The thumb reached the far end, so the switch turns on');
+end;
+
+procedure TToggleSwitchTest.DragAwayFromTravel_ShouldNotToggle;
+begin
+  Press(ThumbOffX);
+  // An off switch has no room to the left, so the thumb never moves
+  MoveTo(-50);
+  Release(-50);
+  Assert.IsFalse(FToggle.Checked, 'A drag the thumb cannot follow changes nothing');
 end;
 
 procedure TToggleSwitchTest.Click_OnLabel_ShouldToggle;
