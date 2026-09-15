@@ -39,6 +39,7 @@ type
     procedure FluentToggleSwitch2Change(Sender: TObject);
     procedure FluentToggleSwitch3Change(Sender: TObject);
     procedure FluentToggleSwitch8Change(Sender: TObject);
+    procedure FluentToggleSwitch11Change(Sender: TObject);
   end;
 
 var
@@ -72,6 +73,15 @@ begin
     Label8.Caption := 'Enable = False (On)'
   else
     Label8.Caption := 'Enable = False (Off)';
+end;
+
+// Proof that the keyboard reached the switch, whether or not a ring showed up
+procedure TForm1.FluentToggleSwitch11Change(Sender: TObject);
+begin
+  if FluentToggleSwitch11.Checked then
+    Label11.Caption := 'Header and text (On)'
+  else
+    Label11.Caption := 'Header and text (Off)';
 end;
 
 end.

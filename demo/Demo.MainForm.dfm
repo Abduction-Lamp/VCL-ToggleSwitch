@@ -626,6 +626,7 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 10
+      OnChange = FluentToggleSwitch11Change
       ShowText = True
       ShowHeader = True
       HeaderText = 'Header'
