@@ -182,6 +182,8 @@ end;
 // shutdown. Taking that hit once here keeps the per-test leak monitor
 // focused on what each test itself leaves behind.
 procedure TToggleSwitchTest.SetupFixture;
+var
+  Tmp: TFluentToggleSwitch;
 begin
   Setup;
   try
@@ -190,6 +192,15 @@ begin
     FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
     FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
     FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+    // Destroying a child while its parent lives is a path of its own
+    Tmp := TFluentToggleSwitch.Create(nil);
+    try
+      Tmp.Parent := FForm;
+      Tmp.ShowText := True;
+      Render(Tmp);
+    finally
+      Tmp.Free;
+    end;
   finally
     TearDown;
   end;

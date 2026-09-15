@@ -12,19 +12,20 @@ interface
 implementation
 
 uses
+  System.SysUtils,
   DUnitX.TestFramework,
   DUnitX.IoC;
 
 type
-  TRtlMemoryLeakMonitor = class(TInterfacedObject, IMemoryLeakMonitor)
+  TRtlMemoryLeakMonitor = class(TInterfacedObject, IMemoryLeakMonitor, IMemoryLeakMonitor2)
   private
-    FPreSetup: Int64;
-    FPostSetup: Int64;
-    FPreTest: Int64;
-    FPostTest: Int64;
-    FPreTearDown: Int64;
-    FPostTearDown: Int64;
-    class function AllocatedBytes: Int64; static;
+    FPreSetup: TMemoryManagerState;
+    FPostSetup: TMemoryManagerState;
+    FPreTest: TMemoryManagerState;
+    FPostTest: TMemoryManagerState;
+    FPreTearDown: TMemoryManagerState;
+    FPostTearDown: TMemoryManagerState;
+    class function AllocatedBytes(const State: TMemoryManagerState): Int64; static;
   public
     procedure PreSetup;
     procedure PostSetUp;
@@ -35,16 +36,15 @@ type
     function SetUpMemoryAllocated: Int64;
     function TestMemoryAllocated: Int64;
     function TearDownMemoryAllocated: Int64;
+    function GetReport: string;
   end;
 
 { TRtlMemoryLeakMonitor }
 
-class function TRtlMemoryLeakMonitor.AllocatedBytes: Int64;
+class function TRtlMemoryLeakMonitor.AllocatedBytes(const State: TMemoryManagerState): Int64;
 var
-  State: TMemoryManagerState;
   Block: TSmallBlockTypeState;
 begin
-  GetMemoryManagerState(State);
   Result := Int64(State.TotalAllocatedMediumBlockSize) +
     Int64(State.TotalAllocatedLargeBlockSize);
   for Block in State.SmallBlockTypeStates do
@@ -53,47 +53,75 @@ end;
 
 procedure TRtlMemoryLeakMonitor.PreSetup;
 begin
-  FPreSetup := AllocatedBytes;
+  GetMemoryManagerState(FPreSetup);
 end;
 
 procedure TRtlMemoryLeakMonitor.PostSetUp;
 begin
-  FPostSetup := AllocatedBytes;
+  GetMemoryManagerState(FPostSetup);
 end;
 
 procedure TRtlMemoryLeakMonitor.PreTest;
 begin
-  FPreTest := AllocatedBytes;
+  GetMemoryManagerState(FPreTest);
 end;
 
 procedure TRtlMemoryLeakMonitor.PostTest;
 begin
-  FPostTest := AllocatedBytes;
+  GetMemoryManagerState(FPostTest);
 end;
 
 procedure TRtlMemoryLeakMonitor.PreTearDown;
 begin
-  FPreTearDown := AllocatedBytes;
+  GetMemoryManagerState(FPreTearDown);
 end;
 
 procedure TRtlMemoryLeakMonitor.PostTearDown;
 begin
-  FPostTearDown := AllocatedBytes;
+  GetMemoryManagerState(FPostTearDown);
 end;
 
 function TRtlMemoryLeakMonitor.SetUpMemoryAllocated: Int64;
 begin
-  Result := FPostSetup - FPreSetup;
+  Result := AllocatedBytes(FPostSetup) - AllocatedBytes(FPreSetup);
 end;
 
 function TRtlMemoryLeakMonitor.TestMemoryAllocated: Int64;
 begin
-  Result := FPostTest - FPreTest;
+  Result := AllocatedBytes(FPostTest) - AllocatedBytes(FPreTest);
 end;
 
 function TRtlMemoryLeakMonitor.TearDownMemoryAllocated: Int64;
 begin
-  Result := FPostTearDown - FPreTearDown;
+  Result := AllocatedBytes(FPostTearDown) - AllocatedBytes(FPreTearDown);
+end;
+
+// Lists the block sizes still allocated after TearDown; the size alone often
+// tells a grown list from a leaked object
+function TRtlMemoryLeakMonitor.GetReport: string;
+var
+  I: Integer;
+  Delta: Int64;
+begin
+  Result := '';
+  for I := Low(FPreSetup.SmallBlockTypeStates) to High(FPreSetup.SmallBlockTypeStates) do
+  begin
+    Delta := Int64(FPostTearDown.SmallBlockTypeStates[I].AllocatedBlockCount)
+      - Int64(FPreSetup.SmallBlockTypeStates[I].AllocatedBlockCount);
+    if Delta <> 0 then
+      Result := Result + Format(' %d x %d B,',
+        [Delta, FPreSetup.SmallBlockTypeStates[I].UseableBlockSize]);
+  end;
+  Delta := Int64(FPostTearDown.AllocatedMediumBlockCount)
+    - Int64(FPreSetup.AllocatedMediumBlockCount);
+  if Delta <> 0 then
+    Result := Result + Format(' %d medium,', [Delta]);
+  Delta := Int64(FPostTearDown.AllocatedLargeBlockCount)
+    - Int64(FPreSetup.AllocatedLargeBlockCount);
+  if Delta <> 0 then
+    Result := Result + Format(' %d large,', [Delta]);
+  if Result <> '' then
+    Result := ' [blocks:' + Copy(Result, 1, Length(Result) - 1) + ']';
 end;
 
 initialization
