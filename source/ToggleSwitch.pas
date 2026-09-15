@@ -38,6 +38,10 @@ type
     FAnimationDuration: Integer;
     FHovered: Boolean;
     FPressed: Boolean;
+    FKeyPressed: Boolean;
+    FShowFocus: Boolean;
+    FFocusVisible: Boolean;
+    FKeyboardToggle: Boolean;
     FDragStartX: Integer;
     FDragDelta: Single;
     FDragged: Boolean;
@@ -104,6 +108,8 @@ type
     function IsTextOnStored: Boolean;
     function IsTextOffStored: Boolean;
     procedure SetShowText(Value: Boolean);
+    procedure SetShowFocus(Value: Boolean);
+    procedure UpdateFocusVisibility;
     procedure SetTextPosition(Value: TTextPosition);
     procedure SetTextSpacing(Value: Integer);
     procedure SetShowHeader(Value: Boolean);
@@ -119,6 +125,9 @@ type
     procedure CMMouseEnter(var Msg: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure CMEnabledChanged(var Msg: TMessage); message CM_ENABLEDCHANGED;
+    procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
+    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
+    procedure WMUpdateUIState(var Msg: TMessage); message WM_UPDATEUISTATE;
   protected
     procedure Paint; override;
     function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
@@ -129,6 +138,8 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -156,8 +167,10 @@ type
     property Animated: Boolean read FAnimated write FAnimated default True;
     property AnimationDuration: Integer read FAnimationDuration write SetAnimationDuration default 367;
     property Enabled;
-    property TabStop default False;
+    property TabStop default True;
     property TabOrder;
+    property ShowFocus: Boolean read FShowFocus write SetShowFocus default True;
+    property KeyboardToggle: Boolean read FKeyboardToggle write FKeyboardToggle default True;
     property Color;
     property ParentColor;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
@@ -189,6 +202,9 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnMouseWheel;
+    property OnKeyDown;
+    property OnKeyPress;
+    property OnKeyUp;
     property OnResize;
   end;
 
@@ -360,6 +376,9 @@ begin
   ControlStyle := ControlStyle + [csOpaque];
   ParentColor := True;
   FChecked := False;
+  TabStop := True;
+  FShowFocus := True;
+  FKeyboardToggle := True;
   FAnimated := True;
   FAnimationDuration := 367;
   FAnimProgress := 0.0;
@@ -461,6 +480,33 @@ end;
 function TFluentToggleSwitch.IsTextOffStored: Boolean;
 begin
   Result := FTextOff <> DefaultTextOff;
+end;
+
+procedure TFluentToggleSwitch.SetShowFocus(Value: Boolean);
+begin
+  if FShowFocus <> Value then
+  begin
+    FShowFocus := Value;
+    if Focused then
+      Invalidate;
+  end;
+end;
+
+// Windows hides focus rings until someone reaches for the keyboard, and says
+// so through the UI state of the window. Following it is what keeps a click
+// from leaving a ring behind while Tab still shows where you are.
+procedure TFluentToggleSwitch.UpdateFocusVisibility;
+var
+  Visible: Boolean;
+begin
+  Visible := HandleAllocated and
+    (Perform(WM_QUERYUISTATE, 0, 0) and UISF_HIDEFOCUS = 0);
+  if Visible <> FFocusVisible then
+  begin
+    FFocusVisible := Visible;
+    if Focused then
+      Invalidate;
+  end;
 end;
 
 procedure TFluentToggleSwitch.SetShowText(Value: Boolean);
@@ -836,6 +882,8 @@ begin
   // hand arrives all the same
   if (Button = mbLeft) and Enabled then
   begin
+    if CanFocus and not Focused then
+      SetFocus;
     FPressed := True;
     FDragStartX := X;
     FDragDelta := 0;
@@ -885,6 +933,34 @@ begin
   end;
   if FPressed then
     DragThumb(X);
+end;
+
+// WinUI acts when the key comes back up, so holding Space down does not fire
+// over and over, and a key released elsewhere never reaches us
+procedure TFluentToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if FKeyboardToggle and (Key = VK_SPACE) and (Shift = []) then
+  begin
+    Key := 0;
+    if not FKeyPressed then
+    begin
+      FKeyPressed := True;
+      UpdateVisualState;
+    end;
+  end;
+end;
+
+procedure TFluentToggleSwitch.KeyUp(var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if FKeyPressed and (Key = VK_SPACE) then
+  begin
+    Key := 0;
+    FKeyPressed := False;
+    UpdateVisualState;
+    Toggle;
+  end;
 end;
 
 function TFluentToggleSwitch.DragTravel: Single;
@@ -948,6 +1024,31 @@ begin
   UpdateVisualState;
 end;
 
+procedure TFluentToggleSwitch.WMSetFocus(var Msg: TWMSetFocus);
+begin
+  inherited;
+  UpdateFocusVisibility;
+  Invalidate;
+end;
+
+procedure TFluentToggleSwitch.WMKillFocus(var Msg: TWMKillFocus);
+begin
+  inherited;
+  // A key still down when focus moves on will never come back up here
+  if FKeyPressed then
+  begin
+    FKeyPressed := False;
+    UpdateVisualState;
+  end;
+  Invalidate;
+end;
+
+procedure TFluentToggleSwitch.WMUpdateUIState(var Msg: TMessage);
+begin
+  inherited;
+  UpdateFocusVisibility;
+end;
+
 procedure TFluentToggleSwitch.CMEnabledChanged(var Msg: TMessage);
 begin
   inherited;
@@ -955,6 +1056,7 @@ begin
   begin
     // A disabled window loses the capture, so no MouseUp will arrive
     CancelPress;
+    FKeyPressed := False;
     FHovered := False;
   end;
   UpdateVisualState;
@@ -964,7 +1066,7 @@ function TFluentToggleSwitch.GetInteractionState: TInteractionState;
 begin
   if not Enabled then
     Result := isDisabled
-  else if FPressed then
+  else if FPressed or FKeyPressed then
     Result := isPressed
   else if FHovered then
     Result := isHover
@@ -1225,6 +1327,11 @@ begin
       Canvas.TextOut(HeaderX, HeaderY, FHeaderText);
     end;
   end;
+
+  // The ring wraps the switch and its label but leaves the header out, the way
+  // the WinUI focus target covers the switch area only
+  if FShowFocus and FFocusVisible and Focused then
+    Canvas.DrawFocusRect(Rect(0, RowTop, Width, RowTop + RowHeight));
 end;
 
 procedure Register;
