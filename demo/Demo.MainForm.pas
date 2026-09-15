@@ -30,6 +30,7 @@ type
     FluentToggleSwitch5: TFluentToggleSwitch;
     Label10: TLabel;
     FluentToggleSwitch10: TFluentToggleSwitch;
+    procedure FluentToggleSwitch2Change(Sender: TObject);
   end;
 
 var
@@ -38,5 +39,13 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TForm1.FluentToggleSwitch2Change(Sender: TObject);
+begin
+  if FluentToggleSwitch2.Checked then
+    Label2.Caption := 'Checked = True (On)'
+  else
+    Label2.Caption := 'Checked = False (Off)';
+end;
 
 end.

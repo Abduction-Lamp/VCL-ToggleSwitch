@@ -259,6 +259,7 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       Checked = True
       TabOrder = 2
+      OnChange = FluentToggleSwitch2Change
     end
     object Label7: TLabel
       AlignWithMargins = True
