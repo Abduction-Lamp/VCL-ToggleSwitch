@@ -17,6 +17,8 @@ uses
   DUnitX.IoC;
 
 type
+  TBlockClass = (bcSmall, bcMedium, bcLarge);
+
   TRtlMemoryLeakMonitor = class(TInterfacedObject, IMemoryLeakMonitor, IMemoryLeakMonitor2)
   private
     FPreSetup: TMemoryManagerState;
@@ -96,30 +98,33 @@ begin
   Result := AllocatedBytes(FPostTearDown) - AllocatedBytes(FPreTearDown);
 end;
 
-// Lists the block sizes left over across the same three spans DUnitX sums up
-// (Setup, Test, TearDown), so the runner's own bookkeeping between them stays
-// out; the size alone often tells a grown list from a leaked object
+// Lists the block classes left over across the same three spans DUnitX sums
+// up (Setup, Test, TearDown), so the runner's own bookkeeping between them
+// stays out. The size is the usable size of the block class, not of the
+// object; it still tells a grown list from a leaked object most of the time
 function TRtlMemoryLeakMonitor.GetReport: string;
 
-  // Index selects a small block type; -1 stands for medium, -2 for large blocks
-  function Delta(const Pre, Post: TMemoryManagerState; Index: Integer): Int64;
+  function Delta(const Pre, Post: TMemoryManagerState; What: TBlockClass;
+    Index: Integer): Int64;
   begin
-    if Index >= 0 then
-      Result := Int64(Post.SmallBlockTypeStates[Index].AllocatedBlockCount)
-        - Int64(Pre.SmallBlockTypeStates[Index].AllocatedBlockCount)
-    else if Index = -1 then
-      Result := Int64(Post.AllocatedMediumBlockCount)
-        - Int64(Pre.AllocatedMediumBlockCount)
+    case What of
+      bcSmall:
+        Result := Int64(Post.SmallBlockTypeStates[Index].AllocatedBlockCount)
+          - Int64(Pre.SmallBlockTypeStates[Index].AllocatedBlockCount);
+      bcMedium:
+        Result := Int64(Post.AllocatedMediumBlockCount)
+          - Int64(Pre.AllocatedMediumBlockCount);
     else
       Result := Int64(Post.AllocatedLargeBlockCount)
         - Int64(Pre.AllocatedLargeBlockCount);
+    end;
   end;
 
-  function LeftOver(Index: Integer): Int64;
+  function LeftOver(What: TBlockClass; Index: Integer = 0): Int64;
   begin
-    Result := Delta(FPreSetup, FPostSetup, Index)
-      + Delta(FPreTest, FPostTest, Index)
-      + Delta(FPreTearDown, FPostTearDown, Index);
+    Result := Delta(FPreSetup, FPostSetup, What, Index)
+      + Delta(FPreTest, FPostTest, What, Index)
+      + Delta(FPreTearDown, FPostTearDown, What, Index);
   end;
 
 var
@@ -129,15 +134,15 @@ begin
   Result := '';
   for I := Low(FPreSetup.SmallBlockTypeStates) to High(FPreSetup.SmallBlockTypeStates) do
   begin
-    Count := LeftOver(I);
+    Count := LeftOver(bcSmall, I);
     if Count <> 0 then
       Result := Result + Format(' %d x %d B,',
         [Count, FPreSetup.SmallBlockTypeStates[I].UseableBlockSize]);
   end;
-  Count := LeftOver(-1);
+  Count := LeftOver(bcMedium);
   if Count <> 0 then
     Result := Result + Format(' %d medium,', [Count]);
-  Count := LeftOver(-2);
+  Count := LeftOver(bcLarge);
   if Count <> 0 then
     Result := Result + Format(' %d large,', [Count]);
   if Result <> '' then
@@ -148,6 +153,11 @@ initialization
   TDUnitXIoC.DefaultContainer.RegisterType<IMemoryLeakMonitor>(
     function: IMemoryLeakMonitor
     begin
+      // A replacement memory manager would leave the RTL snapshots empty and
+      // every delta at zero, which would pass for a clean run
+      if IsMemoryManagerSet then
+        raise Exception.Create('ToggleSwitch.Tests.LeakMonitor reads the RTL '
+          + 'memory manager; a replacement one needs a monitor of its own');
       Result := TRtlMemoryLeakMonitor.Create;
     end);
 
