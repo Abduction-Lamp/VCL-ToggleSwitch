@@ -196,8 +196,6 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 0
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label6: TLabel
       AlignWithMargins = True
@@ -229,8 +227,6 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       TabOrder = 1
       ShowText = True
-      TextOn = 'On'
-      TextOff = 'Off'
       TextPosition = tpLeft
     end
     object Label2: TLabel
@@ -263,8 +259,6 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       Checked = True
       TabOrder = 2
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label7: TLabel
       AlignWithMargins = True
@@ -297,8 +291,6 @@ object Form1: TForm1
       Checked = True
       TabOrder = 5
       ShowText = True
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label3: TLabel
       AlignWithMargins = True
@@ -330,8 +322,6 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       Enabled = False
       TabOrder = 8
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label8: TLabel
       AlignWithMargins = True
@@ -365,15 +355,13 @@ object Form1: TForm1
       Enabled = False
       TabOrder = 3
       ShowText = True
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label4: TLabel
       AlignWithMargins = True
       Left = 103
       Top = 186
       Width = 142
-      Height = 90
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
@@ -386,7 +374,7 @@ object Form1: TForm1
     object FluentToggleSwitch4: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 293
-      Top = 207
+      Top = 205
       Width = 88
       Height = 48
       Margins.Left = 24
@@ -402,15 +390,13 @@ object Form1: TForm1
       TrackColorOn = clGreen
       ThumbColorOff = clKhaki
       ThumbColorOn = clGold
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label9: TLabel
       AlignWithMargins = True
       Left = 606
       Top = 186
       Width = 77
-      Height = 90
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
@@ -423,7 +409,7 @@ object Form1: TForm1
     object FluentToggleSwitch9: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 758
-      Top = 188
+      Top = 186
       Width = 88
       Height = 86
       Margins.Left = 24
@@ -434,8 +420,6 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 6
-      TextOn = 'On'
-      TextOff = 'Off'
       ShowHeader = True
       HeaderText = 'Top'
       HeaderAlignment = taCenter
@@ -448,9 +432,9 @@ object Form1: TForm1
     object Label5: TLabel
       AlignWithMargins = True
       Left = 60
-      Top = 288
+      Top = 284
       Width = 185
-      Height = 94
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
@@ -463,7 +447,7 @@ object Form1: TForm1
     object FluentToggleSwitch5: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 293
-      Top = 311
+      Top = 303
       Width = 88
       Height = 48
       Margins.Left = 24
@@ -475,15 +459,13 @@ object Form1: TForm1
       ParentDoubleBuffered = False
       Animated = False
       TabOrder = 7
-      TextOn = 'On'
-      TextOff = 'Off'
     end
     object Label10: TLabel
       AlignWithMargins = True
       Left = 497
-      Top = 288
+      Top = 284
       Width = 186
-      Height = 94
+      Height = 86
       Margins.Left = 24
       Margins.Top = 6
       Margins.Right = 24
@@ -496,7 +478,7 @@ object Form1: TForm1
     object FluentToggleSwitch10: TFluentToggleSwitch
       AlignWithMargins = True
       Left = 758
-      Top = 292
+      Top = 284
       Width = 88
       Height = 86
       Margins.Left = 24
@@ -507,8 +489,6 @@ object Form1: TForm1
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 9
-      TextOn = 'On'
-      TextOff = 'Off'
       ShowHeader = True
       HeaderText = 'Bottom'
       HeaderPosition = hpBottom
