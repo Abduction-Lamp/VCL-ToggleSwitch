@@ -5,6 +5,8 @@
   rebuilt with USE_FASTMM4_LEAK_MONITOR. Registering it replaces the no-op
   monitor DUnitX installs by default. }
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 implementation

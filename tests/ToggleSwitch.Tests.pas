@@ -20,7 +20,10 @@ type
     FToggle: TFluentToggleSwitch;
     FOnChangeFired: Boolean;
     procedure HandleOnChange(Sender: TObject);
+    procedure Render(Toggle: TFluentToggleSwitch);
   public
+    [SetupFixture]
+    procedure SetupFixture;
     [Setup]
     procedure Setup;
     [TearDown]
@@ -172,6 +175,37 @@ end;
 procedure TToggleSwitchTest.TearDown;
 begin
   FForm.Free;
+end;
+
+// The first window, paint and mouse input of the process fill VCL caches
+// (screen lists, font handles, focus and hint bookkeeping) that live until
+// shutdown. Taking that hit once here keeps the per-test leak monitor
+// focused on what each test itself leaves behind.
+procedure TToggleSwitchTest.SetupFixture;
+begin
+  Setup;
+  try
+    FToggle.ShowText := True;
+    Render(FToggle);
+    FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(10, 12));
+    FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
+    FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
+  finally
+    TearDown;
+  end;
+end;
+
+procedure TToggleSwitchTest.Render(Toggle: TFluentToggleSwitch);
+var
+  Bmp: TBitmap;
+begin
+  Bmp := TBitmap.Create;
+  try
+    Bmp.SetSize(Toggle.Width, Toggle.Height);
+    Toggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
+  finally
+    Bmp.Free;
+  end;
 end;
 
 // --- Color tests ---
@@ -375,18 +409,11 @@ end;
 
 procedure TToggleSwitchTest.Paint_ShouldNotChangeSize;
 var
-  Bmp: TBitmap;
   W, H: Integer;
 begin
   W := FToggle.Width;
   H := FToggle.Height;
-  Bmp := TBitmap.Create;
-  try
-    Bmp.SetSize(W, H);
-    FToggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
-  finally
-    Bmp.Free;
-  end;
+  Render(FToggle);
   Assert.AreEqual(W, FToggle.Width, 'Painting leaves the width alone');
   Assert.AreEqual(H, FToggle.Height, 'Painting leaves the height alone');
 end;
@@ -395,25 +422,18 @@ procedure TToggleSwitchTest.CreateAndDestroy_ShouldNotLeak;
 var
   I: Integer;
   Tmp: TFluentToggleSwitch;
-  Bmp: TBitmap;
 begin
   // Painting is what builds the GDI+ objects, so the loop has to render
-  Bmp := TBitmap.Create;
-  try
-    for I := 1 to 50 do
-    begin
-      Tmp := TFluentToggleSwitch.Create(nil);
-      try
-        Tmp.Parent := FForm;
-        Tmp.ShowText := True;
-        Bmp.SetSize(Tmp.Width, Tmp.Height);
-        Tmp.PaintTo(Bmp.Canvas.Handle, 0, 0);
-      finally
-        Tmp.Free;
-      end;
+  for I := 1 to 50 do
+  begin
+    Tmp := TFluentToggleSwitch.Create(nil);
+    try
+      Tmp.Parent := FForm;
+      Tmp.ShowText := True;
+      Render(Tmp);
+    finally
+      Tmp.Free;
     end;
-  finally
-    Bmp.Free;
   end;
   Assert.Pass('The per-test memory monitor flags anything left behind');
 end;
