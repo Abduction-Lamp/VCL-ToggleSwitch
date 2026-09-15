@@ -25,6 +25,7 @@ type
     procedure Press(X: Integer);
     procedure MoveTo(X: Integer);
     procedure Release(X: Integer);
+    function RenderToStream(Toggle: TFluentToggleSwitch): TMemoryStream;
     procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
     function StreamFormWithSwitch(out Loaded: TFluentToggleSwitch;
       out SourceWidth: Integer): TForm;
@@ -141,6 +142,12 @@ type
     procedure Enabled_False_WhilePressed_ShouldCancelThePress;
 
     [Test]
+    procedure Enabled_False_MidDrag_ShouldSettleTheThumb;
+
+    [Test]
+    procedure CancelMode_MidPress_ShouldNotToggle;
+
+    [Test]
     procedure ParentColor_ShouldBeTrueByDefault;
 
     [Test]
@@ -231,9 +238,12 @@ const
   // Design pixels the expectations below are written in. Setup pins the
   // control to this scale, so the numbers hold on any machine.
   DesignPPI = 96;
-  // Thumb centers and the drag threshold of the component, at DesignPPI
+  // Press points near each end of the track, at DesignPPI: the thumb rests at
+  // 10 and 30 within a track inset by 2 (ThumbCenterOffX and ThumbCenterOnX in
+  // source/ToggleSwitch.pas). A drag only cares about the distance between them
   ThumbOffX = 12;
   ThumbOnX = 32;
+  // Mirrors DragThreshold in source/ToggleSwitch.pas
   DragThreshold = 4;
 
 procedure TToggleSwitchTest.Setup;
@@ -316,19 +326,47 @@ begin
 end;
 
 // Mouse messages land at the vertical middle of the control
+// A coordinate outside the control is normal here, and MakeLParam takes
+// words, so the sign travels in the bits the way Windows sends it
 procedure TToggleSwitchTest.Press(X: Integer);
 begin
-  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(X, FToggle.Height div 2));
+  FToggle.Perform(WM_LBUTTONDOWN, MK_LBUTTON,
+    MakeLParam(Word(X), Word(FToggle.Height div 2)));
 end;
 
 procedure TToggleSwitchTest.MoveTo(X: Integer);
 begin
-  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(X, FToggle.Height div 2));
+  FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON,
+    MakeLParam(Word(X), Word(FToggle.Height div 2)));
 end;
 
 procedure TToggleSwitchTest.Release(X: Integer);
 begin
-  FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(X, FToggle.Height div 2));
+  FToggle.Perform(WM_LBUTTONUP, 0,
+    MakeLParam(Word(X), Word(FToggle.Height div 2)));
+end;
+
+// A bitmap of the control as it would paint right now. Two controls in the
+// same state have to come out byte for byte the same
+function TToggleSwitchTest.RenderToStream(Toggle: TFluentToggleSwitch): TMemoryStream;
+var
+  Bmp: TBitmap;
+begin
+  Result := TMemoryStream.Create;
+  try
+    Bmp := TBitmap.Create;
+    try
+      Bmp.SetSize(Toggle.Width, Toggle.Height);
+      Toggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
+      Bmp.SaveToStream(Result);
+    finally
+      Bmp.Free;
+    end;
+    Result.Position := 0;
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 // --- Color tests ---
@@ -614,6 +652,45 @@ begin
   FToggle.Enabled := False;
   Release(ThumbOffX);
   Assert.IsFalse(FToggle.Checked, 'Being disabled mid-press drops the press');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+// Dropping the press is not enough: the thumb is painted at its resting place
+// plus whatever the drag moved it by
+procedure TToggleSwitchTest.Enabled_False_MidDrag_ShouldSettleTheThumb;
+var
+  Reference: TFluentToggleSwitch;
+  Expected, Actual: TMemoryStream;
+begin
+  Expected := nil;
+  Actual := nil;
+  Reference := TFluentToggleSwitch.Create(FForm);
+  try
+    Reference.Parent := FForm;
+    Reference.ScaleForPPI(DesignPPI);
+    Reference.Enabled := False;
+    Press(ThumbOffX);
+    MoveTo(ThumbOffX + DragThreshold + 4);
+    FToggle.Enabled := False;
+    Expected := RenderToStream(Reference);
+    Actual := RenderToStream(FToggle);
+    Assert.AreEqual(Expected, Actual,
+      'A switch disabled mid-drag looks like one that was never touched');
+  finally
+    Actual.Free;
+    Expected.Free;
+    Reference.Free;
+  end;
+end;
+
+procedure TToggleSwitchTest.CancelMode_MidPress_ShouldNotToggle;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  Press(ThumbOffX);
+  // What a menu or a modal dialog opening mid-press comes down to
+  FToggle.Perform(WM_CANCELMODE, 0, 0);
+  Assert.IsFalse(FToggle.Checked, 'A press the system cancels is no click');
   Assert.IsFalse(FOnChangeFired, 'and fires nothing');
 end;
 
