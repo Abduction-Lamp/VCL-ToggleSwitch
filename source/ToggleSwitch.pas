@@ -122,6 +122,7 @@ type
     procedure Paint; override;
     function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
     procedure AdjustSize; override;
+    procedure Loaded; override;
     procedure CreateWnd; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -702,6 +703,15 @@ begin
 end;
 
 // The control only learns which monitor it sits on once the window exists
+// AdjustSize sits out csLoading, so the size read from the DFM stands until
+// every property is in; measure once they are, as the AutoSize controls of
+// the VCL do
+procedure TFluentToggleSwitch.Loaded;
+begin
+  inherited;
+  LayoutChanged;
+end;
+
 procedure TFluentToggleSwitch.CreateWnd;
 begin
   inherited;

@@ -181,7 +181,7 @@ type
     procedure Stream_HeaderFont_Default_ShouldNotBeStored;
 
     [Test]
-    procedure Stream_Load_WithShowText_ShouldMeasureOnceTheWindowExists;
+    procedure Stream_Load_WithShowText_ShouldMeasureAfterLoad;
   end;
 
 implementation
@@ -756,21 +756,23 @@ begin
     'A header font that only follows Font stays out of the DFM');
 end;
 
-procedure TToggleSwitchTest.Stream_Load_WithShowText_ShouldMeasureOnceTheWindowExists;
+procedure TToggleSwitchTest.Stream_Load_WithShowText_ShouldMeasureAfterLoad;
 var
   Loaded: TFluentToggleSwitch;
 begin
   FToggle.ShowText := True;
   Loaded := TFluentToggleSwitch.Create(nil);
   try
+    // The DFM size is deliberately wrong; the same font as FToggle makes the
+    // measured size comparable
     LoadText('object TFluentToggleSwitch'#13#10 +
       '  Width = 10'#13#10 +
       '  Height = 10'#13#10 +
       '  ShowText = True'#13#10 +
       'end', Loaded);
     Loaded.Parent := FForm;
-    Assert.AreEqual(FToggle.Width, Loaded.Width, 'The window brings the measured width');
-    Assert.AreEqual(FToggle.Height, Loaded.Height, 'and the measured height');
+    Assert.AreEqual(FToggle.Width, Loaded.Width, 'Loading measures the width, no window needed');
+    Assert.AreEqual(FToggle.Height, Loaded.Height, 'and the height');
   finally
     Loaded.Free;
   end;
