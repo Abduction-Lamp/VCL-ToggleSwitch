@@ -5,8 +5,6 @@ program Tests;
 {$ENDIF}
 {$STRONGLINKTYPES ON}
 uses
-  FastMM4,
-  DUnitX.MemoryLeakMonitor.FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -16,6 +14,7 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   ToggleSwitch in '..\source\ToggleSwitch.pas',
+  ToggleSwitch.Tests.LeakMonitor in 'ToggleSwitch.Tests.LeakMonitor.pas',
   ToggleSwitch.Tests in 'ToggleSwitch.Tests.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
