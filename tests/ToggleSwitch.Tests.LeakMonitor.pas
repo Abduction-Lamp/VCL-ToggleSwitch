@@ -1,9 +1,11 @@
 ﻿unit ToggleSwitch.Tests.LeakMonitor;
 
-{ Per-test memory leak monitor for DUnitX that reads the RTL memory manager
-  directly, so the test project needs neither FastMM4.pas nor a DUnitX
-  rebuilt with USE_FASTMM4_LEAK_MONITOR. Registering it replaces the no-op
-  monitor DUnitX installs by default. }
+///
+///  Per-test memory leak monitor for DUnitX that reads the RTL memory manager
+///  directly, so the test project needs neither FastMM4.pas nor a DUnitX
+///  rebuilt with USE_FASTMM4_LEAK_MONITOR. Registering it replaces the no-op
+///  monitor DUnitX installs by default.
+///
 
 {$WARN SYMBOL_PLATFORM OFF}
 
@@ -21,13 +23,15 @@ type
 
   TRtlMemoryLeakMonitor = class(TInterfacedObject, IMemoryLeakMonitor, IMemoryLeakMonitor2)
   private
-    FPreSetup: TMemoryManagerState;
-    FPostSetup: TMemoryManagerState;
-    FPreTest: TMemoryManagerState;
-    FPostTest: TMemoryManagerState;
-    FPreTearDown: TMemoryManagerState;
-    FPostTearDown: TMemoryManagerState;
+    FPreSetup     : TMemoryManagerState;
+    FPostSetup    : TMemoryManagerState;
+    FPreTest      : TMemoryManagerState;
+    FPostTest     : TMemoryManagerState;
+    FPreTearDown  : TMemoryManagerState;
+    FPostTearDown : TMemoryManagerState;
+
     class function AllocatedBytes(const State: TMemoryManagerState): Int64; static;
+
   public
     procedure PreSetup;
     procedure PostSetUp;
@@ -41,14 +45,14 @@ type
     function GetReport: string;
   end;
 
+
 { TRtlMemoryLeakMonitor }
 
 class function TRtlMemoryLeakMonitor.AllocatedBytes(const State: TMemoryManagerState): Int64;
 var
   Block: TSmallBlockTypeState;
 begin
-  Result := Int64(State.TotalAllocatedMediumBlockSize) +
-    Int64(State.TotalAllocatedLargeBlockSize);
+  Result := Int64(State.TotalAllocatedMediumBlockSize) + Int64(State.TotalAllocatedLargeBlockSize);
   for Block in State.SmallBlockTypeStates do
     Inc(Result, Int64(Block.UseableBlockSize) * Block.AllocatedBlockCount);
 end;
@@ -98,25 +102,24 @@ begin
   Result := AllocatedBytes(FPostTearDown) - AllocatedBytes(FPreTearDown);
 end;
 
-// Lists the block classes left over across the same three spans DUnitX sums
-// up (Setup, Test, TearDown), so the runner's own bookkeeping between them
-// stays out. The size is the usable size of the block class, not of the
-// object; it still tells a grown list from a leaked object most of the time
+///
+///  Lists the block classes left over across the same three spans DUnitX sums
+///  up (Setup, Test, TearDown), so the runner's own bookkeeping between them
+///  stays out. The size is the usable size of the block class, not of the
+///  object; it still tells a grown list from a leaked object most of the time
+///
 function TRtlMemoryLeakMonitor.GetReport: string;
 
-  function Delta(const Pre, Post: TMemoryManagerState; What: TBlockClass;
-    Index: Integer): Int64;
+  function Delta(const Pre, Post: TMemoryManagerState; What: TBlockClass; Index: Integer): Int64;
   begin
     case What of
       bcSmall:
         Result := Int64(Post.SmallBlockTypeStates[Index].AllocatedBlockCount)
           - Int64(Pre.SmallBlockTypeStates[Index].AllocatedBlockCount);
       bcMedium:
-        Result := Int64(Post.AllocatedMediumBlockCount)
-          - Int64(Pre.AllocatedMediumBlockCount);
+        Result := Int64(Post.AllocatedMediumBlockCount) - Int64(Pre.AllocatedMediumBlockCount);
     else
-      Result := Int64(Post.AllocatedLargeBlockCount)
-        - Int64(Pre.AllocatedLargeBlockCount);
+      Result := Int64(Post.AllocatedLargeBlockCount) - Int64(Pre.AllocatedLargeBlockCount);
     end;
   end;
 
@@ -153,8 +156,8 @@ initialization
   TDUnitXIoC.DefaultContainer.RegisterType<IMemoryLeakMonitor>(
     function: IMemoryLeakMonitor
     begin
-      // A replacement memory manager would leave the RTL snapshots empty and
-      // every delta at zero, which would pass for a clean run
+      ///  A replacement memory manager would leave the RTL snapshots empty and
+      ///  every delta at zero, which would pass for a clean run
       if IsMemoryManagerSet then
         raise Exception.Create('ToggleSwitch.Tests.LeakMonitor reads the RTL '
           + 'memory manager; a replacement one needs a monitor of its own');
