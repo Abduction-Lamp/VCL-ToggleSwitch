@@ -362,37 +362,53 @@ begin
 end;
 
 // Empty when the two look the same. Otherwise says how much differs and
-// where, which tells a thumb that moved from a color that changed
+// where, which tells a thumb that moved from a color that changed. Only the
+// color bits count: the fourth byte of a 32-bit DIB is not painted by GDI and
+// carries whatever GDI+ happened to leave there
 function TToggleSwitchTest.DescribeDifference(A, B: TBitmap): string;
 type
   PRow = ^TRow;
   TRow = array[0..MaxInt div SizeOf(Cardinal) - 1] of Cardinal;
+const
+  ColorBits = $00FFFFFF;
 var
-  X, Y, Count, MinX, MaxX: Integer;
+  X, Y, Count, MinX, MaxX, FirstX, FirstY: Integer;
   RowA, RowB: PRow;
+  FirstA, FirstB: Cardinal;
 begin
   Count := 0;
   MinX := A.Width;
   MaxX := -1;
+  FirstX := -1;
+  FirstY := -1;
+  FirstA := 0;
+  FirstB := 0;
   for Y := 0 to A.Height - 1 do
   begin
     RowA := A.ScanLine[Y];
     RowB := B.ScanLine[Y];
     for X := 0 to A.Width - 1 do
-      if RowA^[X] <> RowB^[X] then
+      if (RowA^[X] and ColorBits) <> (RowB^[X] and ColorBits) then
       begin
         Inc(Count);
         if X < MinX then
           MinX := X;
         if X > MaxX then
           MaxX := X;
+        if FirstX < 0 then
+        begin
+          FirstX := X;
+          FirstY := Y;
+          FirstA := RowA^[X];
+          FirstB := RowB^[X];
+        end;
       end;
   end;
   if Count = 0 then
     Result := ''
   else
-    Result := Format('%d of %d pixels differ, in columns %d..%d',
-      [Count, A.Width * A.Height, MinX, MaxX]);
+    Result := Format('%d of %d pixels differ, in columns %d..%d; at %d,%d %.8x against %.8x',
+      [Count, A.Width * A.Height, MinX, MaxX, FirstX, FirstY, FirstA, FirstB]);
 end;
 
 // --- Color tests ---
