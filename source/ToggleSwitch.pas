@@ -882,7 +882,10 @@ begin
   // hand arrives all the same
   if (Button = mbLeft) and Enabled then
   begin
-    if CanFocus and not Focused then
+    // Clicking a control is how Windows hands it the focus. A window nobody
+    // can see has nowhere to put it, and SetFocus says so by raising
+    if TabStop and not Focused and CanFocus and HandleAllocated and
+      IsWindowVisible(Handle) and IsWindowEnabled(Handle) then
       SetFocus;
     FPressed := True;
     FDragStartX := X;
