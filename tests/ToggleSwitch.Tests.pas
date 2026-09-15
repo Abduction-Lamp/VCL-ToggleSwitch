@@ -656,30 +656,27 @@ begin
 end;
 
 // Dropping the press is not enough: the thumb is painted at its resting place
-// plus whatever the drag moved it by
+// plus whatever the drag moved it by. The same control in the same state has
+// to paint the same, so anything the drag left behind shows up here
 procedure TToggleSwitchTest.Enabled_False_MidDrag_ShouldSettleTheThumb;
 var
-  Reference: TFluentToggleSwitch;
   Expected, Actual: TMemoryStream;
 begin
   Expected := nil;
   Actual := nil;
-  Reference := TFluentToggleSwitch.Create(FForm);
   try
-    Reference.Parent := FForm;
-    Reference.ScaleForPPI(DesignPPI);
-    Reference.Enabled := False;
+    FToggle.Enabled := False;
+    Expected := RenderToStream(FToggle);
+    FToggle.Enabled := True;
     Press(ThumbOffX);
     MoveTo(ThumbOffX + DragThreshold + 4);
     FToggle.Enabled := False;
-    Expected := RenderToStream(Reference);
     Actual := RenderToStream(FToggle);
     Assert.AreEqual(Expected, Actual,
-      'A switch disabled mid-drag looks like one that was never touched');
+      'A switch disabled mid-drag looks like one that was disabled untouched');
   finally
     Actual.Free;
     Expected.Free;
-    Reference.Free;
   end;
 end;
 
