@@ -831,7 +831,9 @@ end;
 procedure TFluentToggleSwitch.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if Button = mbLeft then
+  // Windows keeps the pointer out of a disabled window, but a message sent by
+  // hand arrives all the same
+  if (Button = mbLeft) and Enabled then
   begin
     FPressed := True;
     FDragStartX := X;
