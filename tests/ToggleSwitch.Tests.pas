@@ -949,7 +949,7 @@ begin
   Assert.AreEqual('', FToggle.HeaderText);
   Assert.IsTrue(FToggle.HeaderPosition = hpTop);
   Assert.IsTrue(FToggle.HeaderAlignment = taLeftJustify);
-  Assert.AreEqual(7, FToggle.HeaderSpacing);
+  Assert.AreEqual(4, FToggle.HeaderSpacing, 'The header sits 4 px from the switch, as in WinUI');
 end;
 
 procedure TToggleSwitchTest.ShowHeader_True_ShouldMakeRoomAbove;

@@ -190,7 +190,7 @@ type
     property HeaderText: string read FHeaderText write SetHeaderText;
     property HeaderPosition: THeaderPosition read FHeaderPosition write SetHeaderPosition default hpTop;
     property HeaderAlignment: TAlignment read FHeaderAlignment write SetHeaderAlignment default taLeftJustify;
-    property HeaderSpacing: Integer read FHeaderSpacing write SetHeaderSpacing default 7;
+    property HeaderSpacing: Integer read FHeaderSpacing write SetHeaderSpacing default 4;
     property HeaderFont: TFont read FHeaderFont write SetHeaderFont stored FHeaderFontCustom;
     property OnContextPopup;
     property OnDblClick;
@@ -401,7 +401,7 @@ begin
   FShowHeader := False;
   FHeaderPosition := hpTop;
   FHeaderAlignment := taLeftJustify;
-  FHeaderSpacing := 7;
+  FHeaderSpacing := 4;
   FHeaderFont := TFont.Create;
   FHeaderFont.Assign(Font);
   FHeaderFont.OnChange := HeaderFontChanged;
