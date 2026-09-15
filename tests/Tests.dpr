@@ -4,6 +4,7 @@ program Tests;
 {$APPTYPE CONSOLE}
 {$ENDIF}
 {$STRONGLINKTYPES ON}
+{$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
