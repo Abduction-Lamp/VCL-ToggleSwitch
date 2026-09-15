@@ -1307,6 +1307,12 @@ begin
     G.Free;
   end;
 
+  // The ring wraps the switch and its label but leaves the header out, the way
+  // the WinUI focus target covers the switch area only. It goes on before the
+  // labels, which leave a hollow brush behind that GDI draws no rectangle with
+  if FShowFocus and FFocusVisible and Focused then
+    Canvas.DrawFocusRect(Rect(0, RowTop, Width, RowTop + RowHeight));
+
   // Labels
   if FShowText or FShowHeader then
   begin
@@ -1330,11 +1336,6 @@ begin
       Canvas.TextOut(HeaderX, HeaderY, FHeaderText);
     end;
   end;
-
-  // The ring wraps the switch and its label but leaves the header out, the way
-  // the WinUI focus target covers the switch area only
-  if FShowFocus and FFocusVisible and Focused then
-    Canvas.DrawFocusRect(Rect(0, RowTop, Width, RowTop + RowHeight));
 end;
 
 procedure Register;
