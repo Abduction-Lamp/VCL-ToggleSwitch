@@ -21,6 +21,7 @@ type
     FOnChangeFired: Boolean;
     procedure HandleOnChange(Sender: TObject);
     procedure Render(Toggle: TFluentToggleSwitch);
+    procedure CreateRenderDestroy;
   public
     [SetupFixture]
     procedure SetupFixture;
@@ -180,10 +181,10 @@ end;
 // The first window, paint and mouse input of the process fill VCL caches
 // (screen lists, font handles, focus and hint bookkeeping) that live until
 // shutdown. Taking that hit once here keeps the per-test leak monitor
-// focused on what each test itself leaves behind.
+// focused on what each test itself leaves behind. A test that opens a new
+// first-time VCL path fails once with a bogus leak: extend this warm-up
+// rather than ignore the test.
 procedure TToggleSwitchTest.SetupFixture;
-var
-  Tmp: TFluentToggleSwitch;
 begin
   Setup;
   try
@@ -193,14 +194,7 @@ begin
     FToggle.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(30, 12));
     FToggle.Perform(WM_LBUTTONUP, 0, MakeLParam(30, 12));
     // Destroying a child while its parent lives is a path of its own
-    Tmp := TFluentToggleSwitch.Create(nil);
-    try
-      Tmp.Parent := FForm;
-      Tmp.ShowText := True;
-      Render(Tmp);
-    finally
-      Tmp.Free;
-    end;
+    CreateRenderDestroy;
   finally
     TearDown;
   end;
@@ -216,6 +210,22 @@ begin
     Toggle.PaintTo(Bmp.Canvas.Handle, 0, 0);
   finally
     Bmp.Free;
+  end;
+end;
+
+// Painting is what builds the GDI+ objects, so a lifetime worth checking
+// has to render
+procedure TToggleSwitchTest.CreateRenderDestroy;
+var
+  Tmp: TFluentToggleSwitch;
+begin
+  Tmp := TFluentToggleSwitch.Create(nil);
+  try
+    Tmp.Parent := FForm;
+    Tmp.ShowText := True;
+    Render(Tmp);
+  finally
+    Tmp.Free;
   end;
 end;
 
@@ -344,21 +354,23 @@ begin
 end;
 
 procedure TToggleSwitchTest.SetTextOn_BeforeParent_ShouldNotRaise;
-var
-  Tmp: TFluentToggleSwitch;
 begin
-  Tmp := TFluentToggleSwitch.Create(nil);
-  try
-    // Should not raise "Control has no parent window"
-    Tmp.ShowText := True;
-    Tmp.TextOn := 'Test';
-    Tmp.TextOff := 'Off test';
-    Tmp.TextPosition := tpLeft;
-    Tmp.TextSpacing := 12;
-    Assert.IsTrue(True, 'No exception raised');
-  finally
-    Tmp.Free;
-  end;
+  Assert.WillNotRaise(
+    procedure
+    var
+      Tmp: TFluentToggleSwitch;
+    begin
+      Tmp := TFluentToggleSwitch.Create(nil);
+      try
+        Tmp.ShowText := True;
+        Tmp.TextOn := 'Test';
+        Tmp.TextOff := 'Off test';
+        Tmp.TextPosition := tpLeft;
+        Tmp.TextSpacing := 12;
+      finally
+        Tmp.Free;
+      end;
+    end, nil, 'Text properties are usable before the control has a parent');
 end;
 
 procedure TToggleSwitchTest.Toggle_ShouldChangeChecked;
@@ -430,24 +442,16 @@ begin
 end;
 
 procedure TToggleSwitchTest.CreateAndDestroy_ShouldNotLeak;
-var
-  I: Integer;
-  Tmp: TFluentToggleSwitch;
 begin
-  // Painting is what builds the GDI+ objects, so the loop has to render
-  for I := 1 to 50 do
-  begin
-    Tmp := TFluentToggleSwitch.Create(nil);
-    try
-      Tmp.Parent := FForm;
-      Tmp.ShowText := True;
-      Render(Tmp);
-    finally
-      Tmp.Free;
-    end;
-  end;
-  // No assertion on purpose: the per-test leak monitor is the check, and
-  // Assert.Pass would raise ETestPass right through its measurement
+  // The leak itself is caught by the per-test monitor
+  Assert.WillNotRaise(
+    procedure
+    var
+      I: Integer;
+    begin
+      for I := 1 to 50 do
+        CreateRenderDestroy;
+    end, nil, 'Fifty lifetimes run clean');
 end;
 
 procedure TToggleSwitchTest.ParentColor_ShouldBeTrueByDefault;

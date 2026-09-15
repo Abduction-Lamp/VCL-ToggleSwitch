@@ -26,6 +26,9 @@ var
   nunitLogger : ITestLogger;
 {$ENDIF}
 begin
+  // Names the classes of anything left over once per process, which the
+  // per-test monitor cannot see; a message box only under the debugger
+  ReportMemoryLeaksOnShutdown := DebugHook <> 0;
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
@@ -37,7 +40,7 @@ begin
     //Tell the runner to use RTTI to find Fixtures
     runner.UseRTTI := True;
     //When true, Assertions must be made during tests;
-    runner.FailsOnNoAsserts := False;
+    runner.FailsOnNoAsserts := True;
 
     //tell the runner how we will log things
     //Log to the console window if desired
