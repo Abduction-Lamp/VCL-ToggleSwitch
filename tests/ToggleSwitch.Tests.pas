@@ -19,6 +19,7 @@ type
     FForm: TForm;
     FToggle: TFluentToggleSwitch;
     FOnChangeFired: Boolean;
+    FOnChangeCount: Integer;
     procedure HandleOnChange(Sender: TObject);
     procedure Render(Toggle: TFluentToggleSwitch);
     procedure PaintOnto(Toggle: TFluentToggleSwitch; Target: TBitmap);
@@ -26,6 +27,8 @@ type
     procedure Press(X: Integer);
     procedure MoveTo(X: Integer);
     procedure Release(X: Integer);
+    procedure PressKey(Key: Word);
+    procedure ReleaseKey(Key: Word);
     function RenderToBitmap(Toggle: TFluentToggleSwitch): TBitmap;
     function DescribeDifference(A, B: TBitmap): string;
     procedure CopyThroughStream(Source, Target: TFluentToggleSwitch);
@@ -108,7 +111,25 @@ type
     procedure SetChecked_ShouldNotFireOnChange;
 
     [Test]
-    procedure SpaceKey_ShouldNotToggle;
+    procedure Space_ShouldToggleOnKeyUp;
+
+    [Test]
+    procedure Space_Held_ShouldToggleOnce;
+
+    [Test]
+    procedure Space_KeyUpAlone_ShouldNotToggle;
+
+    [Test]
+    procedure Enter_ShouldNotToggle;
+
+    [Test]
+    procedure KeyboardToggle_False_Space_ShouldNotToggle;
+
+    [Test]
+    procedure TabStop_ShouldBeTrueByDefault;
+
+    [Test]
+    procedure ShowFocus_ShouldBeTrueByDefault;
 
     [Test]
     procedure DragPastMiddle_ShouldTurnOnAndFireOnChange;
@@ -360,6 +381,16 @@ begin
     MakeLParam(Word(X), Word(FToggle.Height div 2)));
 end;
 
+procedure TToggleSwitchTest.PressKey(Key: Word);
+begin
+  FToggle.Perform(WM_KEYDOWN, Key, 0);
+end;
+
+procedure TToggleSwitchTest.ReleaseKey(Key: Word);
+begin
+  FToggle.Perform(WM_KEYUP, Key, 0);
+end;
+
 // The control as it would paint right now
 function TToggleSwitchTest.RenderToBitmap(Toggle: TFluentToggleSwitch): TBitmap;
 begin
@@ -546,6 +577,7 @@ end;
 procedure TToggleSwitchTest.HandleOnChange(Sender: TObject);
 begin
   FOnChangeFired := True;
+  Inc(FOnChangeCount);
 end;
 
 procedure TToggleSwitchTest.SetTextOn_BeforeParent_ShouldNotRaise;
@@ -586,13 +618,71 @@ begin
   Assert.IsFalse(FOnChangeFired, 'OnChange is for user actions only');
 end;
 
-procedure TToggleSwitchTest.SpaceKey_ShouldNotToggle;
+// Acting on the release is what keeps a held key from firing over and over
+procedure TToggleSwitchTest.Space_ShouldToggleOnKeyUp;
+begin
+  FOnChangeCount := 0;
+  FToggle.OnChange := HandleOnChange;
+  PressKey(VK_SPACE);
+  Assert.IsFalse(FToggle.Checked, 'Holding Space down does not toggle yet');
+  ReleaseKey(VK_SPACE);
+  Assert.IsTrue(FToggle.Checked, 'Letting Space go toggles the switch');
+  Assert.AreEqual(1, FOnChangeCount, 'and fires OnChange once');
+end;
+
+procedure TToggleSwitchTest.Space_Held_ShouldToggleOnce;
+begin
+  FOnChangeCount := 0;
+  FToggle.OnChange := HandleOnChange;
+  // What auto-repeat looks like from here
+  PressKey(VK_SPACE);
+  PressKey(VK_SPACE);
+  PressKey(VK_SPACE);
+  ReleaseKey(VK_SPACE);
+  Assert.IsTrue(FToggle.Checked, 'A held Space still toggles once');
+  Assert.AreEqual(1, FOnChangeCount, 'and fires OnChange once');
+end;
+
+procedure TToggleSwitchTest.Space_KeyUpAlone_ShouldNotToggle;
 begin
   FOnChangeFired := False;
   FToggle.OnChange := HandleOnChange;
-  FToggle.Perform(WM_KEYDOWN, VK_SPACE, 0);
-  Assert.IsFalse(FToggle.Checked, 'Keyboard does not toggle the switch');
-  Assert.IsFalse(FOnChangeFired, 'OnChange does not fire on keyboard input');
+  // A key pressed somewhere else and released over us
+  ReleaseKey(VK_SPACE);
+  Assert.IsFalse(FToggle.Checked, 'A release without a press here changes nothing');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.Enter_ShouldNotToggle;
+begin
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  PressKey(VK_RETURN);
+  ReleaseKey(VK_RETURN);
+  Assert.IsFalse(FToggle.Checked, 'Enter belongs to the default button, not to us');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.KeyboardToggle_False_Space_ShouldNotToggle;
+begin
+  FToggle.KeyboardToggle := False;
+  FOnChangeFired := False;
+  FToggle.OnChange := HandleOnChange;
+  PressKey(VK_SPACE);
+  ReleaseKey(VK_SPACE);
+  Assert.IsFalse(FToggle.Checked, 'With the keyboard turned off Space does nothing');
+  Assert.IsFalse(FOnChangeFired, 'and fires nothing');
+end;
+
+procedure TToggleSwitchTest.TabStop_ShouldBeTrueByDefault;
+begin
+  Assert.IsTrue(FToggle.TabStop, 'Tab reaches the switch like any other control');
+end;
+
+procedure TToggleSwitchTest.ShowFocus_ShouldBeTrueByDefault;
+begin
+  Assert.IsTrue(FToggle.ShowFocus, 'The switch is allowed to show a focus ring');
+  Assert.IsTrue(FToggle.KeyboardToggle, 'and answers the keyboard');
 end;
 
 procedure TToggleSwitchTest.DragPastMiddle_ShouldTurnOnAndFireOnChange;
@@ -994,7 +1084,9 @@ begin
   FToggle.Checked := True;
   FToggle.Animated := False;
   FToggle.AnimationDuration := 100;
-  FToggle.TabStop := True;
+  FToggle.TabStop := False;
+  FToggle.ShowFocus := False;
+  FToggle.KeyboardToggle := False;
   FToggle.TrackFrameColor := clRed;
   FToggle.TrackColorOff := clGreen;
   FToggle.TrackColorOn := clBlue;
@@ -1017,7 +1109,9 @@ begin
     Assert.IsTrue(Loaded.Checked, 'Checked');
     Assert.IsFalse(Loaded.Animated, 'Animated');
     Assert.AreEqual(100, Loaded.AnimationDuration, 'AnimationDuration');
-    Assert.IsTrue(Loaded.TabStop, 'TabStop');
+    Assert.IsFalse(Loaded.TabStop, 'TabStop');
+    Assert.IsFalse(Loaded.ShowFocus, 'ShowFocus');
+    Assert.IsFalse(Loaded.KeyboardToggle, 'KeyboardToggle');
     Assert.AreEqual(TColor(clRed), Loaded.TrackFrameColor, 'TrackFrameColor');
     Assert.AreEqual(TColor(clGreen), Loaded.TrackColorOff, 'TrackColorOff');
     Assert.AreEqual(TColor(clBlue), Loaded.TrackColorOn, 'TrackColorOn');
@@ -1041,8 +1135,9 @@ end;
 
 procedure TToggleSwitchTest.Stream_Defaults_ShouldWriteNoOwnProperty;
 const
-  OwnProperties: array[0..19] of string = ('Checked', 'Animated',
-    'AnimationDuration', 'TabStop', 'TrackFrameColor', 'TrackColorOff',
+  OwnProperties: array[0..21] of string = ('Checked', 'Animated',
+    'AnimationDuration', 'TabStop', 'ShowFocus', 'KeyboardToggle',
+    'TrackFrameColor', 'TrackColorOff',
     'TrackColorOn', 'ThumbColorOff', 'ThumbColorOn', 'ShowText', 'TextOn',
     'TextOff', 'TextPosition', 'TextSpacing', 'ShowHeader', 'HeaderText',
     'HeaderPosition', 'HeaderAlignment', 'HeaderSpacing', 'HeaderFont');
